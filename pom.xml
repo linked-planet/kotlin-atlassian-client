@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>kotlin-client</artifactId>
+    <groupId>com.linked-planet.client</groupId>
+    <version>1.0-SNAPSHOT</version>
+    <description>Provides clients for jira and insight functionality.</description>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>kotlin-jira-client</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <kotlin.code.style>official</kotlin.code.style>
+        <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+        <kotlin.version>1.8.0</kotlin.version>
+        <arrow.version>0.13.2</arrow.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-core</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-meta</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.13.2</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>mavenCentral</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <!-- BUILD HELPER -->
+            <!-- make plugins aware of the src/main/kotlin source folder -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/main/kotlin</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Clean Maven directories that get corrupted when rebuilding the project with IntelliJ
+                 or on successive Maven builds -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <echo>Version: "${project.version}"</echo>
+                                <delete failonerror="false">
+                                    <fileset dir="${project.build.directory}/dependency-maven-plugin-markers"/>
+                                    <fileset dir="${project.build.directory}/classes"/>
+                                </delete>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- KOTLIN -->
+            <plugin>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <!-- Replacing default-compile as it is treated specially by maven -->
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <!-- Replacing default-testCompile as it is treated specially by maven -->
+                    <execution>
+                        <id>default-testCompile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>java-compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>java-test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- LICENSE -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <configuration>
+                    <licenseName>apache_v2</licenseName>
+                    <licenseFile>${project.basedir}/LICENSE</licenseFile>
+                    <inceptionYear>2022</inceptionYear>
+                    <projectName>${project.artifactId}</projectName>
+                    <copyrightOwners>linked-planet GmbH</copyrightOwners>
+                    <failOnMissing>true</failOnMissing>
+                    <failOnMissingHeader>true</failOnMissingHeader>
+                    <failOnNotUptodateHeader>true</failOnNotUptodateHeader>
+                    <failIfWarning>true</failIfWarning>
+                    <roots>
+                        <root>src</root>
+                    </roots>
+                    <excludes>
+                        <exclude>**/*.xml</exclude>
+                        <exclude>**/plugin.properties</exclude>
+                        <exclude>**/package-info.java</exclude>
+                    </excludes>
+                    <excludedScopes>provided,test</excludedScopes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>license-check-file-header</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check-file-header</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- DEPLOYMENT disabled, see profile ci underneath -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.13</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <!-- META -->
+    <scm>
+        <connection>scm:git:git://github.com/linked-planet/kotlin-jira-client.git</connection>
+        <developerConnection>scm:git:git@github.com/linked-planet/kotlin-jira-client.git</developerConnection>
+        <url>https://github.com/linked-planet/kotlin-jira-client</url>
+    </scm>
+    <url>https://github.com/linked-planet/kotlin-jira-client</url>
+    <inceptionYear>2022-2023</inceptionYear>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <organization>
+        <name>linked-planet GmbH</name>
+        <url>https://linked-planet.com</url>
+    </organization>
+    <developers>
+        <developer>
+            <name>Philipp Karlsson</name>
+            <email>philipp.karlsson@linked-planet.com</email>
+            <url>https://github.com/betacore</url>
+            <organization>linked-planet GmbH</organization>
+            <organizationUrl>https://linked-planet.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Simon Jahreiss</name>
+            <email>simon.jahreiss@linked-planet.com</email>
+            <url>https://github.com/sjahreis</url>
+            <organization>linked-planet GmbH</organization>
+            <organizationUrl>https://linked-planet.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Alexander Weickmann</name>
+            <email>alexander.weickmann@linked-planet.com</email>
+            <url>https://github.com/weickmanna</url>
+            <organization>linked-planet GmbH</organization>
+            <organizationUrl>https://linked-planet.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Heiko Guckes</name>
+            <email>heiko.guckes@linked-planet.com</email>
+            <url>https://github.com/HighKo</url>
+            <organization>linked-planet GmbH</organization>
+            <organizationUrl>https://linked-planet.com</organizationUrl>
+        </developer>
+    </developers>
+</project>

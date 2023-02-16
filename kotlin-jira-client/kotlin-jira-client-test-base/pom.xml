@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.linked-planet.client</groupId>
+        <artifactId>kotlin-jira-client</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>kotlin-jira-client-test-base</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <jira.http.port>2990</jira.http.port>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.linked-planet</groupId>
+            <artifactId>kotlin-jira-client-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.linked-planet</groupId>
+            <artifactId>kotlin-http-client-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.atlassian.maven.plugins</groupId>
+                    <artifactId>jira-maven-plugin</artifactId>
+                    <version>${amps.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>jira-maven</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.atlassian.maven.plugins</groupId>
+                        <artifactId>jira-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <productVersion>${jira.version}</productVersion>
+                            <productDataVersion>${jira.version}</productDataVersion>
+                            <productDataPath>${project.parent.basedir}/jira/generated-test-resources.zip
+                            </productDataPath>
+                            <skipITs>true</skipITs>
+                            <enableQuickReload>false</enableQuickReload>
+                            <contextPath>/</contextPath>
+                            <installPlugin>false</installPlugin>
+                            <jvmArgs>-Xms2g -Xmx4g -XX:+UseG1GC</jvmArgs>
+                            <httpPort>${jira.http.port}</httpPort>
+                            <applications>
+                                <application>
+                                    <applicationKey>jira-software</applicationKey>
+                                    <version>${jira.version}</version>
+                                </application>
+                                <application>
+                                    <applicationKey>jira-servicedesk</applicationKey>
+                                    <version>${servicedesk.version}</version>
+                                </application>
+                            </applications>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

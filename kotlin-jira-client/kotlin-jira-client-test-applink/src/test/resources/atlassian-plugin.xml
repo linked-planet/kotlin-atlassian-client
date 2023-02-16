@@ -1,0 +1,15 @@
+<atlassian-plugin key="${atlassian.plugin.key}-test" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}" />
+    </plugin-info>
+
+    <resource type="i18n" name="i18n" location="i18n/plugin"/>
+
+
+    <component-import key="userAccessor" interface="com.atlassian.confluence.user.UserAccessor" />
+    <component-import key="applicationLinkService" interface="com.atlassian.applinks.api.ApplicationLinkService" />
+    <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties" />
+
+</atlassian-plugin>
