@@ -253,6 +253,15 @@
             </build>
         </profile>
         <profile>
+            <id>itest-base</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-jira-client-test-base</module>
+            </modules>
+        </profile>
+        <profile>
             <id>itest-ktor</id>
             <activation>
                 <activeByDefault>true</activeByDefault>

@@ -1,0 +1,34 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="kotlin-jira-client-applink:package" type="MavenRunConfiguration" factoryName="Maven" folderName="kotlin-jira-client-applink">
+    <MavenSettings>
+      <option name="myGeneralSettings" />
+      <option name="myRunnerSettings" />
+      <option name="myRunnerParameters">
+        <MavenRunnerParameters>
+          <option name="profiles">
+            <set />
+          </option>
+          <option name="goals">
+            <list>
+              <option value="package" />
+              <option value="-pl" />
+              <option value="kotlin-jira-client/kotlin-jira-client-test-applink" />
+            </list>
+          </option>
+          <option name="pomFileName" />
+          <option name="profilesMap">
+            <map>
+              <entry key="itest-ktor" value="false" />
+              <entry key="itest-sdk" value="false" />
+            </map>
+          </option>
+          <option name="resolveToWorkspace" value="false" />
+          <option name="workingDirPath" value="$PROJECT_DIR$" />
+        </MavenRunnerParameters>
+      </option>
+    </MavenSettings>
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="false" run_configuration_name="kotlin-client:install-prod" run_configuration_type="MavenRunConfiguration" />
+    </method>
+  </configuration>
+</component>

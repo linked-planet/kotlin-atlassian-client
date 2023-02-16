@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ApplinkClientTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+    <module name="kotlin-jira-client-test-applink" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="it.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="PACKAGE_NAME" value="it" />
+    <option name="MAIN_CLASS_NAME" value="it.ApplinkClientTest" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <option name="VM_PARAMETERS" value="-ea -Dbaseurl=http://localhost:1990" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
