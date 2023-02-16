@@ -14,7 +14,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.linked-planet</groupId>
+            <groupId>com.linked-planet.client</groupId>
             <artifactId>kotlin-jira-client-api</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -22,13 +22,13 @@
     <dependencies>
         <!-- kotlin-jira-client -->
         <dependency>
-            <groupId>com.linked-planet</groupId>
+            <groupId>com.linked-planet.client</groupId>
             <artifactId>kotlin-jira-client-sdk</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.linked-planet</groupId>
+            <groupId>com.linked-planet.client</groupId>
             <artifactId>kotlin-jira-client-test-base</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -18,14 +18,17 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.linked-planet</groupId>
+            <groupId>com.linked-planet.client</groupId>
             <artifactId>kotlin-jira-client-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.linked-planet</groupId>
+            <groupId>com.linked-planet.client</groupId>
             <artifactId>kotlin-http-client-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
+
+        <!-- External -->
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>

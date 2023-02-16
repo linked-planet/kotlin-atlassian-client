@@ -31,7 +31,7 @@ class JiraIssueLinkTestHelper<JiraFieldType>(
 
     fun getIssueLinks(issueKey: String): JsonArray {
         val jsonResponse = runBlocking {
-            issueOperator.getIssueByKey(issueKey) { json, mappings ->
+            issueOperator.getIssueByKey(issueKey) { json, _ ->
                 Either.Right(json)
             }.orNull()
         }

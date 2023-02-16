@@ -24,8 +24,6 @@
     </modules>
 
     <properties>
-        <http.client.version>0.5.2</http.client.version>
-
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
         <atlassian.spring.scanner.version>2.2.1</atlassian.spring.scanner.version>
 
@@ -40,24 +38,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Internal -->
-            <dependency>
-                <groupId>com.linked-planet</groupId>
-                <artifactId>kotlin-http-client-api</artifactId>
-                <version>${http.client.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.linked-planet</groupId>
-                <artifactId>kotlin-http-client-atlas</artifactId>
-                <version>${http.client.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.linked-planet</groupId>
-                <artifactId>kotlin-http-client-ktor</artifactId>
-                <version>${http.client.version}</version>
-            </dependency>
-
-            <!-- External -->
             <!-- Atlassian -->
             <dependency>
                 <groupId>com.atlassian.jira</groupId>
