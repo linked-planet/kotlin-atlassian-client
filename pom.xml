@@ -175,8 +175,6 @@
                 <artifactId>license-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
-                    <!--TODO: activate again -->
-                    <skipCheckLicense>true</skipCheckLicense>
                     <licenseName>apache_v2</licenseName>
                     <licenseFile>${project.basedir}/LICENSE</licenseFile>
                     <inceptionYear>2022</inceptionYear>
