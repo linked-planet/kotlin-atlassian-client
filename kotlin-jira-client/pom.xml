@@ -17,10 +17,6 @@
         <module>kotlin-jira-client-api</module>
         <module>kotlin-jira-client-http</module>
         <module>kotlin-jira-client-sdk</module>
-        <module>kotlin-jira-client-test-base</module>
-        <module>kotlin-jira-client-test-applink</module>
-        <module>kotlin-jira-client-test-ktor</module>
-        <module>kotlin-jira-client-test-sdk</module>
     </modules>
 
     <properties>
@@ -255,6 +251,36 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>itest-ktor</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-jira-client-test-base</module>
+                <module>kotlin-jira-client-test-ktor</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>itest-applink</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-jira-client-test-base</module>
+                <module>kotlin-jira-client-test-applink</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>itest-sdk</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-jira-client-test-base</module>
+                <module>kotlin-jira-client-test-sdk</module>
+            </modules>
         </profile>
     </profiles>
 </project>

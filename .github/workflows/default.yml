@@ -45,10 +45,10 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
-      - name: Build library
-        run: mvn package -Pci "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
+      - name: Build libraries
+        run: mvn package -T 2 -Pci "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
-  test-ktor:
+  kotlin-jira-client-test-ktor:
     runs-on: ubuntu-20.04
     needs: build
     steps:
@@ -80,15 +80,15 @@ jobs:
 
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pjira-maven "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" -pl -kotlin-jira-client-api,-kotlin-jira-client-http,-kotlin-jira-client-sdk,-kotlin-jira-client-test-base,-kotlin-jira-client-test-ktor,-kotlin-jira-client-test-sdk,-kotlin-jira-client-test-applink &
+        run: (while true; do sleep 10000; done) | mvn jira:debug -Pjira-maven -pl kotlin-jira-client "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
 
       - name: Wait for Jira and Insight
         run: ./scripts/wait-for-jira.sh
 
       - name: Integration tests using ktor
-        run: mvn -B verify -Pci-ktor -pl -kotlin-jira-client-test-sdk,-kotlin-jira-client-test-applink "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
+        run: mvn -B verify -Pitest-ktor,ci-ktor,-itest-applink,-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
-  test-applink:
+  kotlin-jira-client-test-applink:
     runs-on: ubuntu-20.04
     needs: build
     steps:
@@ -119,7 +119,8 @@ jobs:
           mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
       - name: Startup Jira and Insight
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pjira-maven "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" -pl -kotlin-jira-client-api,-kotlin-jira-client-http,-kotlin-jira-client-sdk,-kotlin-jira-client-test-base,-kotlin-jira-client-test-ktor,-kotlin-jira-client-test-sdk,-kotlin-jira-client-test-applink &
+        # Loop is needed to prevent Jira from suspension
+        run: (while true; do sleep 10000; done) | mvn jira:debug -Pjira-maven -pl kotlin-jira-client "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
 
       - name: Wait for Jira and Insight
         run: ./scripts/wait-for-jira.sh
@@ -128,9 +129,9 @@ jobs:
         run: sudo echo "127.0.0.1 confluence" | sudo tee -a /etc/hosts
 
       - name: Integration tests using applinks
-        run: mvn -B verify -Pci-applink "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" -Dbaseurl=http://confluence:1990 -pl -kotlin-jira-client-test-sdk,-kotlin-jira-client-test-ktor
+        run: mvn -B verify -Pitest-applink,ci-applink,-itest-ktor,-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://confluence:1990"
 
-  test-sdk:
+  kotlin-jira-client-test-sdk:
     runs-on: ubuntu-20.04
     needs: build
     steps:
@@ -161,11 +162,11 @@ jobs:
           mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
       - name: Integration tests using sdk
-        run: mvn clean -B verify -Pci-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" -pl -kotlin-jira-client-test-ktor,-kotlin-jira-client-test-applink
+        run: mvn clean -B verify -Pitest-sdk,ci-sdk,-itest-applink,-itest-ktor "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990"
 
   deploy-to-central:
     runs-on: ubuntu-20.04
-    needs: [ build, test-sdk, test-ktor, test-applink ]
+    needs: [ build, kotlin-jira-client-test-sdk, kotlin-jira-client-test-ktor, kotlin-jira-client-test-applink ]
     if: ${{ github.event_name == 'release' }}
     steps:
       - name: Checkout Source
@@ -208,7 +209,7 @@ jobs:
         run: cat <(echo -e "${{ secrets.SIGNING_KEY }}") | gpg --batch --import
 
       - name: Deploy to Maven Central
-        run: mvn -B deploy -Pci -DskipTests "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" -pl -kotlin-jira-client-test-base,-kotlin-jira-client-test-applink,-kotlin-jira-client-test-ktor,-kotlin-jira-client-test-sdk
+        run: mvn -B deploy -Pci,-ci-sdk,-ci-applink,-ci-ktor -DskipTests "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
