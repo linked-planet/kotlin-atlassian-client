@@ -1,7 +1,7 @@
-# kotlin-client
+# kotlin-atlassian-client
 
 ![Maven Central](https://img.shields.io/maven-central/v/com.linked-planet.client/kotlin-jira-client-api)
-[![kotlin-client - default](https://github.com/linked-planet/kotlin-client/actions/workflows/default.yml/badge.svg)](https://github.com/linked-planet/kotlin-client/actions/workflows/default.yml)
+[![kotlin-atlassian-client - default](https://github.com/linked-planet/kotlin-atlassian-client/actions/workflows/default.yml/badge.svg)](https://github.com/linked-planet/kotlin-atlassian-client/actions/workflows/default.yml)
 
 #### Docs
 coming soon...

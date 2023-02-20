@@ -1,4 +1,4 @@
-name: kotlin-client - default
+name: kotlin-atlassian-client - default
 on:
   push:
     branches:
