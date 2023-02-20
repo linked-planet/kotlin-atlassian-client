@@ -10,6 +10,7 @@
           </option>
           <option name="goals">
             <list>
+              <option value="antrun:run@show-home-warning" />
               <option value="jira:create-home-zip" />
               <option value="-pl" />
               <option value="kotlin-jira-client/kotlin-jira-client-test-sdk" />

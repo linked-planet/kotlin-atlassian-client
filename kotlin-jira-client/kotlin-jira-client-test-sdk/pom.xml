@@ -247,6 +247,22 @@
                     <verbose>false</verbose>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>show-home-warning</id>
+                        <configuration>
+                            <target>
+                                <input message="ATTENTION!${line.separator}Remove the license information which is stored in the database. Therefore stop Jira, connect to the database (e.g. with IntelliJ) and finally remove the entries from the license tables.${line.separator}Press enter to continue..."/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
