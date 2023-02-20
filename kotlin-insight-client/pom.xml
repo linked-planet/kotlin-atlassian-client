@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.linked-planet.client</groupId>
+        <artifactId>kotlin-atlassian-client</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>kotlin-insight-client</artifactId>
+    <packaging>pom</packaging>
+    <description>Provides a client for jira-insight rest api calls and object mapping.</description>
+    <modules>
+        <module>kotlin-insight-client-api</module>
+        <module>kotlin-insight-client-http</module>
+    </modules>
+
+    <!-- TODO: combine with kotlin-jira-client -->
+    <properties>
+        <jira.version>9.4.2</jira.version>
+        <servicedesk.version>5.4.2</servicedesk.version>
+        <insight.version>10.4.2</insight.version>
+        <confluence.version>7.4.18</confluence.version>
+        <amps.version>8.9.1</amps.version>
+    </properties>
+
+    <!-- TODO: combine with kotlin-jira-client -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-core</artifactId>
+                <version>1.3.3</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>itest-base</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-insight-client-test-base</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>itest-ktor</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-insight-client-test-base</module>
+                <module>kotlin-insight-client-test-ktor</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>itest-applink</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-insight-client-test-base</module>
+                <module>kotlin-insight-client-test-applink</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>itest-sdk</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-insight-client-test-base</module>
+<!--                <module>kotlin-insight-client-test-sdk</module>-->
+            </modules>
+        </profile>
+    </profiles>
+</project>

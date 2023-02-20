@@ -130,7 +130,7 @@ jobs:
         run: sudo echo "127.0.0.1 confluence" | sudo tee -a /etc/hosts
 
       - name: Integration tests using applinks
-        run: mvn -B verify -Pitest-applink,ci-applink,-itest-ktor,-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://confluence:1990"
+        run: mvn -B verify -Pitest-applink,ci-jira-applink,-itest-ktor,-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://confluence:1990"
 
   kotlin-jira-client-test-sdk:
     runs-on: ubuntu-20.04
@@ -210,7 +210,7 @@ jobs:
         run: cat <(echo -e "${{ secrets.SIGNING_KEY }}") | gpg --batch --import
 
       - name: Deploy to Maven Central
-        run: mvn -B deploy -Pci,-ci-sdk,-ci-applink,-ci-ktor -DskipTests "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
+        run: mvn -B deploy -Pci,-ci-sdk,-ci-jira-applink,-ci-ktor -DskipTests "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

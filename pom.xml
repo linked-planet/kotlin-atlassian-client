@@ -11,8 +11,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>kotlin-jira-client</module>
         <module>kotlin-http-client</module>
+        <module>kotlin-jira-client</module>
+        <module>kotlin-insight-client</module>
     </modules>
 
     <properties>
