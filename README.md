@@ -6,6 +6,7 @@
 ## Docs
 This project provides the following libraries.
 - [kotlin-jira-client](#kotlin-jira-client)
+- [kotlin-http-client](#kotlin-http-client)
 
 ### kotlin-jira-client
 Provides a Kotlin client for interaction with Atlassian Jira. It provides management functionality for
@@ -17,6 +18,10 @@ Provides a Kotlin client for interaction with Atlassian Jira. It provides manage
 - projects.
 
 See [kotlin-jira-client](kotlin-jira-client/README.md) for more details.
+
+### kotlin-http-client
+
+Provides an interface for several basic http operations which might be required by the other libraries.
 
 ### Releasing
 
