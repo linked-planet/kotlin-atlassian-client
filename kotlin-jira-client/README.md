@@ -22,13 +22,14 @@ The plugin is available on Maven Central.
 First you need to define a dependency to the desired variant and initialize your client as described in the sections
 below.
 Then you can simply use the client as it's shown
-in [AbstractMainTest](../blob/master/kotlin-jira-client-test-base/src/main/kotlin/com/linkedplanet/kotlinjiraclient/AbstractMainTest.kt).
+in [AbstractMainTest](kotlin-jira-client/kotlin-jira-client-test-base/src/main/kotlin/com/linkedplanet/kotlinjiraclient/AbstractMainTest.kt).
 
 ### SDK
 
 Add the following dependency to your `pom.xml`:
 
 ```xml
+
 <dependency>
     <groupId>com.linked-planet</groupId>
     <artifactId>kotlin-jira-client-sdk</artifactId>
@@ -36,13 +37,11 @@ Add the following dependency to your `pom.xml`:
 </dependency>
 ```
 
-For client initialization take a look at
-the [SDKClientTest](../blob/master/kotlin-jira-client-test-sdk/src/test/kotlin/it/SdkClientTest.kt).
+For client initialization take a look at the [SDKClientTest](kotlin-jira-client/kotlin-jira-client-test-sdk/src/test/kotlin/it/SdkClientTest.kt).
 
 ### HTTP
 
-The HTTP variant requires an implementation
-of [kotlin-http-client](https://github.com/linked-planet/kotlin-http-client).
+The HTTP variant requires an implementation of the `kotlin-http-client`.
 
 #### HTTP via Atlassian Applinks
 
@@ -52,6 +51,7 @@ desired Jira instance.
 Specify the following dependency for usage:
 
 ```xml
+
 <dependency>
     <groupId>com.linked-planet</groupId>
     <artifactId>kotlin-jira-client-http</artifactId>
@@ -64,8 +64,7 @@ Specify the following dependency for usage:
 </dependency>
 ```
 
-For client initialization take a look at
-the [ApplinkClientTest](../blob/master/kotlin-jira-client-test-applink/src/test/kotlin/it/ApplinkClientTest.kt).
+For client initialization take a look at the [ApplinkClientTest](kotlin-jira-client/kotlin-jira-client-test-applink/src/test/kotlin/it/ApplinkClientTest.kt).
 
 #### HTTP via Ktor
 
@@ -74,6 +73,7 @@ the [ApplinkClientTest](../blob/master/kotlin-jira-client-test-applink/src/test/
 Specify the following dependency for usage:
 
 ```xml
+
 <dependency>
     <groupId>com.linked-planet</groupId>
     <artifactId>kotlin-jira-client-http</artifactId>
@@ -86,8 +86,7 @@ Specify the following dependency for usage:
 </dependency>
 ```
 
-For client initialization take a look at
-the [KtorClientTest](../blob/master/kotlin-jira-client-test-ktor/src/test/kotlin/KtorClientTest.kt).
+For client initialization take a look at the [KtorClientTest](kotlin-jira-client/kotlin-jira-client-test-ktor/src/test/kotlin/KtorClientTest.kt).
 
 ## Project structure
 
@@ -96,8 +95,7 @@ The project is structured using multiple Maven modules.
 ### Productive modules
 
 - **kotlin-jira-client-api**: Provides the interfaces of the client. Always implement using classes from this package.
-- **kotlin-jira-client-http**: Implements the client's interfaces using
-  a [kotlin-http-client](https://github.com/linked-planet/kotlin-http-client).
+- **kotlin-jira-client-http**: Implements the client's interfaces using a kotlin-http-client.
 - **kotlin-jira-client-sdk**: Implements the client's interfaces using several Atlassian Jira SDK libraries.
 
 ### Test modules
