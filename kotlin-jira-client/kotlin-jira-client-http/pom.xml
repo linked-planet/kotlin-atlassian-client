@@ -23,6 +23,8 @@
             <artifactId>kotlin-http-client-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- TODO: remove -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

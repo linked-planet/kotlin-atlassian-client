@@ -24,7 +24,7 @@ import org.junit.BeforeClass
 import com.linkedplanet.kotlinhttpclient.ktor.KtorHttpClient
 
 
-class MainTest: AbstractMainTest() {
+class InsightKtorClientTest: AbstractMainTest() {
 
     companion object {
         @BeforeClass
@@ -32,11 +32,11 @@ class MainTest: AbstractMainTest() {
         fun setUp() {
             println("#### Starting setUp")
             val httpClient = KtorHttpClient(
-                "http://localhost:8080",
+                "http://localhost:2990",
                 "admin",
                 "admin"
             )
-            InsightConfig.init("http://localhost:8080", httpClient, InsightSchemaCacheOperator)
+            InsightConfig.init("http://localhost:2990", httpClient, InsightSchemaCacheOperator)
         }
     }
 }

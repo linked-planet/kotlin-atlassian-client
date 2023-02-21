@@ -70,7 +70,7 @@
 
     <profiles>
         <profile>
-            <id>ci-ktor</id>
+            <id>jira-ci-ktor</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>

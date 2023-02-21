@@ -22,10 +22,10 @@ package com.linkedplanet.kotlininsightclient
 enum class OBJECTS(val id: Int) {
     Company(1),
     Country(2),
-    TestWithLists(34),
-    SimpleObject(35),
-    Many(65),
-    Abstract(98)
+    TestWithLists(4),
+    SimpleObject(3),
+    Many(5),
+    Abstract(6)
 }
 
 enum class MANY {

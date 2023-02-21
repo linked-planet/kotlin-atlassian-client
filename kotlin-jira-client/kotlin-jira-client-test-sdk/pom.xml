@@ -270,7 +270,7 @@
         <!-- plugins we only want to execute on the CI server because they either take too
              long or cause problems locally -->
         <profile>
-            <id>ci-sdk</id>
+            <id>jira-ci-sdk</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>

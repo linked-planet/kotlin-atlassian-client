@@ -18,8 +18,11 @@
           <option name="pomFileName" />
           <option name="profilesMap">
             <map>
-              <entry key="itest-ktor" value="false" />
-              <entry key="itest-sdk" value="false" />
+              <entry key="itest-insight-ktor" value="false" />
+              <entry key="itest-insight-sdk" value="false" />
+              <entry key="itest-jira-sdk" value="false" />
+              <entry key="itest-jira-ktor" value="false" />
+              <entry key="itest-insight-applink" value="false" />
             </map>
           </option>
           <option name="resolveToWorkspace" value="false" />

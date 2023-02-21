@@ -153,7 +153,7 @@
                 <configuration>
                     <productVersion>${confluence.version}</productVersion>
                     <productDataVersion>${confluence.version}</productDataVersion>
-                    <productDataPath>${project.basedir}/src/test/resources/generated-test-resources.zip
+                    <productDataPath>${maven.multiModuleProjectDirectory}/test-resources/confluence-generated-test-resources.zip
                     </productDataPath>
                     <skipITs>true</skipITs>
                     <enableQuickReload>true</enableQuickReload>
@@ -211,7 +211,7 @@
         <!-- plugins we only want to execute on the CI server because they either take too
              long or cause problems locally -->
         <profile>
-            <id>ci-insight-applink</id>
+            <id>insight-ci-applink</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>

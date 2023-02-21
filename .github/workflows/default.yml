@@ -49,6 +49,9 @@ jobs:
       - name: Build libraries
         run: mvn package -T 2 -Pci "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
+# JIRA
+# -------------------------------------------------------
+
   kotlin-jira-client-test-ktor:
     runs-on: ubuntu-20.04
     needs: build
@@ -81,13 +84,13 @@ jobs:
 
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pjira-maven -pl kotlin-jira-client "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
+        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
 
       - name: Wait for Jira and Insight
         run: ./scripts/wait-for-jira.sh
 
       - name: Integration tests using ktor
-        run: mvn -B verify -Pitest-ktor,ci-ktor,-itest-applink,-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
+        run: mvn -B verify -Pjira-itest-ktor,jira-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
   kotlin-jira-client-test-applink:
     runs-on: ubuntu-20.04
@@ -121,7 +124,7 @@ jobs:
 
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pjira-maven -pl kotlin-jira-client "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
+        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
 
       - name: Wait for Jira and Insight
         run: ./scripts/wait-for-jira.sh
@@ -130,7 +133,7 @@ jobs:
         run: sudo echo "127.0.0.1 confluence" | sudo tee -a /etc/hosts
 
       - name: Integration tests using applinks
-        run: mvn -B verify -Pitest-applink,ci-jira-applink,-itest-ktor,-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://confluence:1990"
+        run: mvn -B verify -Pjira-itest-applink,jira-ci-applink,-jira-itest-ktor,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://confluence:1990"
 
   kotlin-jira-client-test-sdk:
     runs-on: ubuntu-20.04
@@ -163,7 +166,93 @@ jobs:
           mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
       - name: Integration tests using sdk
-        run: mvn clean -B verify -Pitest-sdk,ci-sdk,-itest-applink,-itest-ktor "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990"
+        run: mvn clean -B verify -Pjira-itest-sdk,jira-ci-sdk,-jira-itest-applink,-jira-itest-ktor,-insight-itest-sdk,-insight-itest-applink,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990"
+
+# INSIGHT
+# -------------------------------------------------------
+
+  kotlin-insight-client-test-ktor:
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+
+      - name: Download Maven Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Setup JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+
+      - name: Set Release Version
+        if: ${{ github.event_name == 'release' }}
+        id: extract-version
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
+
+      - name: Startup Jira and Insight
+        # Loop is needed to prevent Jira from suspension
+        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
+
+      - name: Wait for Jira and Insight
+        run: ./scripts/wait-for-jira.sh
+
+      - name: Integration tests using ktor
+        run: mvn -B verify -Pinsight-itest-ktor,insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink,-insight-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
+
+  kotlin-insight-client-test-applink:
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+
+      - name: Download Maven Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Setup JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+
+      - name: Set Release Version
+        if: ${{ github.event_name == 'release' }}
+        id: extract-version
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
+
+      - name: Startup Jira and Insight
+        # Loop is needed to prevent Jira from suspension
+        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-insight-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
+
+      - name: Wait for Jira and Insight
+        run: ./scripts/wait-for-jira.sh
+
+      - name: Add hosts to /etc/hosts
+        run: sudo echo "127.0.0.1 confluence" | sudo tee -a /etc/hosts
+
+      - name: Integration tests using applinks
+        run: mvn -B verify -Pinsight-itest-applink,insight-ci-applink,-insight-itest-ktor,-insight-itest-sdk,-jira-itest-ktor,-jira-itest-sdk,-jira-itest-applink "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://confluence:1990"
 
   deploy-to-central:
     runs-on: ubuntu-20.04

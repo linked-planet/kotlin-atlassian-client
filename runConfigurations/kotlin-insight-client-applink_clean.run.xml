@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="kotlin-atlassian-client:install-prod" type="MavenRunConfiguration" factoryName="Maven">
+  <configuration default="false" name="kotlin-insight-client-applink:clean" type="MavenRunConfiguration" factoryName="Maven" folderName="kotlin-insight-client-applink">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings" />
@@ -10,17 +10,14 @@
           </option>
           <option name="goals">
             <list>
-              <option value="install" />
+              <option value="clean" />
+              <option value="-pl" />
+              <option value="kotlin-insight-client/kotlin-insight-client-test-applink" />
             </list>
           </option>
           <option name="pomFileName" />
           <option name="profilesMap">
-            <map>
-              <entry key="itest-base" value="true" />
-              <entry key="itest-ktor" value="false" />
-              <entry key="itest-sdk" value="false" />
-              <entry key="itest-applink" value="false" />
-            </map>
+            <map />
           </option>
           <option name="resolveToWorkspace" value="false" />
           <option name="workingDirPath" value="$PROJECT_DIR$" />

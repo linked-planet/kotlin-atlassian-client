@@ -24,6 +24,11 @@
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <kotlin.version>1.8.0</kotlin.version>
         <arrow.version>0.13.2</arrow.version>
+
+        <jira.version>9.4.2</jira.version>
+        <servicedesk.version>5.4.2</servicedesk.version>
+        <jira.http.port>2990</jira.http.port>
+        <amps.version>8.9.1</amps.version>
     </properties>
 
     <dependencies>
@@ -233,9 +238,157 @@
                     <artifactId>maven-deploy-plugin</artifactId>
                     <version>2.7</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jetbrains.dokka</groupId>
+                    <artifactId>dokka-maven-plugin</artifactId>
+                    <version>1.7.20</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.atlassian.maven.plugins</groupId>
+                    <artifactId>jira-maven-plugin</artifactId>
+                    <version>${amps.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>ci</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- KDOC -->
+                    <plugin>
+                        <groupId>org.jetbrains.dokka</groupId>
+                        <artifactId>dokka-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>javadocJar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <!-- Prevents the plugin from connecting to the internet (cannot build offline otherwise) -->
+                            <cacheRoot>default</cacheRoot>
+                        </configuration>
+                    </plugin>
+
+                    <!-- SOURCES -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- SIGNING FOR DEPLOYMENT -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <passphrase>${env.SIGNING_PASSWORD}</passphrase>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- DEPLOYMENT -->
+                    <!-- see https://central.sonatype.org/publish/publish-maven/#distribution-management-and-authentication -->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <serverId>maven-central-nexus</serverId>
+                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>itest-jira</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.atlassian.maven.plugins</groupId>
+                        <artifactId>jira-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <productVersion>${jira.version}</productVersion>
+                            <productDataVersion>${jira.version}</productDataVersion>
+                            <productDataPath>${project.basedir}/test-resources/jira-generated-test-resources.zip
+                            </productDataPath>
+                            <skipITs>true</skipITs>
+                            <allowGoogleTracking>false</allowGoogleTracking>
+                            <enableQuickReload>false</enableQuickReload>
+                            <contextPath>/</contextPath>
+                            <installPlugin>false</installPlugin>
+                            <jvmArgs>-Xms1g -Xmx2g -XX:+UseG1GC</jvmArgs>
+                            <httpPort>${jira.http.port}</httpPort>
+                            <wait>true</wait>
+                            <productLicense>${jira.service.management.license}</productLicense>
+                            <applications>
+                                <application>
+                                    <applicationKey>jira-software</applicationKey>
+                                    <version>${jira.version}</version>
+                                </application>
+                                <application>
+                                    <applicationKey>jira-servicedesk</applicationKey>
+                                    <version>${servicedesk.version}</version>
+                                </application>
+                            </applications>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <!-- META -->
     <scm>

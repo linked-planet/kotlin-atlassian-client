@@ -19,11 +19,8 @@
 
     <!-- TODO: combine with kotlin-jira-client -->
     <properties>
-        <jira.version>9.4.2</jira.version>
-        <servicedesk.version>5.4.2</servicedesk.version>
         <insight.version>10.4.2</insight.version>
         <confluence.version>7.4.18</confluence.version>
-        <amps.version>8.9.1</amps.version>
     </properties>
 
     <!-- TODO: combine with kotlin-jira-client -->
@@ -37,9 +34,66 @@
         </dependencies>
     </dependencyManagement>
 
+    <build>
+        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-property</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireProperty>
+                                    <property>confluence.license</property>
+                                    <message>Set property confluence.license in .mvn/maven.config</message>
+                                    <regex>.+</regex>
+                                </requireProperty>
+                                <requireProperty>
+                                    <property>jira.service.management.license</property>
+                                    <message>Set property jira.service.management.license in .mvn/maven.config</message>
+                                    <regex>.+</regex>
+                                </requireProperty>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Show reminder for license removal on create-home-zip -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>show-home-warning</id>
+                        <configuration>
+                            <target>
+                                <input message="ATTENTION!${line.separator}Remove the license information which is stored in the database. Therefore stop Jira, connect to the database (e.g. with IntelliJ) and finally remove the entries from the license table (e.g. PRODUCTLICENSE).${line.separator}Press enter to continue..."/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
     <profiles>
         <profile>
-            <id>itest-base</id>
+            <id>insight-itest-base</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
@@ -48,7 +102,7 @@
             </modules>
         </profile>
         <profile>
-            <id>itest-ktor</id>
+            <id>insight-itest-ktor</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -58,23 +112,13 @@
             </modules>
         </profile>
         <profile>
-            <id>itest-applink</id>
+            <id>insight-itest-applink</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
                 <module>kotlin-insight-client-test-base</module>
                 <module>kotlin-insight-client-test-applink</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>itest-sdk</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <modules>
-                <module>kotlin-insight-client-test-base</module>
-<!--                <module>kotlin-insight-client-test-sdk</module>-->
             </modules>
         </profile>
     </profiles>

@@ -54,7 +54,7 @@
 
     <profiles>
         <profile>
-            <id>ci-insight-ktor</id>
+            <id>insight-ci-ktor</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>

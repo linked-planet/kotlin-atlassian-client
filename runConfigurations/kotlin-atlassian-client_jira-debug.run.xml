@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="kotlin-jira-client-ktor:local-test" type="MavenRunConfiguration" factoryName="Maven" folderName="kotlin-jira-client-ktor">
+  <configuration default="false" name="kotlin-atlassian-client:jira-debug" type="MavenRunConfiguration" factoryName="Maven">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings" />
@@ -10,19 +10,18 @@
           </option>
           <option name="goals">
             <list>
-              <option value="verify" />
-              <option value="-pl" />
-              <option value="kotlin-jira-client/kotlin-jira-client-test-ktor" />
+              <option value="jira:debug" />
             </list>
           </option>
           <option name="pomFileName" />
           <option name="profilesMap">
             <map>
               <entry key="insight-itest-sdk" value="false" />
-              <entry key="jira-ci-ktor" value="true" />
-              <entry key="jira-itest-applink" value="false" />
+              <entry key="itest-jira" value="true" />
               <entry key="insight-itest-ktor" value="false" />
+              <entry key="jira-itest-applink" value="false" />
               <entry key="insight-itest-applink" value="false" />
+              <entry key="jira-itest-ktor" value="false" />
               <entry key="jira-itest-sdk" value="false" />
             </map>
           </option>
@@ -31,9 +30,6 @@
         </MavenRunnerParameters>
       </option>
     </MavenSettings>
-    <method v="2">
-      <option name="RunConfigurationTask" enabled="false" run_configuration_name="kotlin-atlassian-client:install-prod" run_configuration_type="MavenRunConfiguration" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="kotlin-jira-client:wait-for-jira" run_configuration_type="ShConfigurationType" />
-    </method>
+    <method v="2" />
   </configuration>
 </component>

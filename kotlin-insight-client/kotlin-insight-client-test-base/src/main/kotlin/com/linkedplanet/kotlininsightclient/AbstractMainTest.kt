@@ -47,10 +47,10 @@ abstract class AbstractMainTest {
         assertFalse(firstCompany.attachmentsExist)
 
 
-        val secondCompany = companies.firstOrNull { it.id == 203}
+        val secondCompany = companies.firstOrNull { it.id == 2}
         assertNotNull(secondCompany)
-        assertEquals(203, secondCompany!!.id)
-        assertEquals("IT-203", secondCompany.objectKey)
+        assertEquals(2, secondCompany!!.id)
+        assertEquals("IT-2", secondCompany.objectKey)
         assertEquals("Test AG", secondCompany.label)
         assertEquals("Test AG", secondCompany.getStringValue(COMPANY.Name.name))
         assertEquals("Germany", secondCompany.getSingleReference(COMPANY.Country.name)!!.objectName)
@@ -62,9 +62,10 @@ abstract class AbstractMainTest {
     fun testObjectListWithResolvedReference() {
         println("### START testObjectListWithResolvedReference")
         val companies = runBlocking {
-            ObjectOperator.getObjects(OBJECTS.Company.id).orNull()!!.objects
+            ObjectOperator.getObjects(OBJECTS.Company.id).orNull()?.objects
         }
-        assertTrue(companies.size == 2)
+        assertNotNull(companies)
+        assertTrue(companies!!.size == 2)
 
         val company = companies.firstOrNull { it.id == 1}
         assertNotNull(company)
@@ -280,9 +281,9 @@ abstract class AbstractMainTest {
             val attachments = AttachmentOperator.getAttachments(country.id).orNull() ?: emptyList()
             val firstAttachment = attachments.first()
             assertEquals(1, attachments.size)
-            assertEquals(97, firstAttachment.id)
+            assertEquals(1, firstAttachment.id)
             assertEquals("application/pdf", firstAttachment.mimeType)
-            assertEquals("JIRAUSER10000", firstAttachment.author)
+            assertEquals("admin", firstAttachment.author)
             assertEquals("", firstAttachment.comment)
             assertEquals("TestAttachment.pdf", firstAttachment.filename)
             assertEquals("10.1 kB", firstAttachment.filesize)
@@ -320,10 +321,10 @@ abstract class AbstractMainTest {
         assertTrue(objects.size == 2)
 
         val firstObj = objects.first()
-        assertTrue(firstObj.id == 169)
+        assertTrue(firstObj.id == 94)
 
         val secondObj = objects[1]
-        assertTrue(secondObj.id == 170)
+        assertTrue(secondObj.id == 95)
 
         println("### END testGetObjectsWithChildren")
     }
@@ -339,8 +340,8 @@ abstract class AbstractMainTest {
         assertTrue(allObjectsList.searchResult == 2)
         val allObjects = allObjectsList.objects
         assertTrue(allObjects.size == 2)
-        assertTrue(allObjects[0].id == 169)
-        assertTrue(allObjects[1].id == 170)
+        assertTrue(allObjects[0].id == 94)
+        assertTrue(allObjects[1].id == 95)
 
         // page 1 and 2 explicit
         val allExplObjectsList = runBlocking {
@@ -349,8 +350,8 @@ abstract class AbstractMainTest {
         assertTrue(allExplObjectsList.searchResult == 2)
         val allExplObjects = allExplObjectsList.objects
         assertTrue(allExplObjects.size == 2)
-        assertTrue(allExplObjects[0].id == 169)
-        assertTrue(allExplObjects[1].id == 170)
+        assertTrue(allExplObjects[0].id == 94)
+        assertTrue(allExplObjects[1].id == 95)
 
         // page 1
         val firstObjectsList = runBlocking {
@@ -360,7 +361,7 @@ abstract class AbstractMainTest {
         assertTrue(firstObjectsList.searchResult == 2)
         val firstObjects = firstObjectsList.objects
         assertTrue(firstObjects.size == 1)
-        assertTrue(firstObjects[0].id == 169)
+        assertTrue(firstObjects[0].id == 94)
 
         // page 2
         val secondObjectsList = runBlocking {
@@ -370,7 +371,7 @@ abstract class AbstractMainTest {
         assertTrue(secondObjectsList.searchResult == 2)
         val secondObjects = secondObjectsList.objects
         assertTrue(secondObjects.size == 1)
-        assertTrue(secondObjects[0].id == 170)
+        assertTrue(secondObjects[0].id == 95)
 
         // page doesn't exist
         val emptyObjectsList = runBlocking {
