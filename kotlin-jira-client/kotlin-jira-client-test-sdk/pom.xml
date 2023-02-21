@@ -193,7 +193,7 @@
                 <configuration>
                     <productVersion>${jira.version}</productVersion>
                     <productDataVersion>${jira.version}</productDataVersion>
-                    <productDataPath>${project.parent.basedir}/jira/generated-test-resources.zip
+                    <productDataPath>${maven.multiModuleProjectDirectory}/test-resources/jira-generated-test-resources.zip
                     </productDataPath>
                     <skipITs>true</skipITs>
                     <enableQuickReload>true</enableQuickReload>
