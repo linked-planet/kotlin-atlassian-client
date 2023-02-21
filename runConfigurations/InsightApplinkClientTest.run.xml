@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="JiraSdkClientTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
-    <module name="kotlin-jira-client-test-sdk" />
+  <configuration default="false" name="InsightApplinkClientTest" type="JUnit" factoryName="JUnit">
+    <module name="kotlin-insight-client-test-applink" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="it.*" />
@@ -8,10 +8,10 @@
       </pattern>
     </extension>
     <option name="PACKAGE_NAME" value="it" />
-    <option name="MAIN_CLASS_NAME" value="it.JiraSdkClientTest" />
+    <option name="MAIN_CLASS_NAME" value="it.InsightApplinkClientTest" />
     <option name="METHOD_NAME" value="" />
     <option name="TEST_OBJECT" value="class" />
-    <option name="VM_PARAMETERS" value="-ea -Dbaseurl=http://localhost:2990" />
+    <option name="VM_PARAMETERS" value="-ea -Dbaseurl=http://localhost:1990" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

@@ -35,7 +35,7 @@ import org.junit.Before
 import org.junit.runner.RunWith
 
 @RunWith(AtlassianPluginsTestRunner::class)
-class ApplinkClientTest constructor(
+class JiraApplinkClientTest constructor(
     private var userAccessor: UserAccessor,
     applicationLinkService: ApplicationLinkService
 ) : AbstractBaseTest<HttpJiraField>() {

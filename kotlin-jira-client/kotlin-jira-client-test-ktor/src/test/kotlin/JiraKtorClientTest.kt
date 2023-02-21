@@ -25,7 +25,7 @@ import com.linkedplanet.kotlinjiraclient.http.*
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraField
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraFieldFactory
 
-class KtorClientTest : AbstractBaseTest<HttpJiraField>() {
+class JiraKtorClientTest : AbstractBaseTest<HttpJiraField>() {
 
     override val issueOperator: JiraIssueOperator<HttpJiraField> get() = HttpJiraIssueOperator(clientContext)
     override val fieldFactory: JiraFieldFactory<HttpJiraField> get() = HttpJiraFieldFactory

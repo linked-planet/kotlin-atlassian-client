@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="JiraKtorClientTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
-    <module name="kotlin-jira-client-test-ktor" />
+  <configuration default="false" name="InsightKtorClientTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+    <module name="kotlin-insight-client-test-ktor" />
     <option name="PACKAGE_NAME" value="" />
-    <option name="MAIN_CLASS_NAME" value="JiraKtorClientTest" />
+    <option name="MAIN_CLASS_NAME" value="InsightKtorClientTest" />
     <option name="METHOD_NAME" value="" />
     <option name="TEST_OBJECT" value="class" />
     <method v="2">

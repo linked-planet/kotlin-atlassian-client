@@ -31,7 +31,7 @@ import org.junit.Before
 import org.junit.runner.RunWith
 
 @RunWith(AtlassianPluginsTestRunner::class)
-class SdkClientTest : AbstractBaseTest<SdkJiraField>() {
+class JiraSdkClientTest : AbstractBaseTest<SdkJiraField>() {
 
     private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
     private val userManager by lazy { ComponentAccessor.getUserManager() }
