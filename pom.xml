@@ -30,7 +30,7 @@
         <jira.http.port>2990</jira.http.port>
         <amps.version>8.9.1</amps.version>
         <insight.version>10.4.2</insight.version>
-        <confluence.version>7.4.18</confluence.version>
+        <confluence.version>7.19.5</confluence.version>
     </properties>
 
     <dependencies>
