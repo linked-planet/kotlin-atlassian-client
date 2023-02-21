@@ -48,13 +48,6 @@
                 <version>${insight.version}</version>
             </dependency>
 
-            <!-- TODO: use official version as default -->
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>2.2.2-atlassian-1</version>
-            </dependency>
-
             <!-- Kotlin -->
             <dependency>
                 <groupId>org.jetbrains.kotlinx</groupId>

@@ -23,19 +23,6 @@
             <groupId>com.linked-planet.client</groupId>
             <artifactId>kotlin-jira-client-http</artifactId>
             <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.code.gson</groupId>
-                    <artifactId>gson</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- Important: Override bundled atlassian gson (above) and use an official version (below) -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.8.5</version>
         </dependency>
 
         <dependency>

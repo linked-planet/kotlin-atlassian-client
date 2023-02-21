@@ -24,11 +24,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- TODO: remove -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
