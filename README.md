@@ -1,7 +1,8 @@
 # kotlin-atlassian-client
 ![Maven Central](https://img.shields.io/maven-central/v/com.linked-planet.client/kotlin-jira-client-api)
 [![kotlin-atlassian-client - default](https://github.com/linked-planet/kotlin-atlassian-client/actions/workflows/default.yml/badge.svg)](https://github.com/linked-planet/kotlin-atlassian-client/actions/workflows/default.yml)
-
+![Jira 9.4.2](https://img.shields.io/badge/Jira-9.4.2-blue)
+![Confluence 7.19.5](https://img.shields.io/badge/Confluence-7.19.5-blue)
 > *kotlin-atlassian-client* merges the libraries of the repositories *kotlin-http-client*, *kotlin-jira-client* and *kotlin-insight-client* originally implemented by @betacore.
 
 ## Docs
@@ -11,7 +12,7 @@ This project provides the following libraries.
 - [kotlin-http-client](#kotlin-http-client)
 
 ### kotlin-jira-client
-Provides a Kotlin client for interaction with Atlassian Jira. It provides management functionality for
+Provides a Kotlin client for interaction with Atlassian Jira (supported version can be seen on top). It provides management functionality for
 
 - comments,
 - issues,
