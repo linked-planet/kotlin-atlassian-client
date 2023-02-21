@@ -12,6 +12,7 @@
             <list>
               <option value="antrun:run@show-home-warning" />
               <option value="jira:create-home-zip" />
+              <option value="-N" />
             </list>
           </option>
           <option name="pomFileName" />
