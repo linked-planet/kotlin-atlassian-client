@@ -27,7 +27,9 @@ import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import io.ktor.client.HttpClient
 import io.ktor.client.call.receive
 import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.auth.basic.BasicAuth
+import io.ktor.client.features.auth.Auth
+import io.ktor.client.features.auth.providers.BasicAuthCredentials
+import io.ktor.client.features.auth.providers.basic
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.*
@@ -41,9 +43,13 @@ fun httpClient(username: String, password: String) =
         install(JsonFeature) {
             serializer = GsonSerializer()
         }
-        install(BasicAuth) {
-            this.username = username
-            this.password = password
+        install(Auth) {
+            basic {
+                sendWithoutRequest { true }
+                credentials {
+                    BasicAuthCredentials(username = username, password = password)
+                }
+            }
         }
     }
 
@@ -72,6 +78,8 @@ class KtorHttpClient(
         requestBuilder.url("$baseUrl/$path$parameterString")
         requestBuilder.contentType(parsedContentType)
         if (bodyIn != null) {
+            // Keep JsonParser instantiation for downwards compatibility
+            @Suppress("DEPRECATION")
             requestBuilder.body = JsonParser().parse(bodyIn)
         }
     }
@@ -80,32 +88,36 @@ class KtorHttpClient(
         method: String,
         path: String,
         params: Map<String, String>,
-        bodyIn: String?,
+        body: String?,
         contentType: String?,
         headers: Map<String, String>
     ): Either<HttpDomainError, HttpResponse<String>> {
         val pathWithoutPrefix = path.removePrefix("/")
         return when (method) {
             "GET" -> {
-                httpClient.get<io.ktor.client.response.HttpResponse> {
-                    prepareRequest(this, pathWithoutPrefix, params, bodyIn, contentType)
+                httpClient.get<io.ktor.client.statement.HttpResponse> {
+                    prepareRequest(this, pathWithoutPrefix, params, body, contentType)
                 }.handleResponse()
             }
+
             "POST" -> {
-                httpClient.post<io.ktor.client.response.HttpResponse> {
-                    prepareRequest(this, pathWithoutPrefix, params, bodyIn, contentType)
+                httpClient.post<io.ktor.client.statement.HttpResponse>(pathWithoutPrefix) {
+                    prepareRequest(this, pathWithoutPrefix, params, body, contentType)
                 }.handleResponse()
             }
+
             "PUT" -> {
-                httpClient.put<io.ktor.client.response.HttpResponse> {
-                    prepareRequest(this, pathWithoutPrefix, params, bodyIn, contentType)
+                httpClient.put<io.ktor.client.statement.HttpResponse> {
+                    prepareRequest(this, pathWithoutPrefix, params, body, contentType)
                 }.handleResponse()
             }
+
             "DELETE" -> {
-                httpClient.delete<io.ktor.client.response.HttpResponse> {
-                    prepareRequest(this, pathWithoutPrefix, params, bodyIn, contentType)
+                httpClient.delete<io.ktor.client.statement.HttpResponse> {
+                    prepareRequest(this, pathWithoutPrefix, params, body, contentType)
                 }.handleResponse()
             }
+
             else -> {
                 HttpDomainError(500, "HTTP-ERROR", "Method '$method' not available").left()
             }
@@ -114,13 +126,13 @@ class KtorHttpClient(
 
     override suspend fun executeDownload(
         method: String,
-        url: String,
+        path: String,
         params: Map<String, String>,
         body: String?,
         contentType: String?
     ): Either<HttpDomainError, HttpResponse<ByteArray>> {
-        return httpClient.get<io.ktor.client.response.HttpResponse> {
-            url(url)
+        return httpClient.get<io.ktor.client.statement.HttpResponse> {
+            url(path)
         }.handleResponse()
     }
 
@@ -132,7 +144,7 @@ class KtorHttpClient(
         filename: String,
         byteArray: ByteArray
     ): Either<HttpDomainError, HttpResponse<ByteArray>> =
-        httpClient.post<io.ktor.client.response.HttpResponse> {
+        httpClient.post<io.ktor.client.statement.HttpResponse> {
             url("$baseUrl$url")
             header("Connection", "keep-alive")
             header("Cache-Control", "no-cache")
@@ -150,7 +162,7 @@ class KtorHttpClient(
         }.handleResponse()
 
 
-    private suspend inline fun <reified T> io.ktor.client.response.HttpResponse.handleResponse(): Either<HttpDomainError, HttpResponse<T>> =
+    private suspend inline fun <reified T> io.ktor.client.statement.HttpResponse.handleResponse(): Either<HttpDomainError, HttpResponse<T>> =
         if (this.status.value < 400) {
             HttpResponse<T>(
                 this.status.value,
