@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-insight-client-test-base</artifactId>
+    <name>kotlin-insight-client-test-base</name>
 
     <dependencies>
         <dependency>

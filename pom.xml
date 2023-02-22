@@ -5,6 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kotlin-atlassian-client</artifactId>
+    <name>kotlin-atlassian-client</name>
     <groupId>com.linked-planet.client</groupId>
     <version>1.0-SNAPSHOT</version>
     <description>Provides clients for jira and insight functionality.</description>

@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-http-client-api</artifactId>
+    <name>kotlin-http-client-api</name>
 
     <dependencies>
         <dependency>

@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-jira-client-api</artifactId>
+    <name>kotlin-jira-client-api</name>
     <packaging>jar</packaging>
 
     <dependencies>

@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-http-client-atlas</artifactId>
+    <name>kotlin-http-client-atlas</name>
 
     <dependencies>
         <dependency>

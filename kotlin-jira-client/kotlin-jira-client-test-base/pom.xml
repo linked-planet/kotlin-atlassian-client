@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-jira-client-test-base</artifactId>
+    <name>kotlin-jira-client-test-base</name>
     <packaging>jar</packaging>
 
     <properties>

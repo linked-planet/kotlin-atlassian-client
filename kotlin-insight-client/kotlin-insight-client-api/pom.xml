@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-insight-client-api</artifactId>
+    <name>kotlin-insight-client-api</name>
 
     <dependencies>
         <!-- TODO: remove -->

@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-insight-client-http</artifactId>
+    <name>kotlin-insight-client-http</name>
 
     <dependencies>
         <dependency>

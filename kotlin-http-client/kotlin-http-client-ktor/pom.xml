@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-http-client-ktor</artifactId>
+    <name>kotlin-http-client-ktor</name>
 
     <properties>
         <ktor.version>1.6.8</ktor.version>

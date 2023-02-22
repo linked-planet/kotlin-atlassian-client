@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-jira-client-test-applink</artifactId>
+    <name>kotlin-jira-client-test-applink</name>
     <packaging>atlassian-plugin</packaging>
 
     <properties>

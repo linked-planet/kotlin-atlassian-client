@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-insight-client</artifactId>
+    <name>kotlin-insight-client</name>
     <packaging>pom</packaging>
     <description>Provides a client for jira-insight rest api calls and object mapping.</description>
     <modules>

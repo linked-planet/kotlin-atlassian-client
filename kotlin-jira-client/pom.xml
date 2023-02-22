@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>kotlin-jira-client</artifactId>
+    <name>kotlin-jira-client</name>
     <packaging>pom</packaging>
     <description>Provides a client for jira rest api calls and object mapping.</description>
 
