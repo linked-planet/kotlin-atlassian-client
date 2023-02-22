@@ -6,7 +6,7 @@
 > *kotlin-atlassian-client* merges the libraries of the repositories *kotlin-http-client*, *kotlin-jira-client* and *kotlin-insight-client* originally implemented by @betacore.
 
 ## Docs
-This project provides the following libraries.
+Provides several Kotlin clients for the interaction with Atlassian Jira and Insight:
 - [kotlin-jira-client](#kotlin-jira-client)
 - [kotlin-insight-client](#kotlin-insight-client)
 - [kotlin-http-client](#kotlin-http-client)
