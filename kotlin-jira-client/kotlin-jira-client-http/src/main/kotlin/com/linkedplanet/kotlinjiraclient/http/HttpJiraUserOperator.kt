@@ -95,6 +95,8 @@ class HttpJiraUserOperator(private val context: HttpJiraClientContext) : JiraUse
             .map { it.body }
             .mapLeft { JiraClientError.fromHttpDomainError(it) }.bind()
 
+        // Keep JsonParser instantiation for downwards compatibility
+        @Suppress("DEPRECATION")
         val jsonObject = JsonParser().parse(successResponse).asJsonObject
         jsonObject.entrySet().map {
             it.value

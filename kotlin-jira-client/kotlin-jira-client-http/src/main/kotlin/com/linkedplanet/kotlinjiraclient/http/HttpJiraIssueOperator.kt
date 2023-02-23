@@ -140,6 +140,8 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
                 }
             }.bind()
 
+        // Keep JsonParser instantiation for downwards compatibility
+        @Suppress("DEPRECATION")
         val jsonObject = JsonParser().parse(successResponse).asJsonObject
         if (jsonObject.has("id")) {
             val mappings = extractEmbeddedMappings(jsonObject)
