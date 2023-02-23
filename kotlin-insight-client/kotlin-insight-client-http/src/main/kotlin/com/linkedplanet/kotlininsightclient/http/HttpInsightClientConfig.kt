@@ -1,6 +1,6 @@
 /*-
  * #%L
- * kotlin-insight-client-api
+ * kotlin-insight-client-http
  * %%
  * Copyright (C) 2022 - 2023 linked-planet GmbH
  * %%
@@ -17,30 +17,29 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient.api
+package com.linkedplanet.kotlininsightclient.http
 
 import arrow.core.Either
+import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaCacheOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaDescription
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
-import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaCacheOperatorInterface
 import kotlinx.coroutines.runBlocking
-import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
-import com.linkedplanet.kotlinhttpclient.error.DomainError
 
-object InsightConfig {
-
+object HttpInsightClientConfig {
     lateinit var baseUrl: String
     lateinit var httpClient: BaseHttpClient
-    lateinit var insightSchemaCacheOperator: InsightSchemaCacheOperatorInterface
+
+    lateinit var insightSchemaCacheOperator: InsightSchemaCacheOperator
     var objectSchemas: List<ObjectTypeSchema> = emptyList()
     var schemaDescriptionCache: List<InsightSchemaDescription> = emptyList()
 
-
-    fun <T: BaseHttpClient> init(
+    fun <T : BaseHttpClient> init(
         baseUrlIn: String,
         httpClientIn: T,
-        insightSchemaOperator: InsightSchemaCacheOperatorInterface
-    ): Either<DomainError, Unit> {
+        insightSchemaOperator: InsightSchemaCacheOperator
+    ): Either<InsightClientError, Unit> {
         baseUrl = baseUrlIn
         httpClient = httpClientIn
         return runBlocking {

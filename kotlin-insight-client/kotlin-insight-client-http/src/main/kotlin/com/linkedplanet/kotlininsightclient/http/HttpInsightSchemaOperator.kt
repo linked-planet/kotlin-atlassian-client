@@ -21,21 +21,24 @@ package com.linkedplanet.kotlininsightclient.http
 
 import arrow.core.Either
 import com.google.gson.reflect.TypeToken
-import com.linkedplanet.kotlininsightclient.api.InsightConfig
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemas
-import com.linkedplanet.kotlinhttpclient.error.DomainError
-import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperatorInterface
+import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
-object InsightSchemaOperator: InsightSchemaOperatorInterface {
+object HttpInsightSchemaOperator :
+    InsightSchemaOperator {
 
-    override suspend fun getSchemas(): Either<DomainError, InsightSchemas> =
-        InsightConfig.httpClient.executeRest<InsightSchemas>(
+    override suspend fun getSchemas(): Either<InsightClientError, InsightSchemas> =
+        HttpInsightClientConfig.httpClient.executeRest<InsightSchemas>(
             "GET",
             "/rest/insight/1.0/objectschema/list",
             emptyMap(),
             null,
             "application/json",
             object : TypeToken<InsightSchemas>() {}.type
-        ).map { it.body!! }
+        )
+            .map { it.body!! }
+            .mapLeft { it.toInsightClientError() }
 
 }

@@ -13,12 +13,6 @@
     <name>kotlin-insight-client-api</name>
 
     <dependencies>
-        <!-- TODO: remove -->
-        <dependency>
-            <groupId>com.linked-planet.client</groupId>
-            <artifactId>kotlin-http-client-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>

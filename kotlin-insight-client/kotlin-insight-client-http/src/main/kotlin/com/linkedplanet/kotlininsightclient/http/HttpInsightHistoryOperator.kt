@@ -20,23 +20,23 @@
 package com.linkedplanet.kotlininsightclient.http
 
 import arrow.core.Either
-import arrow.core.computations.either
 import com.google.gson.reflect.TypeToken
-import com.linkedplanet.kotlininsightclient.api.InsightConfig
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
-import com.linkedplanet.kotlinhttpclient.error.DomainError
-import com.linkedplanet.kotlininsightclient.api.interfaces.HistoryOperatorInterface
+import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
-object HistoryOperator: HistoryOperatorInterface {
+object HttpInsightHistoryOperator : InsightHistoryOperator {
 
-    override suspend fun getHistory(objectId: Int): Either<DomainError, List<InsightHistoryItem>> = either {
-        InsightConfig.httpClient.executeRestList<InsightHistoryItem>(
+    override suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>> =
+        HttpInsightClientConfig.httpClient.executeRestList<InsightHistoryItem>(
             "GET",
             "rest/insight/1.0/object/${objectId}/history",
             emptyMap(),
             null,
             "application/json",
             object : TypeToken<List<InsightHistoryItem>>() {}.type
-        ).map { it.body }.bind()
-    }
+        )
+            .map { it.body }
+            .mapLeft { it.toInsightClientError() }
 }

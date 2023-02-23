@@ -20,23 +20,10 @@
 package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
-import com.linkedplanet.kotlinhttpclient.error.DomainError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.*
 
-interface AttachmentOperatorInterface {
+interface InsightSchemaOperator {
 
-    suspend fun getAttachments(objectId: Int): Either<DomainError, List<InsightAttachment>>
-
-    suspend fun downloadAttachment(url: String): Either<DomainError, ByteArray?>
-
-    suspend fun downloadAttachmentZip(objectId: Int): Either<DomainError, ByteArray>
-
-    suspend fun uploadAttachment(
-        objectId: Int,
-        filename: String,
-        byteArray: ByteArray,
-        comment: String = ""
-    ): Either<DomainError, List<InsightAttachment>>
-
-    suspend fun deleteAttachment(attachmentId: Int): Either<DomainError, String>
+    suspend fun getSchemas(): Either<InsightClientError, InsightSchemas>
 }

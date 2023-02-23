@@ -19,9 +19,8 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
-import com.linkedplanet.kotlininsightclient.api.InsightConfig
-import org.joda.time.DateTime
 import java.util.Collections.emptyList
+import org.joda.time.DateTime
 
 data class InsightObjects(
     val searchResult: Int = -1,
@@ -44,18 +43,18 @@ data class InsightObject(
     val objectSelf: String
 )
 
-fun InsightObject.getAttributeNames(): List<ObjectTypeSchemaAttribute> {
-    val schema = InsightConfig.objectSchemas.first { it.id == this.objectType.id }
-    return schema.attributes
-}
+fun InsightObject.getAttributeNames(): List<ObjectTypeSchemaAttribute> =
+    objectType.attributes
 
-fun InsightObject.getAttributeType(name: String): String? {
-    val schema = InsightConfig.objectSchemas.first { it.id == this.objectType.id }
-    return schema.attributes.firstOrNull { it.name == name }?.defaultType?.name
-}
+fun InsightObject.getAttributeType(name: String): String? =
+    objectType.attributes.firstOrNull { it.name == name }?.defaultType?.name
 
 fun InsightObject.isReferenceAttribute(name: String): Boolean =
-    this.attributes.filter { it.attributeName == name }.any { it.value.any { it.referencedObject != null } }
+    this.attributes
+        .filter { it.attributeName == name }
+        .singleOrNull { it.value.any { it.referencedObject != null } }
+        ?.let { true }
+        ?: false
 
 fun InsightObject.isValueAttribute(name: String): Boolean =
     this.attributes.filter { it.attributeName == name }.any { it.value.any { it.value != null } }
@@ -113,15 +112,16 @@ fun InsightObject.removeValue(name: String, value: Any?) {
 }
 
 private fun InsightObject.createAttribute(name: String) {
-    val schema = InsightConfig.objectSchemas.first { it.id == this.objectType.id }
-    val attribute = schema.attributes.firstOrNull { it.name == name }
-    if (attribute != null) {
-        this.attributes = this.attributes + InsightAttribute(
-            attribute.id,
-            attribute.name,
-            emptyList()
-        )
-    }
+    // TODO: error handling
+    this.objectType.attributes
+        .firstOrNull { it.name == name }
+        ?.let { attribute ->
+            this.attributes = this.attributes + InsightAttribute(
+                attribute.id,
+                attribute.name,
+                emptyList()
+            )
+        }
 }
 
 fun InsightObject.addValue(name: String, value: Any?) {
@@ -291,12 +291,12 @@ fun InsightObject.getMultiReference(name: String): List<InsightReference> =
 
 fun InsightObject.toDTO(): InsightObjectDTO {
     val attributeMapping = this.attributes.map {
-        it.attributeName to (this.getStringValue(it.attributeName)?:"")
+        it.attributeName to (this.getStringValue(it.attributeName) ?: "")
     }.toMap()
     return InsightObjectDTO(
         this.objectType,
         this.id,
-        this.getStringValue("Name")?:"",
+        this.getStringValue("Name") ?: "",
         attributeMapping
     )
 }
@@ -469,7 +469,6 @@ data class InsightObjectTypeDescription(
     val parentObjectTypeId: Int? = null,
     val attributes: List<InsightAttributeDescription>
 )
-
 
 data class InsightAttachment(
     val id: Int,

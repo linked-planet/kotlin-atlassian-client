@@ -17,14 +17,14 @@
  * limitations under the License.
  * #L%
  */
-import com.linkedplanet.kotlininsightclient.AbstractMainTest
-import com.linkedplanet.kotlininsightclient.api.InsightConfig
-import com.linkedplanet.kotlininsightclient.http.InsightSchemaCacheOperator
-import org.junit.BeforeClass
 import com.linkedplanet.kotlinhttpclient.ktor.KtorHttpClient
+import com.linkedplanet.kotlininsightclient.AbstractMainTest
+import com.linkedplanet.kotlininsightclient.http.HttpInsightClientConfig
+import com.linkedplanet.kotlininsightclient.http.HttpInsightSchemaCacheOperator
+import org.junit.BeforeClass
 
 
-class InsightKtorClientTest: AbstractMainTest() {
+class InsightKtorClientTest : AbstractMainTest() {
 
     companion object {
         @BeforeClass
@@ -36,7 +36,7 @@ class InsightKtorClientTest: AbstractMainTest() {
                 "admin",
                 "admin"
             )
-            InsightConfig.init("http://localhost:2990", httpClient, InsightSchemaCacheOperator)
+            HttpInsightClientConfig.init("http://localhost:2990", httpClient, HttpInsightSchemaCacheOperator)
         }
     }
 }

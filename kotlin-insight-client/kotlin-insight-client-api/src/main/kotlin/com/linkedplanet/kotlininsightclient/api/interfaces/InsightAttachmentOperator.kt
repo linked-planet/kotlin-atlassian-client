@@ -20,11 +20,23 @@
 package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
-import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
-import com.linkedplanet.kotlinhttpclient.error.DomainError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 
-interface HistoryOperatorInterface {
+interface InsightAttachmentOperator {
 
-    suspend fun getHistory(objectId: Int): Either<DomainError, List<InsightHistoryItem>>
+    suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>>
 
+    suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray?>
+
+    suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray>
+
+    suspend fun uploadAttachment(
+        objectId: Int,
+        filename: String,
+        byteArray: ByteArray,
+        comment: String = ""
+    ): Either<InsightClientError, List<InsightAttachment>>
+
+    suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String>
 }

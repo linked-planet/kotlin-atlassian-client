@@ -20,27 +20,27 @@
 package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
-import com.linkedplanet.kotlinhttpclient.error.DomainError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 
-interface ObjectTypeOperatorInterface {
+interface InsightObjectTypeOperator {
 
-    suspend fun loadAllObjectTypeSchemas(): Either<DomainError, List<ObjectTypeSchema>>
+    suspend fun loadAllObjectTypeSchemas(): Either<InsightClientError, List<ObjectTypeSchema>>
 
-    suspend fun loadObjectTypeSchemas(schemaId: Int): Either<DomainError, List<ObjectTypeSchema>>
+    suspend fun loadObjectTypeSchemas(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>>
 
-    suspend fun reloadObjectTypeSchema(schemaId: Int, name: String): Either<DomainError, Unit>
+    suspend fun reloadObjectTypeSchema(schemaId: Int, name: String): Either<InsightClientError, Unit>
 
-    suspend fun reloadObjectTypeSchema(schemaId: Int, id: Int): Either<DomainError, Unit>
+    suspend fun reloadObjectTypeSchema(schemaId: Int, id: Int): Either<InsightClientError, Unit>
 
-    suspend fun getObjectTypesBySchema(schemaId: Int): Either<DomainError, List<ObjectTypeSchema>>
+    suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>>
 
     suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,
         rootObjectTypeId: Int
-    ): Either<DomainError, List<ObjectTypeSchema>>
+    ): Either<InsightClientError, List<ObjectTypeSchema>>
 
-    suspend fun getObjectTypeSchemas(schemaId: Int): Either<DomainError, List<ObjectTypeSchema>>
+    suspend fun getObjectTypeSchemas(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>>
 
-    suspend fun populateObjectTypeSchemaAttributes(objectTypeSchema: ObjectTypeSchema): Either<DomainError, ObjectTypeSchema>
+    suspend fun populateObjectTypeSchemaAttributes(objectTypeSchema: ObjectTypeSchema): Either<InsightClientError, ObjectTypeSchema>
 }

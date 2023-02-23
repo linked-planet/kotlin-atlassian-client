@@ -20,11 +20,10 @@
 package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
-import com.linkedplanet.kotlininsightclient.api.model.InsightSchemas
-import com.linkedplanet.kotlinhttpclient.error.DomainError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
 
-interface InsightSchemaOperatorInterface {
+interface InsightHistoryOperator {
 
-    suspend fun getSchemas(): Either<DomainError, InsightSchemas>
-
+    suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>>
 }

@@ -1,6 +1,6 @@
 /*-
  * #%L
- * kotlin-insight-client-api
+ * kotlin-jira-client-api
  * %%
  * Copyright (C) 2022 - 2023 linked-planet GmbH
  * %%
@@ -17,19 +17,17 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient.api.interfaces
+package com.linkedplanet.kotlininsightclient.api.error
 
-import arrow.core.Either
-import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaDescription
-import com.linkedplanet.kotlinhttpclient.error.DomainError
-import org.joda.time.DateTime
+@Suppress("unused")
+open class InsightClientError(
+    val error: String,
+    val message: String
+) {
+    val stacktrace: String = Exception(message).stackTraceToString()
 
-interface InsightSchemaCacheOperatorInterface {
-
-    var lastUpdate: DateTime?
-
-    suspend fun updateSchemaCache(): Either<DomainError, Unit>
-
-    // PRIVATE DOWN HERE
-    suspend fun getSchemaCache(): Either<DomainError, List<InsightSchemaDescription>>
+    companion object
 }
+
+class ObjectTypeNotFoundError :
+    InsightClientError("Nicht gefunden", "Der ObjectType mit der angegebenen Id wurde nicht gefunden.")

@@ -17,9 +17,18 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient.api.model
+package com.linkedplanet.kotlininsightclient.api.interfaces
 
-import com.linkedplanet.kotlinhttpclient.error.DomainError
+import arrow.core.Either
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaDescription
+import org.joda.time.DateTime
 
-class ObjectTypeNotFoundError :
-    DomainError("Nicht gefunden", "Der ObjectType mit der angegebenen Id wurde nicht gefunden.")
+interface InsightSchemaCacheOperator {
+
+    var lastUpdate: DateTime?
+
+    suspend fun updateSchemaCache(): Either<InsightClientError, Unit>
+
+    suspend fun getSchemaCache(): Either<InsightClientError, List<InsightSchemaDescription>>
+}

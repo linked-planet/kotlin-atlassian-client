@@ -24,12 +24,12 @@ import arrow.core.computations.either
 import arrow.core.flatten
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
-import com.linkedplanet.kotlinhttpclient.error.DomainError
-import com.linkedplanet.kotlininsightclient.api.InsightConfig
-import com.linkedplanet.kotlininsightclient.api.interfaces.ObjectOperatorInterface
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.*
+import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
-object ObjectOperator : ObjectOperatorInterface {
+object HttpInsightObjectOperator : InsightObjectOperator {
 
     override var RESULTS_PER_PAGE: Int = 25
 
@@ -39,18 +39,18 @@ object ObjectOperator : ObjectOperatorInterface {
         pageFrom: Int,
         pageTo: Int?,
         perPage: Int
-    ): Either<DomainError, InsightObjects> = either {
+    ): Either<InsightClientError, InsightObjects> = either {
         val iql = getIQLWithChildren(objectTypeId, withChildren)
         getObjectsByPlainIQL(iql, pageFrom, pageTo, perPage).bind()
     }
 
-    override suspend fun getObjectById(id: Int): Either<DomainError, InsightObject?> =
+    override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
         getObjectByPlainIQL("objectId=$id")
 
-    override suspend fun getObjectByKey(key: String): Either<DomainError, InsightObject?> =
+    override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
         getObjectByPlainIQL("Key=\"$key\"")
 
-    override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<DomainError, InsightObject?> =
+    override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> =
         getObjectByPlainIQL("objectTypeId=$objectTypeId AND Name=\"$name\"")
 
     override suspend fun getObjectsByIQL(
@@ -60,7 +60,7 @@ object ObjectOperator : ObjectOperatorInterface {
         pageFrom: Int,
         pageTo: Int?,
         perPage: Int
-    ): Either<DomainError, InsightObjects> = either {
+    ): Either<InsightClientError, InsightObjects> = either {
         val fullIql = "${getIQLWithChildren(objectTypeId, withChildren)} AND $iql"
         getObjectsByPlainIQL(
             fullIql,
@@ -70,7 +70,7 @@ object ObjectOperator : ObjectOperatorInterface {
         ).bind()
     }
 
-    override suspend fun updateObject(obj: InsightObject): Either<DomainError, InsightObject> = either {
+    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
         val objRefEditAttributes = obj.getEditReferences()
         val objEditAttributes = obj.getEditValues()
         val editItem = ObjectEditItem(
@@ -78,7 +78,7 @@ object ObjectOperator : ObjectOperatorInterface {
             objEditAttributes + objRefEditAttributes
         )
 
-        InsightConfig.httpClient.executeRest<ObjectUpdateResponse>(
+        HttpInsightClientConfig.httpClient.executeRest<ObjectUpdateResponse>(
             "PUT",
             "rest/insight/1.0/object/${obj.id}",
             emptyMap(),
@@ -86,15 +86,14 @@ object ObjectOperator : ObjectOperatorInterface {
             "application/json",
             ObjectUpdateResponse::class.java
         )
-            .map {
-                getObjectById(it.body!!.id).map { it!! }
-            }
+            .map { getObjectById(it.body!!.id).map { it!! } }
+            .mapLeft { it.toInsightClientError() }
             .flatten()
             .bind()
     }
 
     override suspend fun deleteObject(id: Int): Boolean =
-        InsightConfig.httpClient.executeRestCall(
+        HttpInsightClientConfig.httpClient.executeRestCall(
             "DELETE",
             "/rest/insight/1.0/object/$id",
             emptyMap(),
@@ -105,7 +104,7 @@ object ObjectOperator : ObjectOperatorInterface {
     override suspend fun createObject(
         objectTypeId: Int,
         func: (InsightObject) -> Unit
-    ): Either<DomainError, InsightObject> = either {
+    ): Either<InsightClientError, InsightObject> = either {
         val obj = createEmptyObject(objectTypeId)
         func(obj)
         val objRefEditAttributes = obj.getEditReferences()
@@ -114,7 +113,8 @@ object ObjectOperator : ObjectOperatorInterface {
             obj.objectType.id,
             objEditAttributes + objRefEditAttributes
         )
-        val response = InsightConfig.httpClient.executeRest<ObjectUpdateResponse>(
+        // TODO: ensure object type has the specified attributes
+        val response = HttpInsightClientConfig.httpClient.executeRest<ObjectUpdateResponse>(
             "POST",
             "rest/insight/1.0/object/create",
             emptyMap(),
@@ -122,7 +122,7 @@ object ObjectOperator : ObjectOperatorInterface {
             "application/json",
             ObjectUpdateResponse::class.java
         )
-        obj.id = response.bind().body!!.id
+        obj.id = response.mapLeft { it.toInsightClientError() }.bind().body!!.id
         getObjectById(obj.id).bind()!!
     }
 
@@ -131,8 +131,8 @@ object ObjectOperator : ObjectOperatorInterface {
     private suspend fun getObjectPages(
         iql: String,
         resultsPerPage: Int = RESULTS_PER_PAGE
-    ): Either<DomainError, Int> =
-        InsightConfig.httpClient.executeGetCall(
+    ): Either<InsightClientError, Int> =
+        HttpInsightClientConfig.httpClient.executeGetCall(
             "rest/insight/1.0/iql/objects",
             mapOf(
                 "iql" to iql,
@@ -141,23 +141,27 @@ object ObjectOperator : ObjectOperatorInterface {
                 "page" to "1",
                 "resultsPerPage" to resultsPerPage.toString()
             )
-        ).map { response ->
-            JsonParser().parse(response.body).asJsonObject.get("toIndex").asInt
-        }
+        )
+            .map { response ->
+                // Keep JsonParser instantiation for downwards compatibility
+                @Suppress("DEPRECATION")
+                JsonParser().parse(response.body).asJsonObject.get("toIndex").asInt
+            }
+            .mapLeft { it.toInsightClientError() }
 
     private suspend fun getObjectsByPlainIQL(
         iql: String,
         pageFrom: Int,
         pageTo: Int?,
         perPage: Int
-    ): Either<DomainError, InsightObjects> = either {
+    ): Either<InsightClientError, InsightObjects> = either {
         val objectsAmount = getObjectCount(iql).bind()
         val maxPage = getObjectPages(iql, perPage).bind()
         val lastPage = pageTo ?: maxPage
         lastPage.let { maxPageSize ->
             (pageFrom..maxPageSize).toList()
         }.flatMap { page ->
-            InsightConfig.httpClient.executeRest<InsightObjectEntries>(
+            HttpInsightClientConfig.httpClient.executeRest<InsightObjectEntries>(
                 "GET",
                 "rest/insight/1.0/iql/objects",
                 mapOf(
@@ -170,7 +174,13 @@ object ObjectOperator : ObjectOperatorInterface {
                 null,
                 "application/json",
                 InsightObjectEntries::class.java
-            ).map { it.body }.bind()?.toValues()?.objects ?: emptyList()
+            )
+                .map { it.body }
+                .mapLeft { it.toInsightClientError() }
+                .bind()
+                ?.toValues()
+                ?.objects
+                ?: emptyList()
         }.let {
             InsightObjects(
                 objectsAmount,
@@ -192,8 +202,8 @@ object ObjectOperator : ObjectOperatorInterface {
      */
     private suspend fun getObjectByPlainIQL(
         iql: String
-    ): Either<DomainError, InsightObject?> = either {
-        InsightConfig.httpClient.executeRest<InsightObjectEntries>(
+    ): Either<InsightClientError, InsightObject?> = either {
+        HttpInsightClientConfig.httpClient.executeRest<InsightObjectEntries>(
             "GET",
             "rest/insight/1.0/iql/objects",
             mapOf(
@@ -204,25 +214,37 @@ object ObjectOperator : ObjectOperatorInterface {
             null,
             "application/json",
             InsightObjectEntries::class.java
-        ).map { it.body }.bind()?.toValues()?.objects?.firstOrNull()
+        )
+            .map { it.body }
+            .mapLeft { it.toInsightClientError() }
+            .bind()
+            ?.toValues()
+            ?.objects
+            ?.firstOrNull()
     }
 
-    override suspend fun getObjectCount(iql: String): Either<DomainError, Int> = either {
-        InsightConfig.httpClient.executeGetCall(
+    override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> = either {
+        HttpInsightClientConfig.httpClient.executeGetCall(
             "rest/insight/1.0/iql/objects",
             mapOf(
                 "iql" to iql,
                 "page" to "1",
                 "resultsPerPage" to "1"
             )
-        ).map { it.body }.bind().let { response: String ->
-            JsonParser().parse(response).asJsonObject.get("totalFilterCount").asInt
-        }
+        )
+            .map { it.body }
+            .mapLeft { it.toInsightClientError() }
+            .bind()
+            .let { response: String ->
+                // Keep JsonParser instantiation for downwards compatibility
+                @Suppress("DEPRECATION")
+                JsonParser().parse(response).asJsonObject.get("totalFilterCount").asInt
+            }
     }
 
     private fun InsightObjectApiResponse.toValue(): InsightObject {
         val objectType =
-            InsightConfig.objectSchemas.first { it.id == this.objectType.id }
+            HttpInsightClientConfig.objectSchemas.first { it.id == this.objectType.id }
         val attributes = this.attributes.map {
             val attributeId = it.objectTypeAttributeId
             InsightAttribute(
@@ -231,7 +253,7 @@ object ObjectOperator : ObjectOperatorInterface {
                 it.objectAttributeValues
             )
         }
-        val objectSelf = "${InsightConfig.baseUrl}/secure/insight/assets/${this.objectKey}"
+        val objectSelf = "${HttpInsightClientConfig.baseUrl}/secure/insight/assets/${this.objectKey}"
         return InsightObject(
             objectType,
             this.id,
@@ -251,7 +273,7 @@ object ObjectOperator : ObjectOperatorInterface {
         }
 
     private fun createEmptyObject(objectTypeId: Int): InsightObject {
-        val schema = InsightConfig.objectSchemas.first { it.id == objectTypeId }
+        val schema = HttpInsightClientConfig.objectSchemas.first { it.id == objectTypeId }
         val attributes = schema.attributes.map {
             InsightAttribute(
                 it.id,
@@ -285,7 +307,7 @@ object ObjectOperator : ObjectOperatorInterface {
                 )
             }
 
-    private suspend fun InsightObject.getEditValues(): List<ObjectEditItemAttribute> =
+    private fun InsightObject.getEditValues(): List<ObjectEditItemAttribute> =
         this.attributes
             .filter { it.value.any { it.value != null } || this.isSelectField(it.attributeName) }
             .map {

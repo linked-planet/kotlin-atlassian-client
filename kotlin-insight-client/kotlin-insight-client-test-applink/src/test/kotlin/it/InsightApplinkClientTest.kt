@@ -27,8 +27,8 @@ import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.atlassian.sal.api.ApplicationProperties
 import com.linkedplanet.kotlinhttpclient.atlas.AtlasHttpClient
 import com.linkedplanet.kotlininsightclient.AbstractMainTest
-import com.linkedplanet.kotlininsightclient.api.InsightConfig
-import com.linkedplanet.kotlininsightclient.http.InsightSchemaCacheOperator
+import com.linkedplanet.kotlininsightclient.http.HttpInsightClientConfig
+import com.linkedplanet.kotlininsightclient.http.HttpInsightSchemaCacheOperator
 import org.junit.Before
 import org.junit.runner.RunWith
 
@@ -55,7 +55,7 @@ class InsightApplinkClientTest : AbstractMainTest {
         val httpClient = AtlasHttpClient(
             appLink
         )
-        InsightConfig.init("http://localhost:8080", httpClient, InsightSchemaCacheOperator)
+        HttpInsightClientConfig.init("http://localhost:8080", httpClient, HttpInsightSchemaCacheOperator)
         println("### Starting MainWiredTest")
     }
 

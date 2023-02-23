@@ -20,21 +20,27 @@
 package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlinhttpclient.error.DomainError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
 
-interface ObjectOperatorInterface {
+interface InsightObjectOperator {
 
     var RESULTS_PER_PAGE: Int
 
-    suspend fun getObjects(objectTypeId: Int, withChildren: Boolean = false, pageFrom: Int = 1, pageTo: Int? = null, perPage: Int = RESULTS_PER_PAGE): Either<DomainError, InsightObjects>
+    suspend fun getObjects(
+        objectTypeId: Int,
+        withChildren: Boolean = false,
+        pageFrom: Int = 1,
+        pageTo: Int? = null,
+        perPage: Int = RESULTS_PER_PAGE
+    ): Either<InsightClientError, InsightObjects>
 
-    suspend fun getObjectById(id: Int): Either<DomainError, InsightObject?>
+    suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?>
 
-    suspend fun getObjectByKey(key: String): Either<DomainError, InsightObject?>
+    suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?>
 
-    suspend fun getObjectByName(objectTypeId: Int, name: String): Either<DomainError, InsightObject?>
+    suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?>
 
     suspend fun getObjectsByIQL(
         objectTypeId: Int,
@@ -43,15 +49,16 @@ interface ObjectOperatorInterface {
         pageFrom: Int = 1,
         pageTo: Int? = null,
         perPage: Int = RESULTS_PER_PAGE
-    ): Either<DomainError, InsightObjects>
+    ): Either<InsightClientError, InsightObjects>
 
-    suspend fun getObjectCount(iql: String): Either<DomainError, Int>
+    suspend fun getObjectCount(iql: String): Either<InsightClientError, Int>
 
-    suspend fun updateObject(obj: InsightObject): Either<DomainError, InsightObject>
+    suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>
 
     suspend fun deleteObject(id: Int): Boolean
 
-    suspend fun createObject(objectTypeId: Int, func: (InsightObject) -> Unit): Either<DomainError, InsightObject>
-
-    // PRIVATE DOWN HERE
+    suspend fun createObject(
+        objectTypeId: Int,
+        func: (InsightObject) -> Unit
+    ): Either<InsightClientError, InsightObject>
 }

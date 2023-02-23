@@ -21,35 +21,34 @@ package com.linkedplanet.kotlininsightclient.http
 
 import arrow.core.Either
 import arrow.core.computations.either
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeDescription
-import com.linkedplanet.kotlininsightclient.api.InsightConfig
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeDescription
-import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaDescription
-import com.linkedplanet.kotlinhttpclient.error.DomainError
-import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaCacheOperatorInterface
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaCacheOperator
+import com.linkedplanet.kotlininsightclient.api.model.*
 import org.joda.time.DateTime
 
-object InsightSchemaCacheOperator: InsightSchemaCacheOperatorInterface {
+object HttpInsightSchemaCacheOperator :
+    InsightSchemaCacheOperator {
 
     override var lastUpdate: DateTime? = null
 
-    override suspend fun updateSchemaCache(): Either<DomainError, Unit> =
+    override suspend fun updateSchemaCache(): Either<InsightClientError, Unit> =
         either {
             val newCache = getSchemaCache().bind()
-            val newSchema = ObjectTypeOperator.loadAllObjectTypeSchemas().bind()
-            InsightConfig.objectSchemas = newSchema
-            InsightConfig.schemaDescriptionCache = newCache
+            val newSchema = HttpInsightObjectTypeOperator.loadAllObjectTypeSchemas().bind()
+            HttpInsightClientConfig.objectSchemas = newSchema
+            HttpInsightClientConfig.schemaDescriptionCache = newCache
             lastUpdate = DateTime.now()
         }
 
 
-    override suspend fun getSchemaCache(): Either<DomainError, List<InsightSchemaDescription>> =
+    override suspend fun getSchemaCache(): Either<InsightClientError, List<InsightSchemaDescription>> =
         either {
-            val schemas = InsightSchemaOperator.getSchemas().bind().objectschemas
+            val schemas = HttpInsightSchemaOperator.getSchemas().bind().objectschemas
             schemas.map { schema ->
-                val objectTypes = ObjectTypeOperator.getObjectTypesBySchema(schema.id).bind()
+                val objectTypes = HttpInsightObjectTypeOperator.getObjectTypesBySchema(schema.id).bind()
                 val objectTypeDescriptions = objectTypes.map {
-                    val attributes = it.attributes.map { InsightAttributeDescription(it.id, it.name, it.defaultType?.name?:"") }
+                    val attributes =
+                        it.attributes.map { InsightAttributeDescription(it.id, it.name, it.defaultType?.name ?: "") }
                     InsightObjectTypeDescription(it.id, it.name, it.parentObjectTypeId, attributes)
                 }
                 InsightSchemaDescription(schema.id, schema.name, objectTypeDescriptions)
