@@ -1,0 +1,36 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="kotlin-atlassian-client:compile" type="MavenRunConfiguration" factoryName="Maven">
+    <MavenSettings>
+      <option name="myGeneralSettings" />
+      <option name="myRunnerSettings" />
+      <option name="myRunnerParameters">
+        <MavenRunnerParameters>
+          <option name="profiles">
+            <set />
+          </option>
+          <option name="goals">
+            <list>
+              <option value="compile" />
+            </list>
+          </option>
+          <option name="pomFileName" />
+          <option name="profilesMap">
+            <map>
+              <entry key="insight-itest-sdk" value="false" />
+              <entry key="insight-itest-ktor" value="false" />
+              <entry key="jira-itest-applink" value="false" />
+              <entry key="insight-itest-base" value="true" />
+              <entry key="insight-itest-applink" value="false" />
+              <entry key="jira-itest-ktor" value="false" />
+              <entry key="jira-itest-sdk" value="false" />
+              <entry key="jira-itest-base" value="true" />
+            </map>
+          </option>
+          <option name="resolveToWorkspace" value="false" />
+          <option name="workingDirPath" value="$PROJECT_DIR$" />
+        </MavenRunnerParameters>
+      </option>
+    </MavenSettings>
+    <method v="2" />
+  </configuration>
+</component>
