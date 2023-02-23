@@ -19,8 +19,8 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
+import java.time.ZonedDateTime
 import java.util.Collections.emptyList
-import org.joda.time.DateTime
 
 data class InsightObjects(
     val searchResult: Int = -1,
@@ -196,11 +196,11 @@ fun InsightObject.setBooleanValue(name: String, value: Boolean?) {
     this.setValue(name, value)
 }
 
-fun InsightObject.getDateTimeValue(name: String): DateTime? =
+fun InsightObject.getDateTimeValue(name: String): ZonedDateTime? =
     getStringValue(name)
-        ?.let { DateTime.parse(it) }
+        ?.let { ZonedDateTime.parse(it) }
 
-fun InsightObject.setDateTimeValue(name: String, value: DateTime?) {
+fun InsightObject.setDateTimeValue(name: String, value: ZonedDateTime?) {
     this.setValue(name, value.toString())
 }
 

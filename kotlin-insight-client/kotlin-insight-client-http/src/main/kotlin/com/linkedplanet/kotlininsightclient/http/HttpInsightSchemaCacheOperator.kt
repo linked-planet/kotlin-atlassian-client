@@ -24,12 +24,12 @@ import arrow.core.computations.either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaCacheOperator
 import com.linkedplanet.kotlininsightclient.api.model.*
-import org.joda.time.DateTime
+import java.time.LocalDateTime
 
 object HttpInsightSchemaCacheOperator :
     InsightSchemaCacheOperator {
 
-    override var lastUpdate: DateTime? = null
+    override var lastUpdate: LocalDateTime? = null
 
     override suspend fun updateSchemaCache(): Either<InsightClientError, Unit> =
         either {
@@ -37,7 +37,7 @@ object HttpInsightSchemaCacheOperator :
             val newSchema = HttpInsightObjectTypeOperator.loadAllObjectTypeSchemas().bind()
             HttpInsightClientConfig.objectSchemas = newSchema
             HttpInsightClientConfig.schemaDescriptionCache = newCache
-            lastUpdate = DateTime.now()
+            lastUpdate = LocalDateTime.now()
         }
 
 

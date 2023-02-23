@@ -22,11 +22,11 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaDescription
-import org.joda.time.DateTime
+import java.time.LocalDateTime
 
 interface InsightSchemaCacheOperator {
 
-    var lastUpdate: DateTime?
+    var lastUpdate: LocalDateTime?
 
     suspend fun updateSchemaCache(): Either<InsightClientError, Unit>
 
