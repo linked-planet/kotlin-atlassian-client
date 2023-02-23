@@ -29,7 +29,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
-object HttpInsightObjectOperator : InsightObjectOperator {
+class HttpInsightObjectOperator(private val context: HttpInsightClientContext) : InsightObjectOperator {
 
     override var RESULTS_PER_PAGE: Int = 25
 
@@ -78,7 +78,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
             objEditAttributes + objRefEditAttributes
         )
 
-        HttpInsightClientConfig.httpClient.executeRest<ObjectUpdateResponse>(
+        context.httpClient.executeRest<ObjectUpdateResponse>(
             "PUT",
             "rest/insight/1.0/object/${obj.id}",
             emptyMap(),
@@ -93,7 +93,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
     }
 
     override suspend fun deleteObject(id: Int): Boolean =
-        HttpInsightClientConfig.httpClient.executeRestCall(
+        context.httpClient.executeRestCall(
             "DELETE",
             "/rest/insight/1.0/object/$id",
             emptyMap(),
@@ -114,7 +114,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
             objEditAttributes + objRefEditAttributes
         )
         // TODO: ensure object type has the specified attributes
-        val response = HttpInsightClientConfig.httpClient.executeRest<ObjectUpdateResponse>(
+        val response = context.httpClient.executeRest<ObjectUpdateResponse>(
             "POST",
             "rest/insight/1.0/object/create",
             emptyMap(),
@@ -132,7 +132,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
         iql: String,
         resultsPerPage: Int = RESULTS_PER_PAGE
     ): Either<InsightClientError, Int> =
-        HttpInsightClientConfig.httpClient.executeGetCall(
+        context.httpClient.executeGetCall(
             "rest/insight/1.0/iql/objects",
             mapOf(
                 "iql" to iql,
@@ -161,7 +161,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
         lastPage.let { maxPageSize ->
             (pageFrom..maxPageSize).toList()
         }.flatMap { page ->
-            HttpInsightClientConfig.httpClient.executeRest<InsightObjectEntries>(
+            context.httpClient.executeRest<InsightObjectEntries>(
                 "GET",
                 "rest/insight/1.0/iql/objects",
                 mapOf(
@@ -203,7 +203,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
     private suspend fun getObjectByPlainIQL(
         iql: String
     ): Either<InsightClientError, InsightObject?> = either {
-        HttpInsightClientConfig.httpClient.executeRest<InsightObjectEntries>(
+        context.httpClient.executeRest<InsightObjectEntries>(
             "GET",
             "rest/insight/1.0/iql/objects",
             mapOf(
@@ -224,7 +224,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
     }
 
     override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> = either {
-        HttpInsightClientConfig.httpClient.executeGetCall(
+        context.httpClient.executeGetCall(
             "rest/insight/1.0/iql/objects",
             mapOf(
                 "iql" to iql,
@@ -244,7 +244,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
 
     private fun InsightObjectApiResponse.toValue(): InsightObject {
         val objectType =
-            HttpInsightClientConfig.objectSchemas.first { it.id == this.objectType.id }
+            context.objectSchemas.first { it.id == this.objectType.id }
         val attributes = this.attributes.map {
             val attributeId = it.objectTypeAttributeId
             InsightAttribute(
@@ -253,7 +253,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
                 it.objectAttributeValues
             )
         }
-        val objectSelf = "${HttpInsightClientConfig.baseUrl}/secure/insight/assets/${this.objectKey}"
+        val objectSelf = "${context.baseUrl}/secure/insight/assets/${this.objectKey}"
         return InsightObject(
             objectType,
             this.id,
@@ -273,7 +273,7 @@ object HttpInsightObjectOperator : InsightObjectOperator {
         }
 
     private fun createEmptyObject(objectTypeId: Int): InsightObject {
-        val schema = HttpInsightClientConfig.objectSchemas.first { it.id == objectTypeId }
+        val schema = context.objectSchemas.first { it.id == objectTypeId }
         val attributes = schema.attributes.map {
             InsightAttribute(
                 it.id,

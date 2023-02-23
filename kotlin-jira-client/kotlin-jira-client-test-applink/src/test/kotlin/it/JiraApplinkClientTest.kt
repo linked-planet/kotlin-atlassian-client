@@ -40,7 +40,7 @@ class JiraApplinkClientTest constructor(
     applicationLinkService: ApplicationLinkService
 ) : AbstractBaseTest<HttpJiraField>() {
 
-    val clientContext: HttpJiraClientContext
+    private val clientContext: HttpJiraClientContext
 
     override val issueOperator: JiraIssueOperator<HttpJiraField> get() = HttpJiraIssueOperator(clientContext)
     override val fieldFactory: JiraFieldFactory<HttpJiraField> get() = HttpJiraFieldFactory

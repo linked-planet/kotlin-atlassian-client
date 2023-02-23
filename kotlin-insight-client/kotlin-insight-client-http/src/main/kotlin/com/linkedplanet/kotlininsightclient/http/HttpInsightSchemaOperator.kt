@@ -26,11 +26,11 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemas
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
-object HttpInsightSchemaOperator :
+class HttpInsightSchemaOperator(private val context: HttpInsightClientContext) :
     InsightSchemaOperator {
 
     override suspend fun getSchemas(): Either<InsightClientError, InsightSchemas> =
-        HttpInsightClientConfig.httpClient.executeRest<InsightSchemas>(
+        context.httpClient.executeRest<InsightSchemas>(
             "GET",
             "/rest/insight/1.0/objectschema/list",
             emptyMap(),

@@ -26,26 +26,29 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaCacheOpe
 import com.linkedplanet.kotlininsightclient.api.model.*
 import java.time.LocalDateTime
 
-object HttpInsightSchemaCacheOperator :
+class HttpInsightSchemaCacheOperator(private val context: HttpInsightClientContext) :
     InsightSchemaCacheOperator {
+
+    private val insightSchemaOperator = HttpInsightSchemaOperator(context)
+    private val insightObjectTypeOperator = HttpInsightObjectTypeOperator(context)
 
     override var lastUpdate: LocalDateTime? = null
 
     override suspend fun updateSchemaCache(): Either<InsightClientError, Unit> =
         either {
             val newCache = getSchemaCache().bind()
-            val newSchema = HttpInsightObjectTypeOperator.loadAllObjectTypeSchemas().bind()
-            HttpInsightClientConfig.objectSchemas = newSchema
-            HttpInsightClientConfig.schemaDescriptionCache = newCache
+            val newSchema = insightObjectTypeOperator.loadAllObjectTypeSchemas().bind()
+            context.objectSchemas = newSchema
+            context.schemaDescriptionCache = newCache
             lastUpdate = LocalDateTime.now()
         }
 
 
     override suspend fun getSchemaCache(): Either<InsightClientError, List<InsightSchemaDescription>> =
         either {
-            val schemas = HttpInsightSchemaOperator.getSchemas().bind().objectschemas
+            val schemas = insightSchemaOperator.getSchemas().bind().objectschemas
             schemas.map { schema ->
-                val objectTypes = HttpInsightObjectTypeOperator.getObjectTypesBySchema(schema.id).bind()
+                val objectTypes = insightObjectTypeOperator.getObjectTypesBySchema(schema.id).bind()
                 val objectTypeDescriptions = objectTypes.map {
                     val attributes =
                         it.attributes.map { InsightAttributeDescription(it.id, it.name, it.defaultType?.name ?: "") }

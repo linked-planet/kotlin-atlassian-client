@@ -19,25 +19,24 @@
  */
 package com.linkedplanet.kotlininsightclient
 
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.*
-import com.linkedplanet.kotlininsightclient.http.*
-import java.security.MessageDigest
-import junit.framework.TestCase.*
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.*
 import org.junit.Test
 
-
-abstract class AbstractMainTest {
+interface InsightObjectOperatorTest {
+    val insightObjectOperator: InsightObjectOperator
 
     @Test
     fun testObjectListWithFlatReference() {
-        println("### START testObjectListWithFlatReference")
+        println("### START object_testObjectListWithFlatReference")
         val companies = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Company.id).orNull()!!.objects
+            insightObjectOperator.getObjects(OBJECTS.Company.id).orNull()!!.objects
         }
         assertTrue(companies.size == 2)
 
-        val firstCompany = companies.firstOrNull { it.id == 1}
+        val firstCompany = companies.firstOrNull { it.id == 1 }
         assertNotNull(firstCompany)
         assertEquals(1, firstCompany!!.id)
         assertEquals("IT-1", firstCompany.objectKey)
@@ -47,7 +46,7 @@ abstract class AbstractMainTest {
         assertFalse(firstCompany.attachmentsExist)
 
 
-        val secondCompany = companies.firstOrNull { it.id == 2}
+        val secondCompany = companies.firstOrNull { it.id == 2 }
         assertNotNull(secondCompany)
         assertEquals(2, secondCompany!!.id)
         assertEquals("IT-2", secondCompany.objectKey)
@@ -55,36 +54,36 @@ abstract class AbstractMainTest {
         assertEquals("Test AG", secondCompany.getStringValue(COMPANY.Name.name))
         assertEquals("Germany", secondCompany.getSingleReference(COMPANY.Country.name)!!.objectName)
         assertTrue(secondCompany.attachmentsExist)
-        println("### END testObjectListWithFlatReference")
+        println("### END object_testObjectListWithFlatReference")
     }
 
     @Test
     fun testObjectListWithResolvedReference() {
-        println("### START testObjectListWithResolvedReference")
+        println("### START object_testObjectListWithResolvedReference")
         val companies = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Company.id).orNull()?.objects
+            insightObjectOperator.getObjects(OBJECTS.Company.id).orNull()?.objects
         }
         assertNotNull(companies)
         assertTrue(companies!!.size == 2)
 
-        val company = companies.firstOrNull { it.id == 1}
+        val company = companies.firstOrNull { it.id == 1 }
         assertNotNull(company)
 
         val country = runBlocking {
-            HttpInsightObjectOperator.getObjectById(
+            insightObjectOperator.getObjectById(
                 company!!.getSingleReference(COMPANY.Country.name)!!.objectId
             ).orNull()!!
         }
         assertTrue(country.getStringValue(COUNTRY.Name.name) == "Germany")
         assertTrue(country.getStringValue(COUNTRY.ShortName.name) == "DE")
-        println("### END testObjectListWithResolvedReference")
+        println("### END object_testObjectListWithResolvedReference")
     }
 
     @Test
     fun testObjectById() {
-        println("### START testObjectById")
+        println("### START object_testObjectById")
         val company = runBlocking {
-            HttpInsightObjectOperator.getObjectById(1).orNull()!!
+            insightObjectOperator.getObjectById(1).orNull()!!
         }
         assertEquals(1, company.id)
         assertEquals("IT-1", company.objectKey)
@@ -92,14 +91,14 @@ abstract class AbstractMainTest {
         assertEquals("Test GmbH", company.getStringValue(COMPANY.Name.name))
         assertEquals("Germany", company.getSingleReference(COMPANY.Country.name)!!.objectName)
         assertFalse(company.attachmentsExist)
-        println("### END testObjectById")
+        println("### END object_testObjectById")
     }
 
     @Test
     fun testObjectWithListAttributes() {
-        println("### START testObjectWithListAttributes")
+        println("### START object_testObjectWithListAttributes")
         val obj = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
+            insightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
         }!!.objects.first()
 
         val references = obj.getMultiReference(TEST_WITH_LISTS.ItemList.name)
@@ -107,7 +106,7 @@ abstract class AbstractMainTest {
         val nameList = references.map { it.objectName }
         val refList = references.map { insightReference ->
             runBlocking {
-                HttpInsightObjectOperator.getObjectById(insightReference.objectId).orNull()!!
+                insightObjectOperator.getObjectById(insightReference.objectId).orNull()!!
             }
         }
         val firstNameList = refList.map { it.getStringValue(SIMPLE_OBJECT.Firstname.name) }
@@ -115,75 +114,66 @@ abstract class AbstractMainTest {
         assertTrue(idList == listOf(35, 36, 37))
         assertTrue(nameList == listOf("Object1", "Object2", "Object3"))
         assertTrue(firstNameList == listOf("F1", "F2", "F3"))
-        println("### END testObjectWithListAttributes")
+        println("### END object_testObjectWithListAttributes")
     }
 
     @Test
     fun testAddingSelectList() {
-        println("### START testAddingSelectList")
+        println("### START object_testAddingSelectList")
         val obj = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
+            insightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
         }!!.objects.first()
         val results = obj.getValueList("StringList")
         assertTrue(results.isEmpty())
         obj.addValue("StringList", "A")
         obj.addValue("StringList", "B")
-        runBlocking { HttpInsightObjectOperator.updateObject(obj).orNull() }
+        runBlocking { insightObjectOperator.updateObject(obj).orNull() }
 
         val obj2 = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
+            insightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
         }!!.objects.first()
         val results2 = obj2.getValueList("StringList")
         assertTrue(results2.size == 2)
         assertTrue(results2.contains("A"))
         assertTrue(results2.contains("B"))
         obj2.removeValue("StringList", "B")
-        runBlocking { HttpInsightObjectOperator.updateObject(obj2).orNull() }
+        runBlocking { insightObjectOperator.updateObject(obj2).orNull() }
 
         val obj3 = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
+            insightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
         }!!.objects.first()
         val results3 = obj3.getValueList("StringList")
         assertTrue(results3.size == 1)
         assertTrue(results3.contains("A"))
         obj3.removeValue("StringList", "A")
-        runBlocking { HttpInsightObjectOperator.updateObject(obj3).orNull() }
+        runBlocking { insightObjectOperator.updateObject(obj3).orNull() }
 
         val obj4 = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
+            insightObjectOperator.getObjects(OBJECTS.TestWithLists.id).orNull()
         }!!.objects.first()
         val results4 = obj4.getValueList("StringList")
         assertTrue(results4.isEmpty())
-        println("### END testAddingSelectList")
-    }
-
-    @Test
-    fun testSchemaLoad() {
-        println("### START testSchemaLoad")
-        val mySchemas = runBlocking {
-            HttpInsightObjectTypeOperator.loadAllObjectTypeSchemas()
-        }
-        val schemas = mySchemas
-        println("### END testSchemaLoad")
+        println("### END object_testAddingSelectList")
     }
 
     @Test
     fun testCreateAndDelete() {
-        println("### START testCreateAndDelete")
+        println("### START object_testCreateAndDelete")
         runBlocking {
             // Check England does not exist
-            val countryBeforeCreate = HttpInsightObjectOperator.getObjectByName(OBJECTS.Country.id, "England").orNull()
-            val companyBeforeCreate = HttpInsightObjectOperator.getObjectByName(OBJECTS.Company.id, "MyTestCompany GmbH").orNull()
+            val countryBeforeCreate = insightObjectOperator.getObjectByName(OBJECTS.Country.id, "England").orNull()
+            val companyBeforeCreate =
+                insightObjectOperator.getObjectByName(OBJECTS.Company.id, "MyTestCompany GmbH").orNull()
             assertTrue(countryBeforeCreate == null)
             assertTrue(companyBeforeCreate == null)
 
             // Create and check direct result
-            val country1 = HttpInsightObjectOperator.createObject(OBJECTS.Country.id) {
+            val country1 = insightObjectOperator.createObject(OBJECTS.Country.id) {
                 it.setStringValue(COUNTRY.Name.name, "England")
                 it.setStringValue(COUNTRY.ShortName.name, "GB")
             }.orNull()!!
 
-            val company1 = HttpInsightObjectOperator.createObject(OBJECTS.Company.id) {
+            val company1 = insightObjectOperator.createObject(OBJECTS.Company.id) {
                 it.setStringValue(COMPANY.Name.name, "MyTestCompany GmbH")
                 it.setSingleReference(COMPANY.Country.name, country1.id)
             }.orNull()!!
@@ -193,24 +183,25 @@ abstract class AbstractMainTest {
             assertTrue(company1.getSingleReference(COMPANY.Country.name)!!.objectId > 0)
             assertTrue(company1.getSingleReference(COMPANY.Country.name)!!.objectKey.isNotBlank())
 
-            // Check England does exists
+            // Check England does exist
             val countryReference = company1.getSingleReference(COMPANY.Country.name)!!
-            val countryAfterCreate = HttpInsightObjectOperator.getObjectByName(OBJECTS.Country.id, "England").orNull()!!
-            val companyAfterCreate = HttpInsightObjectOperator.getObjectByName(OBJECTS.Company.id, "MyTestCompany GmbH").orNull()!!
+            val countryAfterCreate = insightObjectOperator.getObjectByName(OBJECTS.Country.id, "England").orNull()!!
+            val companyAfterCreate =
+                insightObjectOperator.getObjectByName(OBJECTS.Company.id, "MyTestCompany GmbH").orNull()!!
             assertTrue(countryAfterCreate.id == countryReference.objectId)
             assertTrue(countryAfterCreate.getStringValue(COUNTRY.Key.name) == countryReference.objectKey)
             assertTrue(countryAfterCreate.getStringValue(COUNTRY.Name.name) == countryReference.objectName)
             assertTrue(companyAfterCreate.id == company1.id)
 
             // Check Delete
-            HttpInsightObjectOperator.deleteObject(countryReference.objectId)
-            HttpInsightObjectOperator.deleteObject(company1.id)
-            val companyAfterDelete = HttpInsightObjectOperator.getObjectByName(
+            insightObjectOperator.deleteObject(countryReference.objectId)
+            insightObjectOperator.deleteObject(company1.id)
+            val companyAfterDelete = insightObjectOperator.getObjectByName(
                 OBJECTS.Company.id, company1.getStringValue(
                     COMPANY.Name.name
                 )!!
             ).orNull()
-            val countryAfterDelete = HttpInsightObjectOperator.getObjectByName(
+            val countryAfterDelete = insightObjectOperator.getObjectByName(
                 OBJECTS.Country.id, company1.getStringValue(
                     COUNTRY.Name.name
                 )!!
@@ -218,88 +209,55 @@ abstract class AbstractMainTest {
             assertTrue(companyAfterDelete == null)
             assertTrue(countryAfterDelete == null)
         }
-        println("### END testCreateAndDelete")
+        println("### END object_testCreateAndDelete")
     }
 
     @Test
     fun testFilter() {
-        println("### START testFilter")
+        println("### START object_testFilter")
         runBlocking {
             val countries =
-                HttpInsightObjectOperator.getObjectsByIQL(OBJECTS.Country.id, false, "\"ShortName\"=\"DE\"").orNull()!!.objects
+                insightObjectOperator.getObjectsByIQL(OBJECTS.Country.id, false, "\"ShortName\"=\"DE\"")
+                    .orNull()!!.objects
             assertTrue(countries.size == 1)
             assertTrue(countries.first().getStringValue(COUNTRY.ShortName.name) == "DE")
             assertTrue(countries.first().getStringValue(COUNTRY.Name.name) == "Germany")
         }
-        println("### END testFilter")
+        println("### END object_testFilter")
     }
 
     @Test
     fun testUpdate() {
-        println("### START testUpdate")
+        println("### START object_testUpdate")
         runBlocking {
-            var country = HttpInsightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
+            var country = insightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
             assertTrue(country.getStringValue(COUNTRY.Name.name) == "Germany")
             assertTrue(country.getStringValue(COUNTRY.ShortName.name) == "DE")
             country.setStringValue(COUNTRY.ShortName.name, "ED")
-            country = runBlocking { HttpInsightObjectOperator.updateObject(country).orNull()!! }
+            country = runBlocking { insightObjectOperator.updateObject(country).orNull()!! }
 
-            val country2 = HttpInsightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
+            val country2 = insightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
             assertTrue(country2.getStringValue(COUNTRY.Name.name) == "Germany")
             assertTrue(country2.getStringValue(COUNTRY.ShortName.name) == "ED")
 
-            var countryAfterUpdate = HttpInsightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
+            var countryAfterUpdate = insightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
             assertTrue(countryAfterUpdate.getStringValue(COUNTRY.Name.name) == "Germany")
             assertTrue(countryAfterUpdate.getStringValue(COUNTRY.ShortName.name) == "ED")
             countryAfterUpdate.setStringValue(COUNTRY.ShortName.name, "DE")
-            countryAfterUpdate = runBlocking { HttpInsightObjectOperator.updateObject(countryAfterUpdate).orNull()!! }
+            countryAfterUpdate = runBlocking { insightObjectOperator.updateObject(countryAfterUpdate).orNull()!! }
 
-            val countryAfterReUpdate = HttpInsightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
+            val countryAfterReUpdate = insightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
             assertTrue(countryAfterReUpdate.getStringValue(COUNTRY.Name.name) == "Germany")
             assertTrue(countryAfterReUpdate.getStringValue(COUNTRY.ShortName.name) == "DE")
         }
-        println("### END testUpdate")
-    }
-
-    @Test
-    fun testHistory() {
-        println("### START testHistory")
-        runBlocking {
-            val country = HttpInsightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
-            val historyItems = HttpInsightHistoryOperator.getHistory(country.id).orNull()!!
-            assertTrue(historyItems.isNotEmpty())
-        }
-        println("### END testHistory")
-    }
-
-
-    @Test
-    fun testAttachments() {
-        println("### START testAttachments")
-        runBlocking {
-            val country = HttpInsightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
-            val attachments = HttpInsightAttachmentOperator.getAttachments(country.id).orNull() ?: emptyList()
-            val firstAttachment = attachments.first()
-            assertEquals(1, attachments.size)
-            assertEquals(1, firstAttachment.id)
-            assertEquals("application/pdf", firstAttachment.mimeType)
-            assertEquals("admin", firstAttachment.author)
-            assertEquals("", firstAttachment.comment)
-            assertEquals("TestAttachment.pdf", firstAttachment.filename)
-            assertEquals("10.1 kB", firstAttachment.filesize)
-
-            val downloadContent = HttpInsightAttachmentOperator.downloadAttachment(attachments.first().url).orNull()!!
-            val sha256HashIS = calculateSha256(downloadContent)
-            assertEquals("fd411837a51c43670e8d7367e64f72dbbcda5016f59988547c12d067505ef75b", sha256HashIS)
-        }
-        println("### END testAttachments")
+        println("### END object_testUpdate")
     }
 
     @Test
     fun testGetObjectsWithoutChildren() {
-        println("### START testGetObjectsWithoutChildren")
+        println("### START object_testGetObjectsWithoutChildren")
         val objectsList = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = false).orNull()!!
+            insightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = false).orNull()!!
         }
         assertTrue(objectsList.searchResult == 0)
 
@@ -311,9 +269,9 @@ abstract class AbstractMainTest {
 
     @Test
     fun testGetObjectsWithChildren() {
-        println("### START testGetObjectsWithChildren")
+        println("### START object_testGetObjectsWithChildren")
         val objectsList = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true).orNull()!!
+            insightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true).orNull()!!
         }
         assertTrue(objectsList.searchResult == 2)
 
@@ -331,11 +289,12 @@ abstract class AbstractMainTest {
 
     @Test
     fun testGetObjectsWithChildrenPaginated() {
-        println("### START testGetObjectsWithChildrenPaginated")
+        println("### START object_testGetObjectsWithChildrenPaginated")
 
         // page 1 and 2 implicit
         val allObjectsList = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true, pageFrom = 1, perPage = 1).orNull()!!
+            insightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true, pageFrom = 1, perPage = 1)
+                .orNull()!!
         }
         assertTrue(allObjectsList.searchResult == 2)
         val allObjects = allObjectsList.objects
@@ -345,7 +304,13 @@ abstract class AbstractMainTest {
 
         // page 1 and 2 explicit
         val allExplObjectsList = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true, pageFrom = 1, pageTo = 2, perPage = 1).orNull()!!
+            insightObjectOperator.getObjects(
+                OBJECTS.Abstract.id,
+                withChildren = true,
+                pageFrom = 1,
+                pageTo = 2,
+                perPage = 1
+            ).orNull()!!
         }
         assertTrue(allExplObjectsList.searchResult == 2)
         val allExplObjects = allExplObjectsList.objects
@@ -355,7 +320,13 @@ abstract class AbstractMainTest {
 
         // page 1
         val firstObjectsList = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true, pageFrom = 1, pageTo = 1, perPage = 1)
+            insightObjectOperator.getObjects(
+                OBJECTS.Abstract.id,
+                withChildren = true,
+                pageFrom = 1,
+                pageTo = 1,
+                perPage = 1
+            )
                 .orNull()!!
         }
         assertTrue(firstObjectsList.searchResult == 2)
@@ -365,7 +336,13 @@ abstract class AbstractMainTest {
 
         // page 2
         val secondObjectsList = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true, pageFrom = 2, pageTo = 2, perPage = 1)
+            insightObjectOperator.getObjects(
+                OBJECTS.Abstract.id,
+                withChildren = true,
+                pageFrom = 2,
+                pageTo = 2,
+                perPage = 1
+            )
                 .orNull()!!
         }
         assertTrue(secondObjectsList.searchResult == 2)
@@ -375,7 +352,8 @@ abstract class AbstractMainTest {
 
         // page doesn't exist
         val emptyObjectsList = runBlocking {
-            HttpInsightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true, pageFrom = 3, perPage = 1).orNull()!!
+            insightObjectOperator.getObjects(OBJECTS.Abstract.id, withChildren = true, pageFrom = 3, perPage = 1)
+                .orNull()!!
         }
         assertTrue(emptyObjectsList.searchResult == 2)
         val emptyObjects = emptyObjectsList.objects
@@ -383,7 +361,4 @@ abstract class AbstractMainTest {
 
         println("### END testGetObjectsWithChildrenPaginated")
     }
-
-    private fun calculateSha256(bytes: ByteArray): String =
-        MessageDigest.getInstance("SHA-256").digest(bytes).fold("") { str, it -> str + "%02x".format(it) }
 }

@@ -18,25 +18,26 @@
  * #L%
  */
 import com.linkedplanet.kotlinhttpclient.ktor.KtorHttpClient
-import com.linkedplanet.kotlininsightclient.AbstractMainTest
-import com.linkedplanet.kotlininsightclient.http.HttpInsightClientConfig
-import com.linkedplanet.kotlininsightclient.http.HttpInsightSchemaCacheOperator
-import org.junit.BeforeClass
+import com.linkedplanet.kotlininsightclient.InsightClientTest
+import com.linkedplanet.kotlininsightclient.http.*
 
 
-class InsightKtorClientTest : AbstractMainTest() {
+class InsightKtorClientTest : InsightClientTest() {
 
-    companion object {
-        @BeforeClass
-        @JvmStatic
-        fun setUp() {
-            println("#### Starting setUp")
-            val httpClient = KtorHttpClient(
-                "http://localhost:2990",
-                "admin",
-                "admin"
-            )
-            HttpInsightClientConfig.init("http://localhost:2990", httpClient, HttpInsightSchemaCacheOperator)
-        }
+    override val insightObjectOperator get() = HttpInsightObjectOperator(clientContext)
+    override val insightAttachmentOperator get() = HttpInsightAttachmentOperator(clientContext)
+    override val insightObjectTypeOperator get() = HttpInsightObjectTypeOperator(clientContext)
+    override val insightHistoryOperator get() = HttpInsightHistoryOperator(clientContext)
+
+    private val clientContext: HttpInsightClientContext
+
+    init {
+        println("#### Starting setUp")
+        val httpClient = KtorHttpClient(
+            "http://localhost:2990",
+            "admin",
+            "admin"
+        )
+        clientContext = HttpInsightClientContext("http://localhost:2990", httpClient)
     }
 }

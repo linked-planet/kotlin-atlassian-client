@@ -19,31 +19,21 @@
  */
 package com.linkedplanet.kotlininsightclient.http
 
-import arrow.core.Either
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
-import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaCacheOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaDescription
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import kotlinx.coroutines.runBlocking
 
-object HttpInsightClientConfig {
-    lateinit var baseUrl: String
-    lateinit var httpClient: BaseHttpClient
-
+class HttpInsightClientContext(val baseUrl: String, val httpClient: BaseHttpClient) {
     lateinit var insightSchemaCacheOperator: InsightSchemaCacheOperator
+
     var objectSchemas: List<ObjectTypeSchema> = emptyList()
     var schemaDescriptionCache: List<InsightSchemaDescription> = emptyList()
 
-    fun <T : BaseHttpClient> init(
-        baseUrlIn: String,
-        httpClientIn: T,
-        insightSchemaOperator: InsightSchemaCacheOperator
-    ): Either<InsightClientError, Unit> {
-        baseUrl = baseUrlIn
-        httpClient = httpClientIn
-        return runBlocking {
-            insightSchemaOperator.updateSchemaCache()
+    init {
+        runBlocking {
+            insightSchemaCacheOperator.updateSchemaCache()
         }
     }
 }

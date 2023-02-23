@@ -26,10 +26,10 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightHistoryOperato
 import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
-object HttpInsightHistoryOperator : InsightHistoryOperator {
+class HttpInsightHistoryOperator(private val context: HttpInsightClientContext) : InsightHistoryOperator {
 
     override suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>> =
-        HttpInsightClientConfig.httpClient.executeRestList<InsightHistoryItem>(
+        context.httpClient.executeRestList<InsightHistoryItem>(
             "GET",
             "rest/insight/1.0/object/${objectId}/history",
             emptyMap(),

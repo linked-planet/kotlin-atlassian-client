@@ -31,10 +31,10 @@ import java.net.URLConnection
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-object HttpInsightAttachmentOperator : InsightAttachmentOperator {
+class HttpInsightAttachmentOperator(private val context: HttpInsightClientContext) : InsightAttachmentOperator {
 
     override suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>> =
-        HttpInsightClientConfig.httpClient.executeRestList<InsightAttachment>(
+        context.httpClient.executeRestList<InsightAttachment>(
             "GET",
             "rest/insight/1.0/attachments/object/${objectId}",
             emptyMap(),
@@ -47,7 +47,7 @@ object HttpInsightAttachmentOperator : InsightAttachmentOperator {
 
     // TODO: Downloads not working in both
     override suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray> =
-        HttpInsightClientConfig.httpClient.executeDownload(
+        context.httpClient.executeDownload(
             "GET",
             url,
             emptyMap(),
@@ -65,7 +65,7 @@ object HttpInsightAttachmentOperator : InsightAttachmentOperator {
         comment: String
     ): Either<InsightClientError, List<InsightAttachment>> = either {
         val mimeType = URLConnection.guessContentTypeFromName(filename)
-        HttpInsightClientConfig.httpClient.executeUpload(
+        context.httpClient.executeUpload(
             "POST",
             "/rest/insight/1.0/attachments/object/${objectId}",
             emptyMap(),
@@ -80,7 +80,7 @@ object HttpInsightAttachmentOperator : InsightAttachmentOperator {
     }
 
     override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String> =
-        HttpInsightClientConfig.httpClient.executeRestCall(
+        context.httpClient.executeRestCall(
             "DELETE",
             "/rest/insight/1.0/attachments/${attachmentId}",
             emptyMap(),

@@ -24,30 +24,29 @@ import com.atlassian.applinks.api.application.jira.JiraApplicationType
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal
 import com.atlassian.confluence.user.UserAccessor
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
-import com.atlassian.sal.api.ApplicationProperties
 import com.linkedplanet.kotlinhttpclient.atlas.AtlasHttpClient
-import com.linkedplanet.kotlininsightclient.AbstractMainTest
-import com.linkedplanet.kotlininsightclient.http.HttpInsightClientConfig
-import com.linkedplanet.kotlininsightclient.http.HttpInsightSchemaCacheOperator
+import com.linkedplanet.kotlininsightclient.InsightClientTest
+import com.linkedplanet.kotlininsightclient.api.interfaces.*
+import com.linkedplanet.kotlininsightclient.http.*
 import org.junit.Before
 import org.junit.runner.RunWith
 
 @RunWith(AtlassianPluginsTestRunner::class)
-class InsightApplinkClientTest : AbstractMainTest {
+class InsightApplinkClientTest constructor(
+    private var userAccessor: UserAccessor,
+    applicationLinkService: ApplicationLinkService
+) : InsightClientTest() {
 
-    private lateinit var userAccessor: UserAccessor
-    private lateinit var applicationProperties: ApplicationProperties
-    private lateinit var applicationLinkService: ApplicationLinkService
+    private val clientContext: HttpInsightClientContext
 
-    constructor(
-        userAccessor: UserAccessor,
-        applicationProperties: ApplicationProperties,
-        applicationLinkService: ApplicationLinkService
-    ) {
-        this.userAccessor = userAccessor
-        this.applicationProperties = applicationProperties
-        this.applicationLinkService = applicationLinkService
+    override val insightObjectOperator get() = HttpInsightObjectOperator(clientContext)
+    override val insightAttachmentOperator get() = HttpInsightAttachmentOperator(clientContext)
+    override val insightObjectTypeOperator get() = HttpInsightObjectTypeOperator(clientContext)
+    override val insightHistoryOperator get() = HttpInsightHistoryOperator(clientContext)
+
+    init {
         println("### Starting MainWiredTest")
+
         println("### AppLinkUrl: ${applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java).displayUrl}")
         val serviceUser = userAccessor.getUserByName("admin")
         AuthenticatedUserThreadLocal.asUser(serviceUser)
@@ -55,7 +54,9 @@ class InsightApplinkClientTest : AbstractMainTest {
         val httpClient = AtlasHttpClient(
             appLink
         )
-        HttpInsightClientConfig.init("http://localhost:8080", httpClient, HttpInsightSchemaCacheOperator)
+
+        clientContext = HttpInsightClientContext("http://localhost:8080", httpClient)
+
         println("### Starting MainWiredTest")
     }
 
