@@ -27,7 +27,7 @@ import org.junit.FixMethodOrder
 import org.junit.runners.MethodSorters
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-abstract class AbstractBaseTest<JiraFieldType> :
+abstract class JiraClientTest<JiraFieldType> :
     JiraCommentOperatorTest<JiraFieldType>,
     JiraIssueLinkOperatorTest<JiraFieldType>,
     JiraIssueOperatorTest<JiraFieldType>,

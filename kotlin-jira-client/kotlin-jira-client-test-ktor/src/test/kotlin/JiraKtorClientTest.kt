@@ -18,14 +18,14 @@
  * #L%
  */
 import com.linkedplanet.kotlinhttpclient.ktor.KtorHttpClient
-import com.linkedplanet.kotlinjiraclient.AbstractBaseTest
+import com.linkedplanet.kotlinjiraclient.JiraClientTest
 import com.linkedplanet.kotlinjiraclient.api.field.JiraFieldFactory
 import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.http.*
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraField
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraFieldFactory
 
-class JiraKtorClientTest : AbstractBaseTest<HttpJiraField>() {
+class JiraKtorClientTest : JiraClientTest<HttpJiraField>() {
 
     override val issueOperator: JiraIssueOperator<HttpJiraField> get() = HttpJiraIssueOperator(clientContext)
     override val fieldFactory: JiraFieldFactory<HttpJiraField> get() = HttpJiraFieldFactory

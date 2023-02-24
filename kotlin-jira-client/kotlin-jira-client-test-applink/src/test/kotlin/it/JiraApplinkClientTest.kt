@@ -25,7 +25,7 @@ import com.atlassian.confluence.user.AuthenticatedUserThreadLocal
 import com.atlassian.confluence.user.UserAccessor
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlinhttpclient.atlas.AtlasHttpClient
-import com.linkedplanet.kotlinjiraclient.AbstractBaseTest
+import com.linkedplanet.kotlinjiraclient.JiraClientTest
 import com.linkedplanet.kotlinjiraclient.api.field.JiraFieldFactory
 import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.http.*
@@ -38,7 +38,7 @@ import org.junit.runner.RunWith
 class JiraApplinkClientTest constructor(
     private var userAccessor: UserAccessor,
     applicationLinkService: ApplicationLinkService
-) : AbstractBaseTest<HttpJiraField>() {
+) : JiraClientTest<HttpJiraField>() {
 
     private val clientContext: HttpJiraClientContext
 

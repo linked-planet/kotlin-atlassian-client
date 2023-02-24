@@ -21,7 +21,7 @@ package it
 
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
-import com.linkedplanet.kotlinjiraclient.AbstractBaseTest
+import com.linkedplanet.kotlinjiraclient.JiraClientTest
 import com.linkedplanet.kotlinjiraclient.api.field.JiraFieldFactory
 import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.sdk.*
@@ -31,7 +31,7 @@ import org.junit.Before
 import org.junit.runner.RunWith
 
 @RunWith(AtlassianPluginsTestRunner::class)
-class JiraSdkClientTest : AbstractBaseTest<SdkJiraField>() {
+class JiraSdkClientTest : JiraClientTest<SdkJiraField>() {
 
     private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
     private val userManager by lazy { ComponentAccessor.getUserManager() }
