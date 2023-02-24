@@ -20,13 +20,12 @@
 package com.linkedplanet.kotlininsightclient.http
 
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
-import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaCacheOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaDescription
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import kotlinx.coroutines.runBlocking
 
 class HttpInsightClientContext(val baseUrl: String, val httpClient: BaseHttpClient) {
-    lateinit var insightSchemaCacheOperator: InsightSchemaCacheOperator
+    private val insightSchemaCacheOperator = HttpInsightSchemaCacheOperator(this)
 
     var objectSchemas: List<ObjectTypeSchema> = emptyList()
     var schemaDescriptionCache: List<InsightSchemaDescription> = emptyList()
