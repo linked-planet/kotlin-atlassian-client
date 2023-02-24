@@ -46,7 +46,7 @@ class HttpInsightSchemaCacheOperator(private val context: HttpInsightClientConte
 
     override suspend fun getSchemaCache(): Either<InsightClientError, List<InsightSchemaDescription>> =
         either {
-            val schemas = insightSchemaOperator.getSchemas().bind().objectschemas
+            val schemas = insightSchemaOperator.getSchemas().bind()
             schemas.map { schema ->
                 val objectTypes = insightObjectTypeOperator.getObjectTypesBySchema(schema.id).bind()
                 val objectTypeDescriptions = objectTypes.map {

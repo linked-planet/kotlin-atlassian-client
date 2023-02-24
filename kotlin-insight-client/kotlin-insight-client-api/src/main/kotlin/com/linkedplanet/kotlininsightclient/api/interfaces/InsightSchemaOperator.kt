@@ -25,5 +25,5 @@ import com.linkedplanet.kotlininsightclient.api.model.*
 
 interface InsightSchemaOperator {
 
-    suspend fun getSchemas(): Either<InsightClientError, InsightSchemas>
+    suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>>
 }

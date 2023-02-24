@@ -23,13 +23,14 @@ import arrow.core.Either
 import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
+import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemas
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
 class HttpInsightSchemaOperator(private val context: HttpInsightClientContext) :
     InsightSchemaOperator {
 
-    override suspend fun getSchemas(): Either<InsightClientError, InsightSchemas> =
+    override suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>> =
         context.httpClient.executeRest<InsightSchemas>(
             "GET",
             "/rest/insight/1.0/objectschema/list",
@@ -38,7 +39,7 @@ class HttpInsightSchemaOperator(private val context: HttpInsightClientContext) :
             "application/json",
             object : TypeToken<InsightSchemas>() {}.type
         )
-            .map { it.body!! }
+            .map { it.body!!.objectschemas }
             .mapLeft { it.toInsightClientError() }
 
 }
