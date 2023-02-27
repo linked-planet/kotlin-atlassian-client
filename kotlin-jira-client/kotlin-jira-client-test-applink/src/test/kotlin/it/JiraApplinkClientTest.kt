@@ -58,7 +58,7 @@ class JiraApplinkClientTest constructor(
     override val projectKey: String get() = "TEST"
 
     init {
-        println("### Starting MainWiredTest")
+        println("### Starting JiraApplinkClientTest")
         val primaryApplicationLink = applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java)
 
         println("### AppLinkUrl: ${primaryApplicationLink.displayUrl}")
@@ -67,7 +67,7 @@ class JiraApplinkClientTest constructor(
 
         val httpClient = AtlasHttpClient(primaryApplicationLink)
         clientContext = HttpJiraClientContext(primaryApplicationLink.rpcUrl.toString(), httpClient)
-        println("### Finishing MainWiredTest")
+        println("### Finishing JiraApplinkClientTest")
     }
 
     @Before
