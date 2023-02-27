@@ -48,13 +48,11 @@ fun InsightObject.getAttribute(id: Int): InsightAttribute? =
 
 fun InsightObject.isReferenceAttribute(id: Int): Boolean =
     getAttribute(id)
-        ?.let { it.value.any { value -> value.referencedObject != null } }
-        ?: false
+        ?.attributeType == InsightObjectAttributeType.REFERENCE
 
 fun InsightObject.isValueAttribute(id: Int): Boolean =
     getAttribute(id)
-        ?.let { it.value.any { value -> value.value != null } }
-        ?: false
+        ?.attributeType == InsightObjectAttributeType.DEFAULT
 
 fun InsightObject.exists(id: Int): Boolean =
     getAttribute(id) != null
@@ -72,7 +70,7 @@ fun InsightObject.getValueList(id: Int): List<Any> =
 
 fun <T> InsightObject.setValueList(id: Int, values: List<T?>) {
     if (!exists(id)) {
-        this.createAttribute(id)
+        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.value = values.map {
@@ -82,7 +80,7 @@ fun <T> InsightObject.setValueList(id: Int, values: List<T?>) {
 
 fun <T> InsightObject.setValue(id: Int, value: T?) {
     if (!exists(id)) {
-        this.createAttribute(id)
+        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.value = listOf(ObjectAttributeValue(value, "", null))
@@ -95,7 +93,7 @@ fun <T> InsightObject.removeValue(id: Int, value: T?) {
 
 fun InsightObject.addValue(id: Int, value: Any?) {
     if (!exists(id)) {
-        this.createAttribute(id)
+        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.apply {
@@ -176,7 +174,7 @@ fun InsightObject.clearReferenceValue(id: Int) {
 
 fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) {
     if (!exists(attributeId)) {
-        this.createAttribute(attributeId)
+        this.createAttribute(attributeId, InsightObjectAttributeType.REFERENCE)
     }
     getAttribute(attributeId)
         ?.let {
@@ -199,10 +197,16 @@ fun InsightObject.setSingleReference(id: Int, referencedObjectId: Int) {
     this.addReference(id, referencedObjectId)
 }
 
+fun InsightObject.toEditObjectItem() =
+    ObjectEditItem(
+        objectTypeId,
+        getEditAttributes()
+    )
+
 fun InsightObject.getEditAttributes() =
     this.attributes.map { insightAttr ->
         val values = insightAttr.value.map {
-            if (it.referencedObject != null) {
+            if (insightAttr.attributeType == InsightObjectAttributeType.REFERENCE) {
                 ObjectEditItemAttributeValue(
                     it.referencedObject!!.id
                 )
@@ -218,9 +222,23 @@ fun InsightObject.getEditAttributes() =
         )
     }
 
-private fun InsightObject.createAttribute(id: Int) {
+/**
+ * See type attribute in response of https://insight-javadoc.riada.io/insight-javadoc-8.6/insight-rest/#object__id__attributes_get
+ */
+enum class InsightObjectAttributeType(val value: Int) {
+    DEFAULT(0),
+    REFERENCE(1);
+
+    companion object {
+        fun parse(value: Int) =
+            values().single { it.value == value }
+    }
+}
+
+private fun InsightObject.createAttribute(id: Int, attributeType: InsightObjectAttributeType) {
     this.attributes = this.attributes + InsightAttribute(
         id,
+        attributeType,
         emptyList()
     )
 }
@@ -235,6 +253,7 @@ data class InsightReference(
 
 data class InsightAttribute(
     val attributeId: Int,
+    val attributeType: InsightObjectAttributeType,
     var value: List<ObjectAttributeValue>
 )
 
@@ -324,13 +343,14 @@ data class ObjectTypeAttribute(
     val id: Int,
     val name: String,
     val referenceObjectTypeId: Int,
-    val referenceObjectType: InsightMetaObjectType
+    val referenceObjectType: InsightMetaObjectType,
+    val type: Int
 )
 
 data class ObjectAttributeValue(
     var value: Any?,
     var displayValue: Any?,
-    var referencedObject: ReferencedObject?
+    var referencedObject: ReferencedObject?,
 )
 
 data class ReferencedObject(

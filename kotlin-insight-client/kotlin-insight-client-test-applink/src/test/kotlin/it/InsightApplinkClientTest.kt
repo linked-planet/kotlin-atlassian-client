@@ -41,11 +41,11 @@ class InsightApplinkClientTest constructor(
 
     override val insightObjectOperator get() = HttpInsightObjectOperator(clientContext)
     override val insightAttachmentOperator get() = HttpInsightAttachmentOperator(clientContext)
-    override val insightObjectTypeOperator get() = HttpInsightObjectTypeOperator(clientContext)
+    override val insightSchemaOperator get() = HttpInsightSchemaOperator(clientContext)
     override val insightHistoryOperator get() = HttpInsightHistoryOperator(clientContext)
 
     init {
-        println("### Starting MainWiredTest")
+        println("### Starting InsightApplinkClientTest")
 
         println("### AppLinkUrl: ${applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java).displayUrl}")
         val serviceUser = userAccessor.getUserByName("admin")
@@ -57,7 +57,7 @@ class InsightApplinkClientTest constructor(
 
         clientContext = HttpInsightClientContext("http://localhost:8080", httpClient)
 
-        println("### Starting MainWiredTest")
+        println("### Starting InsightApplinkClientTest")
     }
 
     @Before

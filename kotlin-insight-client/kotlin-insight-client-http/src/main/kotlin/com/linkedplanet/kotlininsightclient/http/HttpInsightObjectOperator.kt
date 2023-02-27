@@ -71,17 +71,11 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
-        val attrs = obj.getEditAttributes()
-        val editItem = ObjectEditItem(
-            obj.objectTypeId,
-            attrs
-        )
-
         context.httpClient.executeRest<ObjectUpdateResponse>(
             "PUT",
             "rest/insight/1.0/object/${obj.id}",
             emptyMap(),
-            GSON.toJson(editItem),
+            GSON.toJson(obj.toEditObjectItem()),
             "application/json",
             ObjectUpdateResponse::class.java
         )
@@ -241,8 +235,13 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     private fun InsightObjectApiResponse.toValue(): InsightObject {
         val attributes = this.attributes.map {
+            val attributeType =
+                it.objectTypeAttribute?.type
+                    ?.let { type -> InsightObjectAttributeType.parse(type) }
+                    ?: InsightObjectAttributeType.DEFAULT
             InsightAttribute(
                 it.objectTypeAttributeId,
+                attributeType,
                 it.objectAttributeValues
             )
         }
