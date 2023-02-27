@@ -19,7 +19,11 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-enum class OBJECTS(val id: Int) {
+enum class SchemaObject(val id: Int) {
+    ITest(1)
+}
+
+enum class InsightObject(val id: Int) {
     Company(1),
     Country(2),
     TestWithLists(4),
@@ -28,25 +32,17 @@ enum class OBJECTS(val id: Int) {
     Abstract(6)
 }
 
-enum class MANY {
-    Name
-}
+enum class InsightAttribute(val id: Int) {
+    CompanyName(2),
+    CompanyCountry(10),
 
-enum class COMPANY {
-    Name,
-    Country
-}
+    CountryKey(5),
+    CountryName(6),
+    CountryShortName(9),
 
-enum class COUNTRY {
-    Name,
-    Key,
-    ShortName
-}
+    TestWithListsItemList(21),
+    TestWithListsStringList(22),
 
-enum class TEST_WITH_LISTS {
-    ItemList
-}
-
-enum class SIMPLE_OBJECT {
-    Firstname,
+    SimpleObjectFirstname(15),
+    SimpleObjectLastname(16),
 }

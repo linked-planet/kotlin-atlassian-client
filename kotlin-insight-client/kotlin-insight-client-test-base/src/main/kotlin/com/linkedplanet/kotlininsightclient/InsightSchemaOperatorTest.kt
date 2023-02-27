@@ -19,20 +19,20 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 interface InsightSchemaOperatorTest {
-    val insightObjectTypeOperator: InsightObjectTypeOperator
+    val insightSchemaOperator: InsightSchemaOperator
 
     @Test
     fun testSchemaLoad() {
         println("### START schema_testSchemaLoad")
 
         val schemas = runBlocking {
-            insightObjectTypeOperator.loadAllObjectTypeSchemas()
+            insightSchemaOperator.getSchemas()
         }
         assertTrue(schemas.isNotEmpty())
 

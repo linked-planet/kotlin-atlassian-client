@@ -71,11 +71,10 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
-        val objRefEditAttributes = obj.getEditReferences()
-        val objEditAttributes = obj.getEditValues()
+        val attrs = obj.getEditAttributes()
         val editItem = ObjectEditItem(
-            obj.objectType.id,
-            objEditAttributes + objRefEditAttributes
+            obj.objectTypeId,
+            attrs
         )
 
         context.httpClient.executeRest<ObjectUpdateResponse>(
@@ -86,7 +85,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             "application/json",
             ObjectUpdateResponse::class.java
         )
-            .map { getObjectById(it.body!!.id).map { it!! } }
+            .map { updateResponse -> getObjectById(updateResponse.body!!.id).map { it!! } }
             .mapLeft { it.toInsightClientError() }
             .flatten()
             .bind()
@@ -107,11 +106,9 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     ): Either<InsightClientError, InsightObject> = either {
         val obj = createEmptyObject(objectTypeId)
         func(obj)
-        val objRefEditAttributes = obj.getEditReferences()
-        val objEditAttributes = obj.getEditValues()
         val editItem = ObjectEditItem(
-            obj.objectType.id,
-            objEditAttributes + objRefEditAttributes
+            obj.objectTypeId,
+            obj.getEditAttributes()
         )
         // TODO: ensure object type has the specified attributes
         val response = context.httpClient.executeRest<ObjectUpdateResponse>(
@@ -243,19 +240,15 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     private fun InsightObjectApiResponse.toValue(): InsightObject {
-        val objectType =
-            context.objectSchemas.first { it.id == this.objectType.id }
         val attributes = this.attributes.map {
-            val attributeId = it.objectTypeAttributeId
             InsightAttribute(
                 it.objectTypeAttributeId,
-                objectType.attributes.firstOrNull { it.id == attributeId }?.name ?: "",
                 it.objectAttributeValues
             )
         }
         val objectSelf = "${context.baseUrl}/secure/insight/assets/${this.objectKey}"
         return InsightObject(
-            objectType,
+            this.objectType.id,
             this.id,
             this.objectKey,
             this.label,
@@ -273,56 +266,14 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         }
 
     private fun createEmptyObject(objectTypeId: Int): InsightObject {
-        val schema = context.objectSchemas.first { it.id == objectTypeId }
-        val attributes = schema.attributes.map {
-            InsightAttribute(
-                it.id,
-                it.name,
-                emptyList()
-            )
-        }
         return InsightObject(
-            schema,
+            objectTypeId,
             -1,
             "",
             "",
-            attributes,
+            emptyList(),
             false,
             ""
         )
     }
-
-    private fun InsightObject.getEditReferences(): List<ObjectEditItemAttribute> =
-        this.attributes
-            .filter { it.value.any { it.referencedObject != null } }
-            .map {
-                val values = it.value.map {
-                    ObjectEditItemAttributeValue(
-                        it.referencedObject!!.id
-                    )
-                }
-                ObjectEditItemAttribute(
-                    it.attributeId,
-                    values
-                )
-            }
-
-    private fun InsightObject.getEditValues(): List<ObjectEditItemAttribute> =
-        this.attributes
-            .filter { it.value.any { it.value != null } || this.isSelectField(it.attributeName) }
-            .map {
-                val values = it.value.map {
-                    ObjectEditItemAttributeValue(
-                        it.value
-                    )
-                }
-                ObjectEditItemAttribute(
-                    it.attributeId,
-                    values
-                )
-            }
-
-    private fun InsightObject.isSelectField(attributeName: String): Boolean =
-        this.getAttributeType(attributeName)?.takeIf { it == "Select" }?.let { true } ?: false
-
 }

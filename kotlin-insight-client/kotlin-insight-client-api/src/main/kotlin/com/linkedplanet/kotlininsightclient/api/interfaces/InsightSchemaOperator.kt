@@ -21,9 +21,11 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.model.*
+import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
 
 interface InsightSchemaOperator {
 
     suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>>
+
+    suspend fun getSchema(id: Int): Either<InsightClientError, InsightSchema>
 }

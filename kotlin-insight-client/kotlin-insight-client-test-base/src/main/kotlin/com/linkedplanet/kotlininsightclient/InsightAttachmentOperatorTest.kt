@@ -34,7 +34,7 @@ interface InsightAttachmentOperatorTest {
     fun testAttachments() {
         println("### START attachment_testGetAndDownloadAttachments")
         runBlocking {
-            val country = insightObjectOperator.getObjectByName(OBJECTS.Country.id, "Germany").orNull()!!
+            val country = insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
             val attachments = insightAttachmentOperator.getAttachments(country.id).orNull() ?: emptyList()
             val firstAttachment = attachments.first()
             assertEquals(1, attachments.size)

@@ -25,22 +25,10 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 
 interface InsightObjectTypeOperator {
 
-    suspend fun loadAllObjectTypeSchemas(): Either<InsightClientError, List<ObjectTypeSchema>>
-
-    suspend fun loadObjectTypeSchemas(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>>
-
-    suspend fun reloadObjectTypeSchema(schemaId: Int, name: String): Either<InsightClientError, Unit>
-
-    suspend fun reloadObjectTypeSchema(schemaId: Int, id: Int): Either<InsightClientError, Unit>
-
     suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>>
 
     suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,
         rootObjectTypeId: Int
     ): Either<InsightClientError, List<ObjectTypeSchema>>
-
-    suspend fun getObjectTypeSchemas(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>>
-
-    suspend fun populateObjectTypeSchemaAttributes(objectTypeSchema: ObjectTypeSchema): Either<InsightClientError, ObjectTypeSchema>
 }

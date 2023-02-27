@@ -24,22 +24,35 @@ import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
-import com.linkedplanet.kotlininsightclient.api.model.InsightSchemas
+import com.linkedplanet.kotlininsightclient.http.model.HttpInsightSchemaList
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
-class HttpInsightSchemaOperator(private val context: HttpInsightClientContext) :
+open class HttpInsightSchemaOperator(
+    private val context: HttpInsightClientContext
+) :
     InsightSchemaOperator {
 
     override suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>> =
-        context.httpClient.executeRest<InsightSchemas>(
+        context.httpClient.executeRest<HttpInsightSchemaList>(
             "GET",
             "/rest/insight/1.0/objectschema/list",
             emptyMap(),
             null,
             "application/json",
-            object : TypeToken<InsightSchemas>() {}.type
+            object : TypeToken<HttpInsightSchemaList>() {}.type
         )
             .map { it.body!!.objectschemas }
             .mapLeft { it.toInsightClientError() }
 
+    override suspend fun getSchema(id: Int): Either<InsightClientError, InsightSchema> =
+        context.httpClient.executeRest<InsightSchema>(
+            "GET",
+            "/rest/insight/1.0/objectschema/$id",
+            emptyMap(),
+            null,
+            "application/json",
+            object : TypeToken<InsightSchema>() {}.type
+        )
+            .map { it.body!! }
+            .mapLeft { it.toInsightClientError() }
 }
