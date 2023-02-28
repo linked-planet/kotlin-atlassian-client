@@ -6,7 +6,7 @@ on:
   release:
     types: [ created ]
   schedule:
-    - cron: '0 2 * * 2' # At 02:00 on Tuesday
+    - cron: '0 4 * * 2' # At 02:00 on Tuesday
 
 env:
   MAIN_BRANCH: 'dev'
