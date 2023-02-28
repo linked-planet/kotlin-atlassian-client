@@ -87,7 +87,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val issues: List<Story> = runBlocking {
             issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).orNull() ?: emptyList()
         }
-
+        assertEquals(10, issues.size)
         val keys = 1..10
         keys.forEach { searchedKeyIndex ->
             val issue = issues.first { "Test-$searchedKeyIndex" == it.summary }
@@ -101,28 +101,59 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_04GetIssuesByJQLPaginated() {
         println("### START issues_04GetIssuesByJQLPaginated")
         val pages = 1..10
-        pages.forEach { page ->
-            val issuePage: List<Story> = runBlocking {
+        val issues = pages.flatMap { pageNumber ->
+            val page: List<Story> = runBlocking {
                 issueOperator.getIssuesByJQLPaginated(
                     "summary ~ \"Test-*\"",
-                    page - 1,
+                    pageNumber - 1,
                     1,
                     parser = ::issueParser
                 ).orNull() ?: emptyList()
             }
-
-            assertEquals(1, issuePage.size)
-
-            val issue = issuePage.first()
-            assertEquals("IT-1", issue.insightObjectKey)
+            assertEquals(1, page.size)
+            page
+        }
+        assertEquals(10, issues.size)
+        val issueKeys = (1..10)
+        issueKeys.forEach { issueKey ->
+            val issue = issues.singleOrNull { it.summary == "Test-$issueKey" }
+            assertNotNull(issue)
+            assertEquals("IT-1", issue!!.insightObjectKey)
             assertEquals("To Do", issue.status.name)
         }
         println("### END issues_04GetIssuesByJQLPaginated")
     }
 
     @Test
-    fun issues_05GetIssuesByIssueTypePaginated() {
-        println("### START issues_05GetIssuesByIssueTypePaginated")
+    fun issues_05GetIssuesByJQLPaginated() {
+        println("### START issues_05GetIssuesByJQLPaginated")
+        val pages = 1..5
+        val issues = pages.flatMap { pageNumber ->
+            val page = runBlocking {
+                issueOperator.getIssuesByJQLPaginated(
+                    "summary ~ \"Test-*\"",
+                    pageNumber - 1,
+                    2,
+                    parser = ::issueParser
+                ).orNull() ?: emptyList()
+            }
+            assertEquals(2, page.size)
+            page
+        }
+        assertEquals(10, issues.size)
+        val issueKeys = (1..10)
+        issueKeys.forEach { issueKey ->
+            val issue = issues.singleOrNull { it.summary == "Test-$issueKey" }
+            assertNotNull(issue)
+            assertEquals("IT-1", issue!!.insightObjectKey)
+            assertEquals("To Do", issue.status.name)
+        }
+        println("### END issues_05GetIssuesByJQLPaginated")
+    }
+
+    @Test
+    fun issues_06GetIssuesByIssueTypePaginated() {
+        println("### START issues_06GetIssuesByIssueTypePaginated")
         val pages = 1..10
         val issues = pages.flatMap { page ->
             runBlocking {
@@ -137,17 +168,19 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             }
         }
         assertEquals(10, issues.size)
-        issues.forEach { issue ->
+        val issueKeys = (1..10)
+        issueKeys.forEach { issueKey ->
+            val issue = issues.singleOrNull { it.summary == "Test-$issueKey" }
             assertNotNull(issue)
-            assertEquals("IT-1", issue.insightObjectKey)
+            assertEquals("IT-1", issue!!.insightObjectKey)
             assertEquals("To Do", issue.status.name)
         }
-        println("### END issues_05GetIssuesByIssueTypePaginated")
+        println("### END issues_06GetIssuesByIssueTypePaginated")
     }
 
     @Test
-    fun issues_06CreateIssue() {
-        println("### START issues_06CreateIssue")
+    fun issues_07CreateIssue() {
+        println("### START issues_07CreateIssue")
 
         val summary = "MyNewSummary"
         val description = "MyDescription"
@@ -214,12 +247,12 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             createdIssue.zonedDateTime?.truncatedTo(ChronoUnit.MINUTES)?.withZoneSameInstant(ZoneOffset.UTC)
         )
 
-        println("### END issues_06CreateIssue")
+        println("### END issues_07CreateIssue")
     }
 
     @Test
-    fun issues_07UpdateIssue() {
-        println("### START issues_07UpdateIssue")
+    fun issues_08UpdateIssue() {
+        println("### START issues_08UpdateIssue")
 
         val issue = runBlocking {
             issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser)
@@ -282,12 +315,12 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertEquals("new", issueAfterUpdate.status.statusCategory)
         assertEquals(null, issueAfterUpdate.epicKey)
 
-        println("### END issues_07UpdateIssue")
+        println("### END issues_08UpdateIssue")
     }
 
     @Test
-    fun issues_08DeleteIssue() {
-        println("### START issues_08DeleteIssue")
+    fun issues_09DeleteIssue() {
+        println("### START issues_09DeleteIssue")
 
         val searchNewIssue = runBlocking {
             issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", ::issueParser)
@@ -302,12 +335,12 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         }
         assertNull(issuesAfterDeletion)
 
-        println("### END issues_08DeleteIssue")
+        println("### END issues_09DeleteIssue")
     }
 
     @Test
-    fun issues_09GetNonExistingIssue() {
-        println("### START issues_09GetNonExistingIssue")
+    fun issues_10GetNonExistingIssue() {
+        println("### START issues_10GetNonExistingIssue")
 
         val response = runBlocking {
             issueOperator.getIssueByKey("BLAAAA") { _, _ -> Either.Right(null) }
@@ -315,24 +348,24 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertTrue(response.isRight())
         assertNull(response.getOrElse { -1 })
 
-        println("### END issues_09GetNonExistingIssue")
+        println("### END issues_10GetNonExistingIssue")
     }
 
     @Test
-    fun issues_10GetIssuesByIQLError() {
-        println("### START issues_10GetIssuesByIQLError")
+    fun issues_11GetIssuesByIQLError() {
+        println("### START issues_11GetIssuesByIQLError")
 
         val response = runBlocking {
             issueOperator.getIssueByJQL("key = BLAAAA") { _, _ -> Either.Right(null) }
         }
         assertTrue(response.isLeft())
 
-        println("### END issues_10GetIssuesByIQLError")
+        println("### END issues_11GetIssuesByIQLError")
     }
 
     @Test
-    fun issues_11GetIssuesByJQLEmpty() {
-        println("### START issues_11GetIssuesByJQLEmpty")
+    fun issues_12GetIssuesByJQLEmpty() {
+        println("### START issues_12GetIssuesByJQLEmpty")
         val issues: List<Story>? = runBlocking {
             issueOperator.getIssuesByJQL("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
         }
@@ -340,12 +373,12 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertNotNull(issues)
         assertTrue(issues!!.isEmpty())
 
-        println("### END issues_11GetIssuesByJQLEmpty")
+        println("### END issues_12GetIssuesByJQLEmpty")
     }
 
     @Test
-    fun issues_12GetIssuesByJQLPaginatedEmpty() {
-        println("### START issues_12GetIssuesByJQLPaginatedEmpty")
+    fun issues_13GetIssuesByJQLPaginatedEmpty() {
+        println("### START issues_13GetIssuesByJQLPaginatedEmpty")
         val issues: List<Story>? = runBlocking {
             issueOperator.getIssuesByJQLPaginated("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
         }
@@ -353,6 +386,6 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertNotNull(issues)
         assertTrue(issues!!.isEmpty())
 
-        println("### END issues_12GetIssuesByJQLPaginatedEmpty")
+        println("### END issues_13GetIssuesByJQLPaginatedEmpty")
     }
 }

@@ -148,7 +148,7 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         pageSize: Int,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, List<T>> =
-        getIssuesByJqlWithPagerFilter(jql, PagerFilter.newPageAlignedFilter(0, 1), parser)
+        getIssuesByJqlWithPagerFilter(jql, PagerFilter.newPageAlignedFilter(pageIndex * pageSize, pageSize), parser)
 
     private suspend fun <T> issueToConcreteType(
         issue: Issue,
