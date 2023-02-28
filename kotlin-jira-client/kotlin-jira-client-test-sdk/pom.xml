@@ -199,6 +199,7 @@
                     </productDataPath>
                     <skipITs>true</skipITs>
                     <enableQuickReload>true</enableQuickReload>
+                    <startupTimeout>1800000</startupTimeout>
                     <jvmArgs>-Xms2g -Xmx4g -XX:+UseG1GC</jvmArgs>
                     <contextPath>/</contextPath>
                     <productLicense>${jira.service.management.license}</productLicense>
