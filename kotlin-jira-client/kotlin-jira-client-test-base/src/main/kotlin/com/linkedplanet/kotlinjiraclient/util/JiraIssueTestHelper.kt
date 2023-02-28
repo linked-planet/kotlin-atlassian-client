@@ -27,6 +27,7 @@ import com.linkedplanet.kotlinjiraclient.api.field.JIRA_DATE_TIME_FORMATTER
 import com.linkedplanet.kotlinjiraclient.api.field.JiraFieldFactory
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraStatus
+import com.linkedplanet.kotlinjiraclient.api.model.JiraTransition
 import com.linkedplanet.kotlinjiraclient.api.resolveConfig
 import java.time.ZonedDateTime
 import kotlinx.coroutines.runBlocking
@@ -73,7 +74,8 @@ data class Story(
     val insightObjectKey: String?,
     val insightObjectsKeys: List<String>?,
     val status: JiraStatus,
-    val epicKey: String?
+    val epicKey: String?,
+    val transitions: List<JiraTransition>
 )
 
 suspend fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Either<JiraClientError, Story> =
@@ -111,6 +113,15 @@ suspend fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Eithe
             statusObject.get("statusCategory").asJsonObject.get("key").asString
         )
 
+        val transitions =
+            jsonObject.get("transitions").asJsonArray
+                .map {
+                    val transition = it.asJsonObject
+                    val name = transition.get("name").asString
+                    val id = transition.get("id").asString
+                    JiraTransition(id, name)
+                }
+
         val epicKey: String? = fieldByName("Epic Link")?.asString
 
         Story(
@@ -130,7 +141,8 @@ suspend fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Eithe
             insightObjectKey,
             insightObjectsKeys,
             status,
-            epicKey
+            epicKey,
+            transitions
         )
     }
 

@@ -247,6 +247,11 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             createdIssue.zonedDateTime?.truncatedTo(ChronoUnit.MINUTES)?.withZoneSameInstant(ZoneOffset.UTC)
         )
 
+        val transitions = createdIssue.transitions
+        assertTrue(transitions.isNotEmpty())
+        assertTrue(transitions.singleOrNull { it.name == "Do it" }?.let { true } ?: false)
+        assertTrue(transitions.singleOrNull { it.name == "To Do" }?.let { true } ?: false)
+
         println("### END issues_07CreateIssue")
     }
 

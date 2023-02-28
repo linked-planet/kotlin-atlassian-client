@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,11 +29,11 @@ import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls
 import com.atlassian.jira.rest.v2.issue.IncludedFields
 import com.atlassian.jira.rest.v2.issue.IssueBean
 import com.atlassian.jira.rest.v2.issue.builder.BeanBuilderFactory
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonObject
+import com.google.gson.*
 import com.linkedplanet.kotlinjiraclient.sdk.field.FieldAccessorImpl
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.UriBuilder
+import javax.xml.bind.annotation.XmlTransient
 
 /**
  * Converts a Jira Issue to Json.
@@ -48,17 +48,18 @@ class IssueJsonConverter {
     private val beanBuilderFactory = ComponentAccessor.getOSGiComponentInstanceOfType(BeanBuilderFactory::class.java)
     private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
     private val uriBuilder: UriBuilder = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
-    private val gson by lazy { GsonBuilder().create() }
+    private val gson by lazy { setupGson() }
 
 
     @Throws(FieldException::class)
     fun createJsonIssue(issue: Issue): JsonObject {
-        val expand: String? = null
+        val expand = "names,transitions"
         val issueBean: IssueBean = beanBuilderFactory
             .newIssueBeanBuilder2(IncludedFields.includeNavigableByDefault(null), expand, uriBuilder)
             .build(issue)
         this.addOrderableFieldsToBean(issueBean, issue)
         this.addAvailableNavigableFieldsToBean(issueBean, issue)
+        this.apply { }
 
         return gson.toJsonTree(issueBean).asJsonObject
     }
@@ -92,4 +93,16 @@ class IssueJsonConverter {
         }
     }
 
+    private fun setupGson() =
+        GsonBuilder()
+            .setExclusionStrategies(object : ExclusionStrategy {
+                override fun shouldSkipField(f: FieldAttributes?): Boolean {
+                    return f?.getAnnotation(XmlTransient::class.java) != null
+                }
+
+                override fun shouldSkipClass(clazz: Class<*>?): Boolean {
+                    return false
+                }
+            })
+            .create()
 }
