@@ -51,6 +51,13 @@ interface InsightObjectOperator {
         perPage: Int = RESULTS_PER_PAGE
     ): Either<InsightClientError, InsightObjects>
 
+    suspend fun getObjectsByIQL(
+        iql: String,
+        pageFrom: Int,
+        pageTo: Int?,
+        perPage: Int
+    ): Either<InsightClientError, InsightObjects>
+
     suspend fun getObjectCount(iql: String): Either<InsightClientError, Int>
 
     suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>

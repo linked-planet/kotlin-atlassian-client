@@ -41,7 +41,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         perPage: Int
     ): Either<InsightClientError, InsightObjects> = either {
         val iql = getIQLWithChildren(objectTypeId, withChildren)
-        getObjectsByPlainIQL(iql, pageFrom, pageTo, perPage).bind()
+        getObjectsByIQL(iql, pageFrom, pageTo, perPage).bind()
     }
 
     override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
@@ -62,12 +62,52 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         perPage: Int
     ): Either<InsightClientError, InsightObjects> = either {
         val fullIql = "${getIQLWithChildren(objectTypeId, withChildren)} AND $iql"
-        getObjectsByPlainIQL(
+        getObjectsByIQL(
             fullIql,
             pageFrom,
             pageTo,
             perPage
         ).bind()
+    }
+
+    override suspend fun getObjectsByIQL(
+        iql: String,
+        pageFrom: Int,
+        pageTo: Int?,
+        perPage: Int
+    ): Either<InsightClientError, InsightObjects> = either {
+        val objectsAmount = getObjectCount(iql).bind()
+        val maxPage = getObjectPages(iql, perPage).bind()
+        val lastPage = pageTo ?: maxPage
+        lastPage.let { maxPageSize ->
+            (pageFrom..maxPageSize).toList()
+        }.flatMap { page ->
+            context.httpClient.executeRest<InsightObjectEntries>(
+                "GET",
+                "rest/insight/1.0/iql/objects",
+                mapOf(
+                    "iql" to iql,
+                    "includeTypeAttributes" to "true",
+                    "includeExtendedInfo" to "true",
+                    "page" to "$page",
+                    "resultPerPage" to perPage.toString()
+                ),
+                null,
+                "application/json",
+                InsightObjectEntries::class.java
+            )
+                .map { it.body }
+                .mapLeft { it.toInsightClientError() }
+                .bind()
+                ?.toValues()
+                ?.objects
+                ?: emptyList()
+        }.let {
+            InsightObjects(
+                objectsAmount,
+                it
+            )
+        }
     }
 
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
@@ -139,46 +179,6 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 JsonParser().parse(response.body).asJsonObject.get("toIndex").asInt
             }
             .mapLeft { it.toInsightClientError() }
-
-    private suspend fun getObjectsByPlainIQL(
-        iql: String,
-        pageFrom: Int,
-        pageTo: Int?,
-        perPage: Int
-    ): Either<InsightClientError, InsightObjects> = either {
-        val objectsAmount = getObjectCount(iql).bind()
-        val maxPage = getObjectPages(iql, perPage).bind()
-        val lastPage = pageTo ?: maxPage
-        lastPage.let { maxPageSize ->
-            (pageFrom..maxPageSize).toList()
-        }.flatMap { page ->
-            context.httpClient.executeRest<InsightObjectEntries>(
-                "GET",
-                "rest/insight/1.0/iql/objects",
-                mapOf(
-                    "iql" to iql,
-                    "includeTypeAttributes" to "true",
-                    "includeExtendedInfo" to "true",
-                    "page" to "$page",
-                    "resultPerPage" to perPage.toString()
-                ),
-                null,
-                "application/json",
-                InsightObjectEntries::class.java
-            )
-                .map { it.body }
-                .mapLeft { it.toInsightClientError() }
-                .bind()
-                ?.toValues()
-                ?.objects
-                ?: emptyList()
-        }.let {
-            InsightObjects(
-                objectsAmount,
-                it
-            )
-        }
-    }
 
     private fun InsightObjectEntries.toValues(): InsightObjects =
         InsightObjects(
