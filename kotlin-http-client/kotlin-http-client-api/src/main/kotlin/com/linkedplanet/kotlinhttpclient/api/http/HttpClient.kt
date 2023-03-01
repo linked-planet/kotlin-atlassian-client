@@ -1,7 +1,6 @@
 package com.linkedplanet.kotlinhttpclient.api.http
 
 import arrow.core.Either
-import com.linkedplanet.kotlinhttpclient.error.DomainError
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import java.lang.reflect.Type
 
@@ -21,7 +20,7 @@ interface HttpClient {
         params: Map<String, String>,
         body: String?,
         contentType: String?
-    ): Either<DomainError, HttpResponse<ByteArray>>
+    ): Either<HttpDomainError, HttpResponse<ByteArray>>
 
     suspend fun executeUpload(
         method: String,

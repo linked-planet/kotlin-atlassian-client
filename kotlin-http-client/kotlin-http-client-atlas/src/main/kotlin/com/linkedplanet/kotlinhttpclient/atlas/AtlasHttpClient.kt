@@ -75,7 +75,7 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(HttpDomainError(-1, "Jira/Insight hat ein internes Problem festgestellt", ""))
+            Either.Left(HttpDomainError(400, "Jira/Insight hat ein internes Problem festgestellt", e.message.toString()))
         }
 
     override suspend fun executeDownload(
@@ -121,7 +121,7 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(HttpDomainError(-1, "Jira/Insight hat ein internes Problem festgestellt", ""))
+            Either.Left(HttpDomainError(400, "Jira/Insight hat ein internes Problem festgestellt", e.message.toString()))
         }
 
     override suspend fun executeUpload(
@@ -169,6 +169,6 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(HttpDomainError(-1, "Jira/Insight hat ein internes Problem festgestellt", ""))
+            Either.Left(HttpDomainError(400, "Jira/Insight hat ein internes Problem festgestellt", e.message.toString()))
         }
 }
