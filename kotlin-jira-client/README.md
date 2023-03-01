@@ -1,4 +1,6 @@
 # kotlin-jira-client
+![Maven Central](https://img.shields.io/maven-central/v/com.linked-planet.client/kotlin-jira-client-api)
+![Jira 9.4.2](https://img.shields.io/badge/Jira-9.4.2-blue)
 
 Provides a Kotlin client for interaction with Atlassian Jira. It provides management functionality for
 
@@ -22,24 +24,37 @@ The plugin is available on Maven Central.
 First you need to define a dependency to the desired variant and initialize your client as described in the sections
 below.
 Then you can simply use the client as it's shown
-in [AbstractMainTest](kotlin-jira-client/kotlin-jira-client-test-base/src/main/kotlin/com/linkedplanet/kotlinjiraclient/AbstractMainTest.kt).
+in [JiraClientTest](kotlin-jira-client-test-base/src/main/kotlin/com/linkedplanet/kotlinjiraclient/JiraClientTest.kt).
 
 ### SDK
+
+|                          | **SDK**                               |
+|--------------------------|---------------------------------------|
+| Scope of application     | Jira-Plugin                           |
+| Implementation           | Atlassian Jira SDK libraries          |
+| Advantages/Disadvantages | + Fast <br> - Limited to Jira-Plugins |
 
 Add the following dependency to your `pom.xml`:
 
 ```xml
 
 <dependency>
-    <groupId>com.linked-planet</groupId>
+    <groupId>com.linked-planet.client</groupId>
     <artifactId>kotlin-jira-client-sdk</artifactId>
     <version>${jira.client.version}</version>
 </dependency>
 ```
 
-For client initialization take a look at the [SDKClientTest](kotlin-jira-client/kotlin-jira-client-test-sdk/src/test/kotlin/it/SdkClientTest.kt).
+For client initialization take a look at the [JiraSdkClientTest](kotlin-jira-client-test-sdk/src/test/kotlin/it/JiraSdkClientTest.kt).
 
 ### HTTP
+
+| Variant                  | **HTTP**                                      |
+|--------------------------|-----------------------------------------------|
+| Scope of application     | Any                                           |
+| Implementation           | Ktor or Atlassian Applink                     |
+| Advantages/Disadvantages | + Usable everywhere <br> - Comparatively slow |
+
 
 The HTTP variant requires an implementation of the `kotlin-http-client`.
 
@@ -53,18 +68,18 @@ Specify the following dependency for usage:
 ```xml
 
 <dependency>
-    <groupId>com.linked-planet</groupId>
+    <groupId>com.linked-planet.client</groupId>
     <artifactId>kotlin-jira-client-http</artifactId>
     <version>${jira.client.version}</version>
 </dependency>
 <dependency>
-<groupId>com.linked-planet</groupId>
+<groupId>com.linked-planet.client</groupId>
 <artifactId>kotlin-http-client-atlas</artifactId>
 <version>${http.client.version}</version>
 </dependency>
 ```
 
-For client initialization take a look at the [ApplinkClientTest](kotlin-jira-client/kotlin-jira-client-test-applink/src/test/kotlin/it/ApplinkClientTest.kt).
+For client initialization take a look at the [JiraApplinkClientTest](kotlin-jira-client-test-applink/src/test/kotlin/it/JiraApplinkClientTest.kt).
 
 #### HTTP via Ktor
 
@@ -75,18 +90,18 @@ Specify the following dependency for usage:
 ```xml
 
 <dependency>
-    <groupId>com.linked-planet</groupId>
+    <groupId>com.linked-planet.client</groupId>
     <artifactId>kotlin-jira-client-http</artifactId>
     <version>${jira.client.version}</version>
 </dependency>
 <dependency>
-<groupId>com.linked-planet</groupId>
+<groupId>com.linked-planet.client</groupId>
 <artifactId>kotlin-http-client-ktor</artifactId>
 <version>${http.client.version}</version>
 </dependency>
 ```
 
-For client initialization take a look at the [KtorClientTest](kotlin-jira-client/kotlin-jira-client-test-ktor/src/test/kotlin/KtorClientTest.kt).
+For client initialization take a look at the [JiraKtorClientTest](kotlin-jira-client-test-ktor/src/test/kotlin/JiraKtorClientTest.kt).
 
 ## Project structure
 
