@@ -23,6 +23,7 @@ import arrow.core.Either
 import com.google.gson.JsonObject
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
+import com.linkedplanet.kotlinjiraclient.api.model.Page
 
 /**
  * Provides methods for working with Jira issues, including retrieving issues by JQL query, issue type, or key; creating and updating issues; and deleting issues.
@@ -55,7 +56,7 @@ interface JiraIssueOperator<JiraFieldType> {
         pageIndex: Int = 0,
         pageSize: Int = RESULTS_PER_PAGE,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, List<T>>
+    ): Either<JiraClientError, Page<T>>
 
     /**
      * Returns an issue based on a JQL query.
@@ -96,7 +97,7 @@ interface JiraIssueOperator<JiraFieldType> {
         pageIndex: Int = 0,
         pageSize: Int = RESULTS_PER_PAGE,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, List<T>>
+    ): Either<JiraClientError, Page<T>>
 
     /**
      * Returns an issue by key.

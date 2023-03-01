@@ -27,10 +27,13 @@ import com.linkedplanet.kotlinhttpclient.api.http.*
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
+import com.linkedplanet.kotlinjiraclient.api.model.Page
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraField
 import com.linkedplanet.kotlinjiraclient.http.model.HttpMappingField
 import com.linkedplanet.kotlinjiraclient.http.util.fromHttpDomainError
 import kotlinx.coroutines.runBlocking
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIssueOperator<HttpJiraField> {
 
@@ -73,7 +76,7 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
         pageIndex: Int,
         pageSize: Int,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, List<T>> = either {
+    ): Either<JiraClientError, Page<T>> = either {
         val page = context.httpClient.executeGet<HttpJiraIssuePage>(
             "/rest/api/2/search",
             mapOf(
@@ -88,18 +91,29 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
             .mapLeft { JiraClientError.fromHttpDomainError(it) }
             .bind()
 
-        if (page.getTotal().toInt() < 1) {
+        val issues = if (page.getTotal().toInt() < 1) {
             emptyList()
         } else {
             parseIssues(page, parser).bind()
         }
+
+        val total = page.getTotal()
+        val startAt = page.getStartAt()
+        val maxResults = page.getMaxResults()
+        Page(
+            issues,
+            total.toInt(),
+            ceil(total.toDouble() / maxResults.toDouble()).toInt(),
+            floor(startAt.toDouble() / maxResults.toDouble()).toInt(),
+            maxResults.toInt()
+        )
     }
 
     override suspend fun <T> getIssueByJQL(
         jql: String,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?> = either {
-        getIssuesByJQLPaginated(jql, 0, 1, parser).bind().firstOrNull()
+        getIssuesByJQLPaginated(jql, 0, 1, parser).bind().items.firstOrNull()
     }
 
     override suspend fun <T> getIssuesByIssueType(
@@ -116,7 +130,7 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
         pageIndex: Int,
         pageSize: Int,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, List<T>> = either {
+    ): Either<JiraClientError, Page<T>> = either {
         getIssuesByJQLPaginated("project=$projectId AND issueType=$issueTypeId", pageIndex, pageSize, parser).bind()
     }
 

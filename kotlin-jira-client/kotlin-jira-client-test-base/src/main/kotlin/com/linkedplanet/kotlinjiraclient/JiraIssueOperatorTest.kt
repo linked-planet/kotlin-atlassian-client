@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlinjiraclient
 
 import arrow.core.*
+import com.linkedplanet.kotlinjiraclient.api.model.Page
 import com.linkedplanet.kotlinjiraclient.util.*
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -100,23 +101,28 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_04GetIssuesByJQLPaginated() {
         println("### START issues_04GetIssuesByJQLPaginated")
-        val pages = 1..10
-        val issues = pages.flatMap { pageNumber ->
-            val page: List<Story> = runBlocking {
+        // 10 items with page size 1 -> 10 pages
+        val pageNumbers = 1..10
+        val pages = pageNumbers.map { pageNumber ->
+            val page: Page<Story>? = runBlocking {
                 issueOperator.getIssuesByJQLPaginated(
                     "summary ~ \"Test-*\"",
                     pageNumber - 1,
                     1,
                     parser = ::issueParser
-                ).orNull() ?: emptyList()
+                ).orNull()
             }
-            assertEquals(1, page.size)
+            assertNotNull(page)
+            assertEquals(10, page!!.totalItems)
+            assertEquals(10, page.totalPages)
+            assertEquals(pageNumber - 1, page.currentPageIndex)
+            assertEquals(1, page.pageSize)
             page
         }
-        assertEquals(10, issues.size)
-        val issueKeys = (1..10)
-        issueKeys.forEach { issueKey ->
-            val issue = issues.singleOrNull { it.summary == "Test-$issueKey" }
+        assertEquals(10, pages.size)
+
+        pageNumbers.forEach { issueKey ->
+            val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
             assertNotNull(issue)
             assertEquals("IT-1", issue!!.insightObjectKey)
             assertEquals("To Do", issue.status.name)
@@ -127,23 +133,29 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_05GetIssuesByJQLPaginated() {
         println("### START issues_05GetIssuesByJQLPaginated")
-        val pages = 1..5
-        val issues = pages.flatMap { pageNumber ->
+        // 10 items with page size 2 -> 5 pages
+        val pageNumbers = 1..5
+        val pages = pageNumbers.map { pageNumber ->
             val page = runBlocking {
                 issueOperator.getIssuesByJQLPaginated(
                     "summary ~ \"Test-*\"",
                     pageNumber - 1,
                     2,
                     parser = ::issueParser
-                ).orNull() ?: emptyList()
+                ).orNull()
             }
-            assertEquals(2, page.size)
+            assertNotNull(page)
+            assertEquals(10, page!!.totalItems)
+            assertEquals(5, page.totalPages)
+            assertEquals(pageNumber - 1, page.currentPageIndex)
+            assertEquals(2, page.pageSize)
             page
         }
-        assertEquals(10, issues.size)
+        assertEquals(5, pages.size)
+
         val issueKeys = (1..10)
         issueKeys.forEach { issueKey ->
-            val issue = issues.singleOrNull { it.summary == "Test-$issueKey" }
+            val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
             assertNotNull(issue)
             assertEquals("IT-1", issue!!.insightObjectKey)
             assertEquals("To Do", issue.status.name)
@@ -154,23 +166,30 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_06GetIssuesByIssueTypePaginated() {
         println("### START issues_06GetIssuesByIssueTypePaginated")
-        val pages = 1..10
-        val issues = pages.flatMap { page ->
+        // 10 items with page size 3 -> 4 pages
+        val pageNumbers = 1..4
+        val pages = pageNumbers.map { pageNumber ->
             runBlocking {
-                issueOperator.getIssuesByTypePaginated(
+                val page = issueOperator.getIssuesByTypePaginated(
                     projectId,
                     issueTypeId,
-                    page - 1,
-                    1,
+                    pageNumber - 1,
+                    3,
                     parser = ::issueParser
-                )
-                    .orNull() ?: emptyList()
+                ).orNull()
+                assertNotNull(page)
+                assertEquals(10, page!!.totalItems)
+                assertEquals(4, page.totalPages)
+                assertEquals(pageNumber - 1, page.currentPageIndex)
+                assertEquals(3, page.pageSize)
+                page
             }
         }
-        assertEquals(10, issues.size)
+        assertEquals(4, pages.size)
+
         val issueKeys = (1..10)
         issueKeys.forEach { issueKey ->
-            val issue = issues.singleOrNull { it.summary == "Test-$issueKey" }
+            val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
             assertNotNull(issue)
             assertEquals("IT-1", issue!!.insightObjectKey)
             assertEquals("To Do", issue.status.name)
@@ -384,12 +403,15 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_13GetIssuesByJQLPaginatedEmpty() {
         println("### START issues_13GetIssuesByJQLPaginatedEmpty")
-        val issues: List<Story>? = runBlocking {
+        val page = runBlocking {
             issueOperator.getIssuesByJQLPaginated("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
         }
 
-        assertNotNull(issues)
-        assertTrue(issues!!.isEmpty())
+        assertNotNull(page)
+        assertEquals(0, page!!.totalItems)
+        assertEquals(0, page.totalPages)
+        assertEquals(0, page.currentPageIndex)
+        assertTrue(page.items.isEmpty())
 
         println("### END issues_13GetIssuesByJQLPaginatedEmpty")
     }
