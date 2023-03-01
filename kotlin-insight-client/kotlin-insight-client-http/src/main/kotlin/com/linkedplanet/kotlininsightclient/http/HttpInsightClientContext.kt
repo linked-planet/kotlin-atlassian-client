@@ -19,6 +19,6 @@
  */
 package com.linkedplanet.kotlininsightclient.http
 
-import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
+import com.linkedplanet.kotlinhttpclient.api.http.HttpClient
 
-class HttpInsightClientContext(val baseUrl: String, val httpClient: BaseHttpClient)
+class HttpInsightClientContext(val baseUrl: String, val httpClient: HttpClient)

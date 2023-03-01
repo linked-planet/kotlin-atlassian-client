@@ -30,35 +30,9 @@ import java.nio.charset.StandardCharsets
 
 val GSON: Gson = GsonBuilder().create()
 
-abstract class BaseHttpClient {
+abstract class BaseHttpClient : HttpClient {
 
-    abstract suspend fun executeRestCall(
-        method: String,
-        path: String,
-        params: Map<String, String>,
-        body: String?,
-        contentType: String?,
-        headers: Map<String, String> = emptyMap()
-    ): Either<HttpDomainError, HttpResponse<String>>
-
-    abstract suspend fun executeDownload(
-        method: String,
-        path: String,
-        params: Map<String, String>,
-        body: String?,
-        contentType: String?
-    ): Either<DomainError, HttpResponse<ByteArray>>
-
-    abstract suspend fun executeUpload(
-        method: String,
-        url: String,
-        params: Map<String, String>,
-        mimeType: String,
-        filename: String,
-        byteArray: ByteArray
-    ): Either<HttpDomainError, HttpResponse<ByteArray>>
-
-    suspend fun <T> executeRest(
+    override suspend fun <T> executeRest(
         method: String,
         path: String,
         params: Map<String, String>,
@@ -73,7 +47,7 @@ abstract class BaseHttpClient {
             )
         }
 
-    suspend fun <T> executeRestList(
+    override suspend fun <T> executeRestList(
         method: String,
         path: String,
         params: Map<String, String>,
@@ -88,7 +62,7 @@ abstract class BaseHttpClient {
             )
         }
 
-    suspend fun <T> executeGet(
+    override suspend fun <T> executeGet(
         path: String,
         params: Map<String, String>,
         returnType: Type
@@ -100,7 +74,7 @@ abstract class BaseHttpClient {
             )
         }
 
-    suspend fun <T> executeGetReturnList(
+    override suspend fun <T> executeGetReturnList(
         path: String,
         params: Map<String, String>,
         returnType: Type
@@ -112,13 +86,13 @@ abstract class BaseHttpClient {
             )
         }
 
-    suspend fun executeGetCall(
+    override suspend fun executeGetCall(
         path: String,
         params: Map<String, String>
     ): Either<HttpDomainError, HttpResponse<String>> =
         executeRestCall("GET", path, params, null, null)
 
-    fun encodeParams(map: Map<String, String>): String {
+    override fun encodeParams(map: Map<String, String>): String {
         return map.map { it.key + "=" + doEncoding(it.value) }.joinToString("&")
     }
 
