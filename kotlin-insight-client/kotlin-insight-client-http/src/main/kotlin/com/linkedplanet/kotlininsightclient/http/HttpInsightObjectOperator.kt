@@ -250,6 +250,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         return InsightObject(
             this.objectType.id,
             this.id,
+            this.objectType.name,
             this.objectKey,
             this.label,
             attributes,
@@ -269,6 +270,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         return InsightObject(
             objectTypeId,
             -1,
+            "",
             "",
             "",
             emptyList(),

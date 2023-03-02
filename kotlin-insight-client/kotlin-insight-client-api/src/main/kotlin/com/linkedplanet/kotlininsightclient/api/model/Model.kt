@@ -36,6 +36,7 @@ fun InsightObjects.plus(insightObjects: InsightObjects): InsightObjects =
 data class InsightObject(
     val objectTypeId: Int,
     var id: Int,
+    val objectTypeName: String,
     var objectKey: String,
     var label: String,
     var attributes: List<InsightAttribute>,
@@ -119,10 +120,19 @@ fun <T> InsightObject.getValue(id: Int, transform: (Any) -> T): T? =
         ?.value
         ?.let { transform(it) }
 
+fun <T> InsightObject.getValueByName(name: String, transform: (Any) -> T): T? =
+    getAttributeIdByName(name)
+        ?.let { getValue(it, transform) }
+
 fun <T> InsightObject.getValueList(id: Int, transform: (Any) -> T): List<T?> =
     getAttribute(id)
         ?.value
         ?.map { transform(it) }
+        ?: emptyList()
+
+fun <T> InsightObject.getValueListByName(name: String, transform: (Any) -> T): List<T?> =
+    getAttributeIdByName(name)
+        ?.let { getValueList(it, transform) }
         ?: emptyList()
 
 fun InsightObject.getStringValue(id: Int): String? =
