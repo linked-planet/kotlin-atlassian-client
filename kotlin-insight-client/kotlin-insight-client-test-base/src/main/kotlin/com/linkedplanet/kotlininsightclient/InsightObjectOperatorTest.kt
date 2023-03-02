@@ -41,19 +41,53 @@ interface InsightObjectOperatorTest {
         assertEquals(1, firstCompany!!.id)
         assertEquals("IT-1", firstCompany.objectKey)
         assertEquals("Test GmbH", firstCompany.label)
-        assertEquals("Test GmbH", firstCompany.getStringValue(InsightAttribute.CompanyName.id))
-        assertEquals("Germany", firstCompany.getSingleReferenceValue(InsightAttribute.CompanyCountry.id)!!.objectName)
-        assertFalse(firstCompany.attachmentsExist)
 
+        // Name
+        assertNotNull(firstCompany.getAttributeByName(InsightAttribute.CompanyName.attributeName))
+        assertEquals(
+            InsightAttribute.CompanyName.attributeId,
+            firstCompany.getAttributeIdByName(InsightAttribute.CompanyName.attributeName)
+        )
+        assertEquals("Test GmbH", firstCompany.getStringValue(InsightAttribute.CompanyName.attributeId))
+
+        // Country
+        assertNotNull(firstCompany.getAttributeByName(InsightAttribute.CompanyCountry.attributeName))
+        assertEquals(
+            InsightAttribute.CompanyCountry.attributeId,
+            firstCompany.getAttributeIdByName(InsightAttribute.CompanyCountry.attributeName)
+        )
+        assertEquals(
+            "Germany",
+            firstCompany.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectName
+        )
+        assertFalse(firstCompany.attachmentsExist)
 
         val secondCompany = companies.firstOrNull { it.id == 2 }
         assertNotNull(secondCompany)
         assertEquals(2, secondCompany!!.id)
         assertEquals("IT-2", secondCompany.objectKey)
         assertEquals("Test AG", secondCompany.label)
-        assertEquals("Test AG", secondCompany.getStringValue(InsightAttribute.CompanyName.id))
-        assertEquals("Germany", secondCompany.getSingleReferenceValue(InsightAttribute.CompanyCountry.id)!!.objectName)
+
+        // Name
+        assertNotNull(secondCompany.getAttributeByName(InsightAttribute.CompanyName.attributeName))
+        assertEquals(
+            InsightAttribute.CompanyName.attributeId,
+            secondCompany.getAttributeIdByName(InsightAttribute.CompanyName.attributeName)
+        )
+        assertEquals("Test AG", secondCompany.getStringValue(InsightAttribute.CompanyName.attributeId))
+
+        // Country
+        assertNotNull(secondCompany.getAttributeByName(InsightAttribute.CompanyCountry.attributeName))
+        assertEquals(
+            InsightAttribute.CompanyCountry.attributeId,
+            secondCompany.getAttributeIdByName(InsightAttribute.CompanyCountry.attributeName)
+        )
+        assertEquals(
+            "Germany",
+            secondCompany.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectName
+        )
         assertTrue(secondCompany.attachmentsExist)
+
         println("### END object_testObjectListWithFlatReference")
     }
 
@@ -71,11 +105,11 @@ interface InsightObjectOperatorTest {
 
         val country = runBlocking {
             insightObjectOperator.getObjectById(
-                company!!.getSingleReferenceValue(InsightAttribute.CompanyCountry.id)!!.objectId
+                company!!.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectId
             ).orNull()!!
         }
-        assertTrue(country.getStringValue(InsightAttribute.CountryName.id) == "Germany")
-        assertTrue(country.getStringValue(InsightAttribute.CountryShortName.id) == "DE")
+        assertTrue(country.getStringValue(InsightAttribute.CountryName.attributeId) == "Germany")
+        assertTrue(country.getStringValue(InsightAttribute.CountryShortName.attributeId) == "DE")
         println("### END object_testObjectListWithResolvedReference")
     }
 
@@ -88,8 +122,11 @@ interface InsightObjectOperatorTest {
         assertEquals(1, company.id)
         assertEquals("IT-1", company.objectKey)
         assertEquals("Test GmbH", company.label)
-        assertEquals("Test GmbH", company.getStringValue(InsightAttribute.CompanyName.id))
-        assertEquals("Germany", company.getSingleReferenceValue(InsightAttribute.CompanyCountry.id)!!.objectName)
+        assertEquals("Test GmbH", company.getStringValue(InsightAttribute.CompanyName.attributeId))
+        assertEquals(
+            "Germany",
+            company.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectName
+        )
         assertFalse(company.attachmentsExist)
         println("### END object_testObjectById")
     }
@@ -101,7 +138,7 @@ interface InsightObjectOperatorTest {
             insightObjectOperator.getObjects(InsightObject.TestWithLists.id).orNull()
         }!!.objects.first()
 
-        val references = obj.getMultiReferenceValue(InsightAttribute.TestWithListsItemList.id)
+        val references = obj.getMultiReferenceValue(InsightAttribute.TestWithListsItemList.attributeId)
         val idList = references.map { it.objectId }
         val nameList = references.map { it.objectName }
         val refList = references.map { insightReference ->
@@ -109,7 +146,7 @@ interface InsightObjectOperatorTest {
                 insightObjectOperator.getObjectById(insightReference.objectId).orNull()!!
             }
         }
-        val firstNameList = refList.map { it.getStringValue(InsightAttribute.SimpleObjectFirstname.id) }
+        val firstNameList = refList.map { it.getStringValue(InsightAttribute.SimpleObjectFirstname.attributeId) }
 
         assertTrue(idList == listOf(35, 36, 37))
         assertTrue(nameList == listOf("Object1", "Object2", "Object3"))
@@ -123,35 +160,35 @@ interface InsightObjectOperatorTest {
         val obj = runBlocking {
             insightObjectOperator.getObjects(InsightObject.TestWithLists.id).orNull()
         }!!.objects.first()
-        val results = obj.getValueList(InsightAttribute.TestWithListsStringList.id)
+        val results = obj.getValueList(InsightAttribute.TestWithListsStringList.attributeId)
         assertTrue(results.isEmpty())
-        obj.addValue(InsightAttribute.TestWithListsStringList.id, "A")
-        obj.addValue(InsightAttribute.TestWithListsStringList.id, "B")
+        obj.addValue(InsightAttribute.TestWithListsStringList.attributeId, "A")
+        obj.addValue(InsightAttribute.TestWithListsStringList.attributeId, "B")
         runBlocking { insightObjectOperator.updateObject(obj).orNull() }
 
         val obj2 = runBlocking {
             insightObjectOperator.getObjects(InsightObject.TestWithLists.id).orNull()
         }!!.objects.first()
-        val results2 = obj2.getValueList(InsightAttribute.TestWithListsStringList.id)
+        val results2 = obj2.getValueList(InsightAttribute.TestWithListsStringList.attributeId)
         assertTrue(results2.size == 2)
         assertTrue(results2.contains("A"))
         assertTrue(results2.contains("B"))
-        obj2.removeValue(InsightAttribute.TestWithListsStringList.id, "B")
+        obj2.removeValue(InsightAttribute.TestWithListsStringList.attributeId, "B")
         runBlocking { insightObjectOperator.updateObject(obj2).orNull() }
 
         val obj3 = runBlocking {
             insightObjectOperator.getObjects(InsightObject.TestWithLists.id).orNull()
         }!!.objects.first()
-        val results3 = obj3.getValueList(InsightAttribute.TestWithListsStringList.id)
+        val results3 = obj3.getValueList(InsightAttribute.TestWithListsStringList.attributeId)
         assertTrue(results3.size == 1)
         assertTrue(results3.contains("A"))
-        obj3.removeValue(InsightAttribute.TestWithListsStringList.id, "A")
+        obj3.removeValue(InsightAttribute.TestWithListsStringList.attributeId, "A")
         runBlocking { insightObjectOperator.updateObject(obj3).orNull() }
 
         val obj4 = runBlocking {
             insightObjectOperator.getObjects(InsightObject.TestWithLists.id).orNull()
         }!!.objects.first()
-        val results4 = obj4.getValueList(InsightAttribute.TestWithListsStringList.id)
+        val results4 = obj4.getValueList(InsightAttribute.TestWithListsStringList.attributeId)
         assertTrue(results4.isEmpty())
         println("### END object_testAddingSelectList")
     }
@@ -170,29 +207,29 @@ interface InsightObjectOperatorTest {
 
             // Create and check direct result
             val country1 = insightObjectOperator.createObject(InsightObject.Country.id) {
-                it.setValue(InsightAttribute.CountryName.id, "England")
-                it.setValue(InsightAttribute.CountryShortName.id, "GB")
+                it.setValue(InsightAttribute.CountryName.attributeId, "England")
+                it.setValue(InsightAttribute.CountryShortName.attributeId, "GB")
             }.orNull()!!
 
             val company1 = insightObjectOperator.createObject(InsightObject.Company.id) {
-                it.setValue(InsightAttribute.CompanyName.id, "MyTestCompany GmbH")
-                it.setSingleReference(InsightAttribute.CompanyCountry.id, country1.id)
+                it.setValue(InsightAttribute.CompanyName.attributeId, "MyTestCompany GmbH")
+                it.setSingleReference(InsightAttribute.CompanyCountry.attributeId, country1.id)
             }.orNull()!!
 
             assertTrue(country1.id > 0)
-            assertTrue(country1.getStringValue(InsightAttribute.CountryKey.id)!!.isNotBlank())
-            assertTrue(company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.id)!!.objectId > 0)
-            assertTrue(company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.id)!!.objectKey.isNotBlank())
+            assertTrue(country1.getStringValue(InsightAttribute.CountryKey.attributeId)!!.isNotBlank())
+            assertTrue(company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectId > 0)
+            assertTrue(company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectKey.isNotBlank())
 
             // Check England does exist
-            val countryReference = company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.id)!!
+            val countryReference = company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!
             val countryAfterCreate =
                 insightObjectOperator.getObjectByName(InsightObject.Country.id, "England").orNull()!!
             val companyAfterCreate =
                 insightObjectOperator.getObjectByName(InsightObject.Company.id, "MyTestCompany GmbH").orNull()!!
             assertTrue(countryAfterCreate.id == countryReference.objectId)
-            assertTrue(countryAfterCreate.getStringValue(InsightAttribute.CountryKey.id) == countryReference.objectKey)
-            assertTrue(countryAfterCreate.getStringValue(InsightAttribute.CountryName.id) == countryReference.objectName)
+            assertTrue(countryAfterCreate.getStringValue(InsightAttribute.CountryKey.attributeId) == countryReference.objectKey)
+            assertTrue(countryAfterCreate.getStringValue(InsightAttribute.CountryName.attributeId) == countryReference.objectName)
             assertTrue(companyAfterCreate.id == company1.id)
 
             // Check Delete
@@ -214,8 +251,8 @@ interface InsightObjectOperatorTest {
                 insightObjectOperator.getObjectsByIQL(InsightObject.Country.id, false, "\"ShortName\"=\"DE\"")
                     .orNull()!!.objects
             assertTrue(countries.size == 1)
-            assertTrue(countries.first().getStringValue(InsightAttribute.CountryShortName.id) == "DE")
-            assertTrue(countries.first().getStringValue(InsightAttribute.CountryName.id) == "Germany")
+            assertTrue(countries.first().getStringValue(InsightAttribute.CountryShortName.attributeId) == "DE")
+            assertTrue(countries.first().getStringValue(InsightAttribute.CountryName.attributeId) == "Germany")
         }
         println("### END object_testFilter")
     }
@@ -225,26 +262,26 @@ interface InsightObjectOperatorTest {
         println("### START object_testUpdate")
         runBlocking {
             var country = insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
-            assertTrue(country.getStringValue(InsightAttribute.CountryName.id) == "Germany")
-            assertTrue(country.getStringValue(InsightAttribute.CountryShortName.id) == "DE")
-            country.setValue(InsightAttribute.CountryShortName.id, "ED")
+            assertTrue(country.getStringValue(InsightAttribute.CountryName.attributeId) == "Germany")
+            assertTrue(country.getStringValue(InsightAttribute.CountryShortName.attributeId) == "DE")
+            country.setValue(InsightAttribute.CountryShortName.attributeId, "ED")
             country = runBlocking { insightObjectOperator.updateObject(country).orNull()!! }
 
             val country2 = insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
-            assertTrue(country2.getStringValue(InsightAttribute.CountryName.id) == "Germany")
-            assertTrue(country2.getStringValue(InsightAttribute.CountryShortName.id) == "ED")
+            assertTrue(country2.getStringValue(InsightAttribute.CountryName.attributeId) == "Germany")
+            assertTrue(country2.getStringValue(InsightAttribute.CountryShortName.attributeId) == "ED")
 
             var countryAfterUpdate =
                 insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
-            assertTrue(countryAfterUpdate.getStringValue(InsightAttribute.CountryName.id) == "Germany")
-            assertTrue(countryAfterUpdate.getStringValue(InsightAttribute.CountryShortName.id) == "ED")
-            countryAfterUpdate.setValue(InsightAttribute.CountryShortName.id, "DE")
+            assertTrue(countryAfterUpdate.getStringValue(InsightAttribute.CountryName.attributeId) == "Germany")
+            assertTrue(countryAfterUpdate.getStringValue(InsightAttribute.CountryShortName.attributeId) == "ED")
+            countryAfterUpdate.setValue(InsightAttribute.CountryShortName.attributeId, "DE")
             countryAfterUpdate = runBlocking { insightObjectOperator.updateObject(countryAfterUpdate).orNull()!! }
 
             val countryAfterReUpdate =
                 insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
-            assertTrue(countryAfterReUpdate.getStringValue(InsightAttribute.CountryName.id) == "Germany")
-            assertTrue(countryAfterReUpdate.getStringValue(InsightAttribute.CountryShortName.id) == "DE")
+            assertTrue(countryAfterReUpdate.getStringValue(InsightAttribute.CountryName.attributeId) == "Germany")
+            assertTrue(countryAfterReUpdate.getStringValue(InsightAttribute.CountryShortName.attributeId) == "DE")
         }
         println("### END object_testUpdate")
     }

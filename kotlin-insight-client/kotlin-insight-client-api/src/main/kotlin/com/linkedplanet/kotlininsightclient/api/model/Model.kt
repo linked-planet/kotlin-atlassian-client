@@ -46,6 +46,11 @@ data class InsightObject(
 fun InsightObject.getAttribute(id: Int): InsightAttribute? =
     this.attributes.singleOrNull { it.attributeId == id }
 
+fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?.attributeId
+
+fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
+    this.attributes.firstOrNull { it.attributeName == name }
+
 fun InsightObject.isReferenceAttribute(id: Int): Boolean =
     getAttribute(id)
         ?.attributeType == InsightObjectAttributeType.REFERENCE
@@ -68,9 +73,11 @@ fun InsightObject.getValueList(id: Int): List<Any> =
         ?.mapNotNull { it.value }
         ?: emptyList()
 
-fun <T> InsightObject.setValueList(id: Int, values: List<T?>) {
+fun <T> InsightObject.setValueList(id: Int, values: List<T?>) = setValueList(id, null, values)
+
+fun <T> InsightObject.setValueList(id: Int, name: String? = null, values: List<T?>) {
     if (!exists(id)) {
-        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
+        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.value = values.map {
@@ -78,9 +85,11 @@ fun <T> InsightObject.setValueList(id: Int, values: List<T?>) {
     }
 }
 
-fun <T> InsightObject.setValue(id: Int, value: T?) {
+fun <T> InsightObject.setValue(id: Int, value: T?) = setValue(id, null, value)
+
+fun <T> InsightObject.setValue(id: Int, name: String? = null, value: T?) {
     if (!exists(id)) {
-        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
+        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.value = listOf(ObjectAttributeValue(value, "", null))
@@ -91,9 +100,11 @@ fun <T> InsightObject.removeValue(id: Int, value: T?) {
         ?.apply { this.value = this.value.filter { cur -> cur.value != value } }
 }
 
-fun InsightObject.addValue(id: Int, value: Any?) {
+fun InsightObject.addValue(id: Int, value: Any?) = addValue(id, null, value)
+
+fun InsightObject.addValue(id: Int, name: String? = null, value: Any?) {
     if (!exists(id)) {
-        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
+        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.apply {
@@ -172,9 +183,11 @@ fun InsightObject.clearReferenceValue(id: Int) {
         ?.value = emptyList()
 }
 
-fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) {
+fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) = addReference(id, null, referencedObjectId)
+
+fun InsightObject.addReference(attributeId: Int, name: String?, referencedObjectId: Int) {
     if (!exists(attributeId)) {
-        this.createAttribute(attributeId, InsightObjectAttributeType.REFERENCE)
+        this.createAttribute(attributeId, name, InsightObjectAttributeType.REFERENCE)
     }
     getAttribute(attributeId)
         ?.let {
@@ -192,9 +205,12 @@ fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) {
         }
 }
 
-fun InsightObject.setSingleReference(id: Int, referencedObjectId: Int) {
+fun InsightObject.setSingleReference(id: Int, referencedObjectId: Int) =
+    setSingleReference(id, null, referencedObjectId)
+
+fun InsightObject.setSingleReference(id: Int, name: String?, referencedObjectId: Int) {
     this.clearReferenceValue(id)
-    this.addReference(id, referencedObjectId)
+    this.addReference(id, name, referencedObjectId)
 }
 
 fun InsightObject.toEditObjectItem() =
@@ -235,9 +251,10 @@ enum class InsightObjectAttributeType(val value: Int) {
     }
 }
 
-private fun InsightObject.createAttribute(id: Int, attributeType: InsightObjectAttributeType) {
+private fun InsightObject.createAttribute(id: Int, name: String? = null, attributeType: InsightObjectAttributeType) {
     this.attributes = this.attributes + InsightAttribute(
         id,
+        name,
         attributeType,
         emptyList()
     )
@@ -253,6 +270,7 @@ data class InsightReference(
 
 data class InsightAttribute(
     val attributeId: Int,
+    val attributeName: String?,
     val attributeType: InsightObjectAttributeType,
     var value: List<ObjectAttributeValue>
 )

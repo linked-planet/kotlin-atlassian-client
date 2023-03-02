@@ -32,17 +32,17 @@ enum class InsightObject(val id: Int) {
     Abstract(6)
 }
 
-enum class InsightAttribute(val id: Int) {
-    CompanyName(2),
-    CompanyCountry(10),
+enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
+    CompanyName(2, "Name"),
+    CompanyCountry(10, "Country"),
 
-    CountryKey(5),
-    CountryName(6),
-    CountryShortName(9),
+    CountryKey(5, "Key"),
+    CountryName(6, "Name"),
+    CountryShortName(9, "ShortName"),
 
-    TestWithListsItemList(21),
-    TestWithListsStringList(22),
+    TestWithListsItemList(21, "ItemList"),
+    TestWithListsStringList(22, "StringList"),
 
-    SimpleObjectFirstname(15),
-    SimpleObjectLastname(16),
+    SimpleObjectFirstname(15, "Firstname"),
+    SimpleObjectLastname(16, "Lastname"),
 }

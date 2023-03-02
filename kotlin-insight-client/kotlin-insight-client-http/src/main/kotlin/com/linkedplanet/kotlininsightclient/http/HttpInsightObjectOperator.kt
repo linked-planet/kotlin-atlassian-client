@@ -241,6 +241,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                     ?: InsightObjectAttributeType.DEFAULT
             InsightAttribute(
                 it.objectTypeAttributeId,
+                it.objectTypeAttribute?.name,
                 attributeType,
                 it.objectAttributeValues
             )
