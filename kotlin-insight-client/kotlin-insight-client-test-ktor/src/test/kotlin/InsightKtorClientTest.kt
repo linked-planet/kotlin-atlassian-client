@@ -25,6 +25,7 @@ import com.linkedplanet.kotlininsightclient.http.*
 class InsightKtorClientTest : InsightClientTest() {
 
     override val insightObjectOperator get() = HttpInsightObjectOperator(clientContext)
+    override val insightObjectTypeOperator get() = HttpInsightObjectTypeOperator(clientContext)
     override val insightAttachmentOperator get() = HttpInsightAttachmentOperator(clientContext)
     override val insightHistoryOperator get() = HttpInsightHistoryOperator(clientContext)
     override val insightSchemaOperator get() = HttpInsightSchemaOperator(clientContext)

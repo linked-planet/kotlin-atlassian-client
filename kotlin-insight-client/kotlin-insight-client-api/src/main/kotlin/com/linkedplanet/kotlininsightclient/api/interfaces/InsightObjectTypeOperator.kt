@@ -25,6 +25,8 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 
 interface InsightObjectTypeOperator {
 
+    suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema>
+
     suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>>
 
     suspend fun getObjectTypesBySchemaAndRootObjectType(

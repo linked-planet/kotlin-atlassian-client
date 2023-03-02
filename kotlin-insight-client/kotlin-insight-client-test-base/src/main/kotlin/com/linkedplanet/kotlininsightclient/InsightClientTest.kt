@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient
 
 abstract class InsightClientTest :
     InsightObjectOperatorTest,
+    InsightObjectTypeOperatorTest,
     InsightAttachmentOperatorTest,
     InsightSchemaOperatorTest,
     InsightHistoryOperatorTest

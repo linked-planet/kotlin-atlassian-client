@@ -26,11 +26,26 @@ import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
+import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
 class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContext) : InsightObjectTypeOperator {
+
+    override suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema> = either {
+        context.httpClient.executeRest<ObjectTypeSchema>(
+            "GET",
+            "/rest/insight/1.0/objecttype/$objectTypeId",
+            emptyMap(),
+            null,
+            "application/json",
+            object : TypeToken<ObjectTypeSchema>() {}.type
+        )
+            .map { it.body!! }
+            .mapLeft { it.toInsightClientError() }
+            .bind()
+            .let { populateObjectTypeSchemaAttributes(it).bind() }
+    }
+
 
     override suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,

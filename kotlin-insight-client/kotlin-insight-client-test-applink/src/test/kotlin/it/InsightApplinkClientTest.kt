@@ -40,6 +40,7 @@ class InsightApplinkClientTest constructor(
     private val clientContext: HttpInsightClientContext
 
     override val insightObjectOperator get() = HttpInsightObjectOperator(clientContext)
+    override val insightObjectTypeOperator get() = HttpInsightObjectTypeOperator(clientContext)
     override val insightAttachmentOperator get() = HttpInsightAttachmentOperator(clientContext)
     override val insightSchemaOperator get() = HttpInsightSchemaOperator(clientContext)
     override val insightHistoryOperator get() = HttpInsightHistoryOperator(clientContext)
