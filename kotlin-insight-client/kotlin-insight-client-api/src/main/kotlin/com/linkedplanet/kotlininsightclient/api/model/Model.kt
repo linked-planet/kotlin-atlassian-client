@@ -193,7 +193,7 @@ fun InsightObject.clearReferenceValue(id: Int) {
         ?.value = emptyList()
 }
 
-fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) = addReference(id, null, referencedObjectId)
+fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) = addReference(attributeId, null, referencedObjectId)
 
 fun InsightObject.addReference(attributeId: Int, name: String?, referencedObjectId: Int) {
     if (!exists(attributeId)) {
