@@ -30,4 +30,16 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <excludes>
+                    <exclude>**/*.pdf</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
 </project>
