@@ -193,7 +193,8 @@ fun InsightObject.clearReferenceValue(id: Int) {
         ?.value = emptyList()
 }
 
-fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) = addReference(attributeId, null, referencedObjectId)
+fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) =
+    addReference(attributeId, null, referencedObjectId)
 
 fun InsightObject.addReference(attributeId: Int, name: String?, referencedObjectId: Int) {
     if (!exists(attributeId)) {
@@ -253,11 +254,12 @@ fun InsightObject.getEditAttributes() =
  */
 enum class InsightObjectAttributeType(val value: Int) {
     DEFAULT(0),
-    REFERENCE(1);
+    REFERENCE(1),
+    UNKNOWN(-1);
 
     companion object {
         fun parse(value: Int) =
-            values().single { it.value == value }
+            values().singleOrNull { it.value == value } ?: UNKNOWN
     }
 }
 
