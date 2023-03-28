@@ -25,8 +25,10 @@ import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
 import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.receive
 import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.features.auth.Auth
 import io.ktor.client.features.auth.providers.BasicAuthCredentials
 import io.ktor.client.features.auth.providers.basic
@@ -37,29 +39,14 @@ import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.http.*
 
-fun httpClient(username: String, password: String) =
-    HttpClient(Apache) {
-        expectSuccess = false
-        install(JsonFeature) {
-            serializer = GsonSerializer()
-        }
-        install(Auth) {
-            basic {
-                sendWithoutRequest { true }
-                credentials {
-                    BasicAuthCredentials(username = username, password = password)
-                }
-            }
-        }
-    }
-
 class KtorHttpClient(
     private val baseUrl: String,
     username: String,
-    password: String
+    password: String,
+    configureHttpClient: (HttpClientConfig<ApacheEngineConfig>) -> Unit = {}
 ) : BaseHttpClient() {
 
-    private var httpClient: HttpClient = httpClient(username, password)
+    private var httpClient: HttpClient = createHttpClient(username, password, configureHttpClient)
 
     private fun prepareRequest(
         requestBuilder: HttpRequestBuilder,
@@ -176,3 +163,24 @@ class KtorHttpClient(
             ).left()
         }
 }
+
+private fun createHttpClient(
+    username: String,
+    password: String,
+    configureHttpClient: (HttpClientConfig<ApacheEngineConfig>) -> Unit
+) =
+    HttpClient(Apache) {
+        expectSuccess = false
+        install(JsonFeature) {
+            serializer = GsonSerializer()
+        }
+        install(Auth) {
+            basic {
+                sendWithoutRequest { true }
+                credentials {
+                    BasicAuthCredentials(username = username, password = password)
+                }
+            }
+        }
+        configureHttpClient(this)
+    }
