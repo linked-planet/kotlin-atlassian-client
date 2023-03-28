@@ -44,7 +44,7 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
     fun comments_02GetCommentsEmpty() {
         println("### START comments_02GetCommentsEmpty")
 
-        val issue = jiraIssueTestHelper.createDefaultIssue(fieldFactory.jiraSummaryField("Transition Test Ticket"))
+        val issue = jiraIssueTestHelper.createDefaultIssue(fieldFactory.jiraSummaryField("Comment Test Ticket"))
 
         val comments = runBlocking {
             commentOperator.getComments(issue.key)

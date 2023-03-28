@@ -34,7 +34,6 @@ interface JiraTransitionOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jir
 
         // get doIt transition
         val transitions = jiraTransitionTestHelper.getAvailableTransitions(issue.key)
-
         assertEquals(setOf("To Do", "Do it"), transitions.map { it.name }.toSet())
         val doIt = transitions.firstOrNull { it.name == "Do it" }!!.id
 

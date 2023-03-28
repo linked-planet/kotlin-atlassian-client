@@ -36,7 +36,7 @@ interface JiraTransitionOperator {
     suspend fun getAvailableTransitions(issueKey: String): Either<JiraClientError, List<JiraTransition>>
 
     /**
-     * Executes a transition on the specified issue.
+     * Executes a transition on the specified issue and blocks until the transition has finished.
      * @param issueKey The key of the issue to transition.
      * @param transitionId The ID of the transition.
      * @param comment An optional comment to add to the transition.
