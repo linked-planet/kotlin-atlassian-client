@@ -29,6 +29,7 @@
         <jira.version>9.4.2</jira.version>
         <servicedesk.version>5.4.2</servicedesk.version>
         <jira.http.port>2990</jira.http.port>
+        <atlassian.spring.scanner.version>2.2.1</atlassian.spring.scanner.version>
         <amps.version>8.9.1</amps.version>
         <insight.version>10.4.2</insight.version>
         <confluence.version>7.19.5</confluence.version>

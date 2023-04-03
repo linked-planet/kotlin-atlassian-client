@@ -5,46 +5,104 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.linked-planet.client</groupId>
-        <artifactId>kotlin-jira-client</artifactId>
+        <artifactId>kotlin-insight-client</artifactId>
         <version>0.9.3-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kotlin-jira-client-test-applink</artifactId>
-    <name>kotlin-jira-client-test-applink</name>
+    <artifactId>kotlin-insight-client-test-sdk</artifactId>
+    <name>kotlin-insight-client-test-sdk</name>
     <packaging>atlassian-plugin</packaging>
 
     <properties>
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
-        <atlassian.spring.scanner.version>2.2.1</atlassian.spring.scanner.version>
-
-        <confluence.http.port>1990</confluence.http.port>
+        <jira.http.port>2990</jira.http.port>
     </properties>
 
     <dependencies>
         <!-- kotlin-jira-client -->
         <dependency>
             <groupId>com.linked-planet.client</groupId>
-            <artifactId>kotlin-http-client-atlas</artifactId>
+            <artifactId>kotlin-insight-client-sdk</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.linked-planet.client</groupId>
-            <artifactId>kotlin-jira-client-http</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.linked-planet.client</groupId>
-            <artifactId>kotlin-jira-client-test-base</artifactId>
+            <artifactId>kotlin-insight-client-test-base</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- External -->
         <dependency>
-            <groupId>com.atlassian.confluence</groupId>
-            <artifactId>confluence</artifactId>
-            <version>${confluence.version}</version>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-api</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>jta</groupId>
+                    <artifactId>jta</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-core</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>jta</groupId>
+                    <artifactId>jta</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>jndi</groupId>
+                    <artifactId>jndi</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-rest-plugin</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>jta</groupId>
+                    <artifactId>jta</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.jira.plugins</groupId>
+            <artifactId>insight</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.ehcache</groupId>
+                    <artifactId>ehcache</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.atlassian.translations</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.atlassian.jira.plugins</groupId>
+                    <artifactId>insight-core-widget-report</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.2.2-atlassian-1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.sal</groupId>
+            <artifactId>sal-api</artifactId>
+            <version>4.2.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -56,9 +114,9 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
+            <groupId>jta</groupId>
+            <artifactId>jta</artifactId>
+            <version>1.0.1b</version>
             <scope>provided</scope>
         </dependency>
 
@@ -70,23 +128,16 @@
         </dependency>
 
         <dependency>
-            <groupId>com.atlassian.applinks</groupId>
-            <artifactId>applinks-api</artifactId>
-            <version>7.2.3</version>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.atlassian.sal</groupId>
-            <artifactId>sal-api</artifactId>
-            <version>4.2.1</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.2-atlassian-1</version>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+            <version>2.8.1</version>
         </dependency>
 
         <!-- WIRED TEST RUNNER DEPENDENCIES -->
@@ -100,23 +151,9 @@
 
     <build>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <excludes>
-                    <exclude>**/*.pdf</exclude>
-                </excludes>
-            </resource>
-        </resources>
 
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <groupId>com.atlassian.maven.plugins</groupId>
-                    <artifactId>confluence-maven-plugin</artifactId>
-                    <version>${amps.version}</version>
-                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
@@ -148,46 +185,52 @@
                 </configuration>
             </plugin>
 
-            <!-- CONFLUENCE -->
-            <!-- https://developer.atlassian.com/docs/advanced-topics/configuration-of-instructions-in-atlassian-plugins -->
+            <!-- JIRA -->
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
-                <artifactId>confluence-maven-plugin</artifactId>
+                <artifactId>jira-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <productVersion>${confluence.version}</productVersion>
-                    <productDataVersion>${confluence.version}</productDataVersion>
-                    <productDataPath>${maven.multiModuleProjectDirectory}/test-resources/confluence-generated-test-resources.zip
+                    <productVersion>${jira.version}</productVersion>
+                    <productDataVersion>${jira.version}</productDataVersion>
+                    <productDataPath>${maven.multiModuleProjectDirectory}/test-resources/jira-generated-test-resources.zip
                     </productDataPath>
                     <skipITs>true</skipITs>
                     <enableQuickReload>true</enableQuickReload>
-                    <allowGoogleTracking>false</allowGoogleTracking>
-                    <jvmArgs>-Xms2g -Xmx4g</jvmArgs>
-                    <server>localhost</server>
-                    <httpPort>${confluence.http.port}</httpPort>
-                    <ajpPort>8010</ajpPort>
-                    <jvmDebugPort>5006</jvmDebugPort>
                     <startupTimeout>1800000</startupTimeout>
+                    <jvmArgs>-Xms2g -Xmx4g -XX:+UseG1GC</jvmArgs>
                     <contextPath>/</contextPath>
-                    <productLicense>${confluence.license}</productLicense>
+                    <productLicense>${jira.service.management.license}</productLicense>
+                    <httpPort>${jira.http.port}</httpPort>
+                    <!-- https://developer.atlassian.com/docs/advanced-topics/configuration-of-instructions-in-atlassian-plugins -->
                     <instructions>
                         <Atlassian-Plugin-Key>${atlassian.plugin.key}</Atlassian-Plugin-Key>
                         <Export-Package>
-                            com.linkedplanet.plugin.confluence.jiraclient.test.api,
+                            com.linkedplanet.plugin.jira.insightclient.test.api,
                         </Export-Package>
                         <Import-Package>
-                            !junit.*,
-                            !org.junit.*,
-                            !sun.misc.*,
-                            !com.sun.*,
-                            !io.ktor.*,
-                            !jdk.internal.*,
-                            !org.jetbrains.*,
-                            !org.joda.convert.*,
-                            *
+                            org.springframework.osgi.*;resolution:="optional",
+                            org.eclipse.gemini.blueprint.*;resolution:="optional",
+                            com.atlassian.jira.plugins.*,
+                            com.riadalabs.jira.plugins.insight.channel.*,
+                            com.riadalabs.jira.plugins.insight.services.core.*;resolution:="optional",
+                            *;version="0";resolution:=optional
                         </Import-Package>
                         <Spring-Context>*</Spring-Context>
                     </instructions>
+                    <applications>
+                        <application>
+                            <applicationKey>jira-software</applicationKey>
+                            <version>${jira.version}</version>
+                        </application>
+                        <application>
+                            <applicationKey>jira-servicedesk</applicationKey>
+                            <version>${servicedesk.version}</version>
+                        </application>
+                    </applications>
+                    <systemPropertyVariables>
+                        <atlassian.mail.senddisabled>false</atlassian.mail.senddisabled>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
 
@@ -205,11 +248,10 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <verbose>false</verbose>
+                    <verbose>true</verbose>
                 </configuration>
             </plugin>
 
-            <!-- Show reminder for license removal on create-home-zip -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -218,7 +260,7 @@
                         <id>show-home-warning</id>
                         <configuration>
                             <target>
-                                <input message="ATTENTION!${line.separator}Remove the license information which is stored in the created zip in 'confluence.cfg.xml'.${line.separator}Set entry 'atlassian.license.message' to 'TBD'.${line.separator}Press enter to continue..."/>
+                                <input message="ATTENTION!${line.separator}Remove the license information which is stored in the database. Therefore stop Jira, connect to the database (e.g. with IntelliJ) and finally remove the entries from the license tables.${line.separator}Press enter to continue..."/>
                             </target>
                         </configuration>
                     </execution>
@@ -231,7 +273,7 @@
         <!-- plugins we only want to execute on the CI server because they either take too
              long or cause problems locally -->
         <profile>
-            <id>jira-ci-applink</id>
+            <id>insight-ci-sdk</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
@@ -239,13 +281,10 @@
                 <plugins>
                     <plugin>
                         <groupId>com.atlassian.maven.plugins</groupId>
-                        <artifactId>confluence-maven-plugin</artifactId>
+                        <artifactId>jira-maven-plugin</artifactId>
                         <configuration>
                             <skipITs>false</skipITs>
                             <enableQuickReload>false</enableQuickReload>
-                            <enablePde>false</enablePde>
-                            <enableDevToolbox>false</enableDevToolbox>
-                            <enablePluginViewer>false</enablePluginViewer>
                         </configuration>
                     </plugin>
 

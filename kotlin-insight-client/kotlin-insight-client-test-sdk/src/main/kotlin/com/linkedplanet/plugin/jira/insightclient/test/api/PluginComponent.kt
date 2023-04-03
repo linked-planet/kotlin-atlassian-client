@@ -17,20 +17,10 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient.api.error
+package com.linkedplanet.plugin.jira.insightclient.test.api
 
-@Suppress("unused")
-open class InsightClientError(
-    val error: String,
-    val message: String
-) {
-    val stacktrace: String = Exception(message).stackTraceToString()
-
+interface PluginComponent {
     companion object {
-        fun fromException(e: Exception): InsightClientError =
-            InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+        const val name: String = "kotlin-insight-client-sdk-test"
     }
 }
-
-class ObjectTypeNotFoundError :
-    InsightClientError("Nicht gefunden", "Der ObjectType mit der angegebenen Id wurde nicht gefunden.")
