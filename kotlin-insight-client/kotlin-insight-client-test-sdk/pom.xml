@@ -211,8 +211,6 @@
                         <Import-Package>
                             org.springframework.osgi.*;resolution:="optional",
                             org.eclipse.gemini.blueprint.*;resolution:="optional",
-                            com.atlassian.jira.plugins.*,
-                            com.riadalabs.jira.plugins.insight.channel.*,
                             com.riadalabs.jira.plugins.insight.services.core.*;resolution:="optional",
                             *;version="0";resolution:=optional
                         </Import-Package>

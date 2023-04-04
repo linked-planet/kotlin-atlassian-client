@@ -23,7 +23,11 @@ import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlininsightclient.InsightClientTest
 import com.linkedplanet.kotlininsightclient.api.interfaces.*
+import com.linkedplanet.kotlininsightclient.sdk.SdkInsightAttachmentOperator
+import com.linkedplanet.kotlininsightclient.sdk.SdkInsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator
+import com.linkedplanet.kotlininsightclient.sdk.SdkInsightSchemaOperator
 import org.junit.Before
 import org.junit.runner.RunWith
 
@@ -34,15 +38,10 @@ class InsightSdkClientTest : InsightClientTest() {
     private val userManager by lazy { ComponentAccessor.getUserManager() }
 
     override val insightObjectOperator: InsightObjectOperator = SdkInsightObjectOperator
-
-    override val insightObjectTypeOperator: InsightObjectTypeOperator
-        get() = TODO("Not yet implemented")
-    override val insightAttachmentOperator: InsightAttachmentOperator
-        get() = TODO("Not yet implemented")
-    override val insightSchemaOperator: InsightSchemaOperator
-        get() = TODO("Not yet implemented")
-    override val insightHistoryOperator: InsightHistoryOperator
-        get() = TODO("Not yet implemented")
+    override val insightObjectTypeOperator: InsightObjectTypeOperator = SdkInsightObjectTypeOperator
+    override val insightAttachmentOperator: InsightAttachmentOperator = SdkInsightAttachmentOperator
+    override val insightSchemaOperator: InsightSchemaOperator = SdkInsightSchemaOperator
+    override val insightHistoryOperator: InsightHistoryOperator = SdkInsightHistoryOperator
 
     @Before
     fun initTest() {

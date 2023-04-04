@@ -28,6 +28,12 @@
 
         <!-- Atlassian -->
         <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-api</artifactId>
+            <version>${jira.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.atlassian.jira.plugins</groupId>
             <artifactId>insight</artifactId>
             <scope>provided</scope>

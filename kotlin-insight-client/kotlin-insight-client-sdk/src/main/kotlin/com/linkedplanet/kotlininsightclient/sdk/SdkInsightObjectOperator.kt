@@ -28,12 +28,16 @@ import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.riadalabs.jira.plugins.insight.channel.external.api.facade.*
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectSchemaFacade
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
 import com.riadalabs.jira.plugins.insight.services.model.*
 import io.riada.core.collector.model.toDisplayValue
 import org.slf4j.LoggerFactory
-import javax.inject.Inject
 import javax.inject.Named
+import com.atlassian.jira.component.ComponentAccessor
 
 @Named
 object SdkInsightObjectOperator : InsightObjectOperator {
@@ -54,30 +58,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     @ComponentImport
     lateinit var objectTypeAttributeFacade: ObjectTypeAttributeFacade
 
-    @ComponentImport
-    lateinit var iqlFacade: IQLFacade
+    private val iqlFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(IQLFacade::class.java) }
 
-    @Inject
-    fun init(
-        @ComponentImport objectFacade: ObjectFacade,
-        @ComponentImport objectTypeFacade: ObjectTypeFacade,
-        @ComponentImport objectSchemaFacade: ObjectSchemaFacade,
-        @ComponentImport iqlFacade: IQLFacade,
-        @ComponentImport objectTypeAttributeFacade: ObjectTypeAttributeFacade,
-    ) {
-        logger.info("Initializing SdkInsightObjectOperator")
-        this.objectFacade = objectFacade
-        logger.info(objectFacade.toString())
-        this.objectTypeFacade = objectTypeFacade
-        logger.info(objectTypeFacade.toString())
-        this.objectSchemaFacade = objectSchemaFacade
-        logger.info(objectSchemaFacade.toString())
-        this.objectTypeAttributeFacade = objectTypeAttributeFacade
-        logger.info(objectTypeAttributeFacade.toString())
-        this.iqlFacade = iqlFacade
-        logger.info(iqlFacade.toString())
-        logger.info("Initialized SdkInsightObjectOperator")
-    }
+//    @Inject
+//    fun init(
+//        @ComponentImport objectFacade: ObjectFacade,
+//        @ComponentImport objectTypeFacade: ObjectTypeFacade,
+//        @ComponentImport objectSchemaFacade: ObjectSchemaFacade,
+//        @ComponentImport objectTypeAttributeFacade: ObjectTypeAttributeFacade,
+//    ) {
+//        this.objectFacade = objectFacade
+//        this.objectTypeFacade = objectTypeFacade
+//        this.objectSchemaFacade = objectSchemaFacade
+//        this.objectTypeAttributeFacade = objectTypeAttributeFacade
+//    }
 
     override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
         objectFacade.loadObjectBean(id)
