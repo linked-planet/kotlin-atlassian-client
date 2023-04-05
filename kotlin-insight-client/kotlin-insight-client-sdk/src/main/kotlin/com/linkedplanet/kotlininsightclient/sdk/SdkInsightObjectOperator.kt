@@ -22,56 +22,41 @@ package com.linkedplanet.kotlininsightclient.sdk
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.left
-import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport
+import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
-import com.linkedplanet.kotlininsightclient.api.model.*
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
+import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.ObjectEditItemAttribute
+import com.linkedplanet.kotlininsightclient.api.model.ObjectEditItemAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
+import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
-import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectSchemaFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
-import com.riadalabs.jira.plugins.insight.services.model.*
+import com.riadalabs.jira.plugins.insight.services.model.MutableObjectBean
+import com.riadalabs.jira.plugins.insight.services.model.ObjectAttributeBean
+import com.riadalabs.jira.plugins.insight.services.model.ObjectBean
+import com.riadalabs.jira.plugins.insight.services.model.ObjectResultBean
+import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
+import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
+import com.riadalabs.jira.plugins.insight.services.model.factory.ObjectAttributeBeanFactory
 import io.riada.core.collector.model.toDisplayValue
-import org.slf4j.LoggerFactory
-import javax.inject.Named
-import com.atlassian.jira.component.ComponentAccessor
 
-@Named
 object SdkInsightObjectOperator : InsightObjectOperator {
-
-    private val logger = LoggerFactory.getLogger(this::class.java)
 
     override var RESULTS_PER_PAGE: Int = 25
 
-    @ComponentImport
-    lateinit var objectFacade: ObjectFacade
-
-    @ComponentImport
-    lateinit var objectTypeFacade: ObjectTypeFacade
-
-    @ComponentImport
-    lateinit var objectSchemaFacade: ObjectSchemaFacade
-
-    @ComponentImport
-    lateinit var objectTypeAttributeFacade: ObjectTypeAttributeFacade
-
-    private val iqlFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(IQLFacade::class.java) }
-
-//    @Inject
-//    fun init(
-//        @ComponentImport objectFacade: ObjectFacade,
-//        @ComponentImport objectTypeFacade: ObjectTypeFacade,
-//        @ComponentImport objectSchemaFacade: ObjectSchemaFacade,
-//        @ComponentImport objectTypeAttributeFacade: ObjectTypeAttributeFacade,
-//    ) {
-//        this.objectFacade = objectFacade
-//        this.objectTypeFacade = objectTypeFacade
-//        this.objectSchemaFacade = objectSchemaFacade
-//        this.objectTypeAttributeFacade = objectTypeAttributeFacade
-//    }
+    private val objectFacade by lazy { getOSGiComponentInstanceOfType( ObjectFacade::class.java) }
+    private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
+    private val objectTypeAttributeFacade  by lazy { getOSGiComponentInstanceOfType( ObjectTypeAttributeFacade::class.java) }
+    private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
+    private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
 
     override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
         objectFacade.loadObjectBean(id)
@@ -83,14 +68,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             ?.toInsightObject()
             ?: Either.Right(null)
 
-    override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> {
-        val objs = iqlFacade.findObjects("objectTypeId=$objectTypeId AND Name=$name")
-        return if (objs.size > 0) {
-            val obj = objs.first()
-            obj.toInsightObject()
-        } else {
-            Either.Right(null)
-        }
+    override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> = either {
+        val iql = "objectTypeId=$objectTypeId AND Name=\"$name\""
+        val objs = iqlFacade.findObjects(iql)
+        objs.firstOrNull()?.toInsightObject()?.bind()
     }
 
     override suspend fun getObjects(
@@ -113,7 +94,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> {
-        TODO("Not yet implemented")
+        val compositeIql = getIQLWithChildren(objectTypeId, withChildren) + " AND " + iql
+        val objs = iqlFacade.findObjects(compositeIql, (pageFrom -1) * perPage, perPage)
+        return objs.toInsightObjects()
     }
 
     override suspend fun getObjectsByIQL(
@@ -122,40 +105,134 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> {
-        TODO("Not yet implemented")
+        val objs = iqlFacade.findObjects(iql, (pageFrom -1) * perPage, perPage)
+        return objs.toInsightObjects()
     }
 
-    override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> {
-        TODO("Not yet implemented")
-    }
+    override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> =
+        Either.catch {
+            // TODO objectFacade has a count function that is probably faster if no iql is required?
+            val objs = iqlFacade.findObjects(iql)
+            objs.size
+        }.mapLeft { InsightClientError.fromException(it) }
 
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> {
-        TODO("Not yet implemented")
+        val objectBean = objectFacade.loadObjectBean(obj.id).createMutable()
+        setAttributesForObjectBean(obj, objectBean)
+        objectBean.objectTypeId = obj.objectTypeId
+        objectBean.objectKey = obj.objectKey // TODO: might be inconsistent to attribute key
+        val resultBean = objectFacade.storeObjectBean(objectBean)
+        return resultBean.toInsightObject()
     }
 
+    private fun setAttributesForObjectBean(
+        obj: InsightObject,
+        objectBean: MutableObjectBean
+    ) {
+        val objRefEditAttributes = obj.getEditReferences()
+        val objEditAttributes = obj.getEditValues()
+
+        val editAttributes = objEditAttributes.map { editItem ->
+            val attrField =
+                objectTypeAttributeFacade.loadObjectTypeAttribute(editItem.objectTypeAttributeId).createMutable()
+            val values = editItem.objectAttributeValues.map { it.value.toString() }.toTypedArray()
+            val attr = objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, attrField, *values)
+            attr
+        }
+
+        val refAttributes = objRefEditAttributes.map { editItem ->
+            val attrField =
+                objectTypeAttributeFacade.loadObjectTypeAttribute(editItem.objectTypeAttributeId).createMutable()
+            val refObjIds = editItem.objectAttributeValues.map { it.value.toString() }.toTypedArray()
+            objectAttributeBeanFactory.createReferenceAttributeValue(attrField) { refObjIds.contains(it.id.toString()) }
+        }
+        objectBean.setObjectAttributeBeans(editAttributes + refAttributes)
+    }
+
+    private fun InsightObject.getEditValues(): List<ObjectEditItemAttribute> =
+        this.attributes
+            .filter { it.value.any { it.value != null }
+                    || (it.attributeName?.let { attrName -> this.isSelectField(attrName) } ?: false  )
+            }
+            .map {
+                val values = it.value.map {
+                    ObjectEditItemAttributeValue(
+                        it.value
+                    )
+                }
+                ObjectEditItemAttribute(
+                    it.attributeId,
+                    values
+                )
+            }
+
+    private fun InsightObject.getEditReferences(): List<ObjectEditItemAttribute> =
+        this.attributes
+            .filter { it.value.any { it.referencedObject != null } }
+            .map {
+                val values = it.value.map {
+                    ObjectEditItemAttributeValue(
+                        it.referencedObject!!.id
+                    )
+                }
+                ObjectEditItemAttribute(
+                    it.attributeId,
+                    values
+                )
+            }
+
+    private fun InsightObject.isSelectField(attributeName: String): Boolean = false // TODO
+//        this.getAttributeType(attributeName)?.takeIf { it == "Select" }?.let { true } ?: false
+
     override suspend fun deleteObject(id: Int): Boolean {
-        TODO("Not yet implemented")
+        try {
+            objectFacade.deleteObjectBean(id)
+            return true
+        } catch (ex: Exception) {
+            //TODO: use either return type
+            return false
+        }
     }
 
     override suspend fun createObject(
         objectTypeId: Int,
-        func: (InsightObject) -> Unit
+        func: (InsightObject) -> Unit // to configure the model
     ): Either<InsightClientError, InsightObject> {
-        TODO("Not yet implemented")
+        val freshInsightObject = createEmptyDomainObject(objectTypeId)
+        func(freshInsightObject)
+        val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
+        val freshObjectBean = objectTypeBean.createMutableObjectBean()
+        setAttributesForObjectBean(freshInsightObject, freshObjectBean)
+        val resultBean = objectFacade.storeObjectBean(freshObjectBean)
+        return resultBean.toInsightObject()
+    }
+
+    private fun createEmptyDomainObject(objectTypeId: Int): InsightObject {
+        val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
+        return InsightObject(
+            objectTypeId = objectTypeId,
+            id = -1,
+            objectTypeName = objectTypeBean.name,
+            objectKey = "",
+            label = "",
+            attributes = emptyList(),
+            attachmentsExist = false,
+            objectSelf = ""
+        )
     }
 
     private suspend fun ObjectResultBean.toInsightObjects(): Either<InsightClientError, InsightObjects> = either {
         InsightObjects(
-            this@toInsightObjects.totalFilterSize,
-            this@toInsightObjects.objects.map { it.toInsightObject().bind() })
+            totalFilterSize,
+            objects.map { it.toInsightObject().bind() })
     }
 
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> {
         return try {
-            val objectType = objectTypeFacade.loadObjectType(this.objectTypeId)
+            val objectType = objectTypeFacade.loadObjectType(objectTypeId)
             val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
             val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
-            createInsightObject(this, objectType, objectTypeAttributeBeans, hasAttachments)
+            createInsightObject(this, objectType, objectTypeAttributeBeans, hasAttachments) // NO BIND!
         } catch (e: Exception) {
             InsightClientError.fromException(e).left()
         }
@@ -183,7 +260,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectBean.label,
             attributes,
             hasAttachments,
-            attributes.single { it.attributeName == "Link" }.toDisplayValue() as String
+            attributes.singleOrNull { it.attributeName == "Link" }?.toDisplayValue() as? String ?: "NO SELF!!!"
         )
     }
 

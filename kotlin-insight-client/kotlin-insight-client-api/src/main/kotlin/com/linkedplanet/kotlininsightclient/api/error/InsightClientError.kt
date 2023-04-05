@@ -29,6 +29,8 @@ open class InsightClientError(
     companion object {
         fun fromException(e: Exception): InsightClientError =
             InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+        fun fromException(e: Throwable): InsightClientError =
+            InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
     }
 }
 
