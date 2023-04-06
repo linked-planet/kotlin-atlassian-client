@@ -20,25 +20,80 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
+import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttributeReferenceType
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
+import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.DefaultType
+import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
+import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 
 object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
 
-    override suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema> {
-        TODO("implement")
-    }
+    private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
+    private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
 
-    override suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>> {
-        TODO("implement")
-    }
+    override suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema> =
+        Either.catch {
+            val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
+            objectTypeSchemaForBean(objectTypeBean)
+        }.mapLeft { InsightClientError.fromException(it) }
+
+    override suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>> =
+        Either.catch {
+            objectTypeFacade.findObjectTypeBeansFlat(schemaId)
+                .map(::objectTypeSchemaForBean)
+        }.mapLeft { InsightClientError.fromException(it) }
 
     override suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,
         rootObjectTypeId: Int
-    ): Either<InsightClientError, List<ObjectTypeSchema>> {
-        TODO("implement")
+    ): Either<InsightClientError, List<ObjectTypeSchema>> =
+        Either.catch {
+            objectTypeFacade.findObjectTypeBeanChildrens(rootObjectTypeId)
+                .map(::objectTypeSchemaForBean)
+        }.mapLeft { InsightClientError.fromException(it) }
+
+    private fun objectTypeSchemaForBean(objectTypeBean: ObjectTypeBean): ObjectTypeSchema {
+        val attributes = attributesForObjectType(objectTypeBean.id)
+        return ObjectTypeSchema(
+            objectTypeBean.id,
+            objectTypeBean.name,
+            attributes,
+            objectTypeBean.parentObjectTypeId
+        )
     }
+
+    private fun attributesForObjectType(objectTypeId: Int): List<ObjectTypeSchemaAttribute> =
+        objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectTypeId).map { bean ->
+            bean.run {
+                ObjectTypeSchemaAttribute(
+                    id,
+                    name,
+                    defaultType?.let(::mapDefaultType),
+                    options,
+                    minimumCardinality,
+                    maximumCardinality,
+                    referenceTypeBean?.run { ObjectTypeSchemaAttributeReferenceType(id, name) }
+                )
+            }
+        }
+
+    private fun mapDefaultType(defaultType: DefaultType) =
+        when (defaultType) {
+            DefaultType.NONE -> null
+            else -> ObjectTypeAttributeDefaultType(
+                defaultType.defaultTypeId,
+                defaultType.name.upperCaseToPascalCase()
+            )
+        }
+
+    private fun String.upperCaseToPascalCase() =
+        split("_").joinToString("") { it.lowercase().capitalizeAsciiOnly() }
 
 }
