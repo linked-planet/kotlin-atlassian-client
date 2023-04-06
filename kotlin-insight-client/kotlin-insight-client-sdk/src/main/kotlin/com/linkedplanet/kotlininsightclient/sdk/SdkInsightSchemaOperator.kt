@@ -20,38 +20,40 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
-import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport
+import arrow.core.right
+import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectSchemaFacade
-import javax.inject.Inject
+import com.riadalabs.jira.plugins.insight.services.model.ObjectSchemaBean
 
 object SdkInsightSchemaOperator : InsightSchemaOperator {
 
-    @ComponentImport
-    lateinit var objectSchemaFacade: ObjectSchemaFacade
-
-    @Inject
-    fun init(
-        @ComponentImport objectSchemaFacade: ObjectSchemaFacade,
-    ) {
-        this.objectSchemaFacade = objectSchemaFacade
-    }
+    private val objectSchemaFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectSchemaFacade::class.java) }
 
     override suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>> {
-        TODO()
-//        val schemas = objectSchemaFacade.findObjectSchemaBeans().map { bean ->
-//            InsightSchema(
-//                bean.id,
-//                bean.name,
-//            )
-//        }
-//        return schemas
+        val schemas = objectSchemaFacade.findObjectSchemaBeans().map { bean ->
+            insightSchemaFromBean(bean)
+        }
+        return schemas.right()
     }
 
+    private fun insightSchemaFromBean(bean: ObjectSchemaBean) =
+        InsightSchema(
+            id = bean.id,
+            name = bean.name,
+            objectCount = 0, //TODO
+            objectTypeCount = 0 //TODO
+        )
+
+
+    //TODO: getSChema is untested
+
     override suspend fun getSchema(id: Int): Either<InsightClientError, InsightSchema> {
-        TODO()
+        val objectSchema = objectSchemaFacade.loadObjectSchema(id)
+        val schema = insightSchemaFromBean(objectSchema)
+        return schema.right()
     }
 
 }
