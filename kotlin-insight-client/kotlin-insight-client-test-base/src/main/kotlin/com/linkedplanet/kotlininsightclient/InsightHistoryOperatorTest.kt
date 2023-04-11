@@ -34,7 +34,7 @@ interface InsightHistoryOperatorTest {
         println("### START history_testHistory")
 
         runBlocking {
-            val country = insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
+            val country = insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany").orNull()!!
             val historyItems = insightHistoryOperator.getHistory(country.id).orNull()!!
             assertTrue(historyItems.isNotEmpty())
         }

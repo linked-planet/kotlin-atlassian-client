@@ -23,13 +23,14 @@ enum class SchemaObject(val id: Int) {
     ITest(1)
 }
 
-enum class InsightObject(val id: Int) {
+enum class InsightObjectType(val id: Int) {
     Company(1),
     Country(2),
     TestWithLists(4),
     SimpleObject(3),
     Many(5),
-    Abstract(6)
+    Abstract(6),
+    User(9)
 }
 
 enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
@@ -45,4 +46,7 @@ enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
 
     SimpleObjectFirstname(15, "Firstname"),
     SimpleObjectLastname(16, "Lastname"),
+
+    UserTestUser(43, "User"),
+    UserTestUsers(44, "Users"),
 }

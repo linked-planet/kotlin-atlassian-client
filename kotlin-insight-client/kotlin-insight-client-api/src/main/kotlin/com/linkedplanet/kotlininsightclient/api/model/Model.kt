@@ -82,7 +82,7 @@ fun <T> InsightObject.setValueList(id: Int, name: String? = null, values: List<T
     }
     getAttribute(id)
         ?.value = values.map {
-        ObjectAttributeValue(it, "", null)
+        ObjectAttributeValue(it, "", null, null)
     }
 }
 
@@ -93,7 +93,7 @@ fun <T> InsightObject.setValue(id: Int, name: String? = null, value: T?) {
         this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
-        ?.value = listOf(ObjectAttributeValue(value, "", null))
+        ?.value = listOf(ObjectAttributeValue(value, "", null, null))
 }
 
 fun <T> InsightObject.removeValue(id: Int, value: T?) {
@@ -109,7 +109,7 @@ fun InsightObject.addValue(id: Int, name: String? = null, value: Any?) {
     }
     getAttribute(id)
         ?.apply {
-            this.value = this.value + ObjectAttributeValue(value, "", null)
+            this.value = this.value + ObjectAttributeValue(value, "", null, null)
         }
 }
 
@@ -210,8 +210,8 @@ fun InsightObject.addReference(attributeId: Int, name: String?, referencedObject
                     "",
                     "",
                     null
-                )
-
+                ),
+                null
             ))
         }
 }
@@ -248,6 +248,13 @@ fun InsightObject.getEditAttributes() =
             values
         )
     }
+
+fun InsightObject.getUserList(id: Int): List<InsightUser> =
+    this.attributes
+        .firstOrNull { it.attributeId == id }
+        ?.value
+        ?.mapNotNull { it.user }
+        ?: emptyList()
 
 /**
  * See type attribute in response of https://insight-javadoc.riada.io/insight-javadoc-8.6/insight-rest/#object__id__attributes_get
@@ -377,10 +384,18 @@ data class ObjectTypeAttribute(
     val type: Int
 )
 
+data class InsightUser(
+    val displayName: String,
+    val name: String,
+    val emailAddress: String,
+    val key: String
+)
+
 data class ObjectAttributeValue(
     var value: Any?,
     var displayValue: Any?,
     var referencedObject: ReferencedObject?,
+    var user: InsightUser?
 )
 
 data class ReferencedObject(
