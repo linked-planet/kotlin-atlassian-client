@@ -47,7 +47,7 @@ class HttpJiraUserOperator(private val context: HttpJiraClientContext) : JiraUse
         getUsersPaginated("rest/api/2/group/member?groupname=jira-administrators")
 
     override suspend fun getAssignableUsersByProjectKey(projectKey: String): Either<JiraClientError, List<JiraUser>> =
-        getUsers("/rest/api/2/user/assignable/search?project=$projectKey")
+        getUsersByProjectKeyAndPermission(projectKey, "ASSIGNABLE_USER")
 
     override suspend fun getUsersByProjectKeyAndPermission(
         projectKey: String,
