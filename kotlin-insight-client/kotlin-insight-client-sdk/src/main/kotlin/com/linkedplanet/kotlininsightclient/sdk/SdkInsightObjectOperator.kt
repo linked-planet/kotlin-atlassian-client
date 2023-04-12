@@ -52,9 +52,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override var RESULTS_PER_PAGE: Int = 25
 
-    private val objectFacade by lazy { getOSGiComponentInstanceOfType( ObjectFacade::class.java) }
+    private val objectFacade by lazy { getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
     private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
-    private val objectTypeAttributeFacade  by lazy { getOSGiComponentInstanceOfType( ObjectTypeAttributeFacade::class.java) }
+    private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
     private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
 
@@ -68,11 +68,12 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             ?.toInsightObject()
             ?: Either.Right(null)
 
-    override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> = either {
-        val iql = "objectTypeId=$objectTypeId AND Name=\"$name\""
-        val objs = iqlFacade.findObjects(iql)
-        objs.firstOrNull()?.toInsightObject()?.bind()
-    }
+    override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> =
+        either {
+            val iql = "objectTypeId=$objectTypeId AND Name=\"$name\""
+            val objs = iqlFacade.findObjects(iql)
+            objs.firstOrNull()?.toInsightObject()?.bind()
+        }
 
     override suspend fun getObjects(
         objectTypeId: Int,
@@ -95,7 +96,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         perPage: Int
     ): Either<InsightClientError, InsightObjects> {
         val compositeIql = getIQLWithChildren(objectTypeId, withChildren) + " AND " + iql
-        val objs = iqlFacade.findObjects(compositeIql, (pageFrom -1) * perPage, perPage)
+        val objs = iqlFacade.findObjects(compositeIql, (pageFrom - 1) * perPage, perPage)
         return objs.toInsightObjects()
     }
 
@@ -105,13 +106,12 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> {
-        val objs = iqlFacade.findObjects(iql, (pageFrom -1) * perPage, perPage)
+        val objs = iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
         return objs.toInsightObjects()
     }
 
     override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> =
         Either.catch {
-            // TODO objectFacade has a count function that is probably faster if no iql is required?
             val objs = iqlFacade.findObjects(iql)
             objs.size
         }.mapLeft { InsightClientError.fromException(it) }
@@ -120,7 +120,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         val objectBean = objectFacade.loadObjectBean(obj.id).createMutable()
         setAttributesForObjectBean(obj, objectBean)
         objectBean.objectTypeId = obj.objectTypeId
-        objectBean.objectKey = obj.objectKey // TODO: might be inconsistent to attribute key
+        objectBean.objectKey = obj.objectKey
         val resultBean = objectFacade.storeObjectBean(objectBean)
         return resultBean.toInsightObject()
     }
@@ -151,13 +151,14 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     private fun InsightObject.getEditValues(): List<ObjectEditItemAttribute> =
         this.attributes
-            .filter { it.value.any { it.value != null }
-                    || (it.attributeName?.let { attrName -> this.isSelectField(attrName) } ?: false  )
+            .filter { insightAttribute ->
+                insightAttribute.value.any { it.value != null }
+                        || (insightAttribute.attributeName?.let { attrName -> this.isSelectField(attrName) } ?: false)
             }
             .map {
-                val values = it.value.map {
+                val values = it.value.map { attributeValue ->
                     ObjectEditItemAttributeValue(
-                        it.value
+                        attributeValue.value
                     )
                 }
                 ObjectEditItemAttribute(
@@ -168,15 +169,15 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     private fun InsightObject.getEditReferences(): List<ObjectEditItemAttribute> =
         this.attributes
-            .filter { it.value.any { it.referencedObject != null } }
-            .map {
-                val values = it.value.map {
+            .filter { insightAttribute -> insightAttribute.value.any { it.referencedObject != null } }
+            .map { insightAttribute ->
+                val values = insightAttribute.value.map { attributeValue ->
                     ObjectEditItemAttributeValue(
-                        it.referencedObject!!.id
+                        attributeValue.referencedObject!!.id
                     )
                 }
                 ObjectEditItemAttribute(
-                    it.attributeId,
+                    insightAttribute.attributeId,
                     values
                 )
             }
@@ -185,12 +186,11 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 //        this.getAttributeType(attributeName)?.takeIf { it == "Select" }?.let { true } ?: false
 
     override suspend fun deleteObject(id: Int): Boolean {
-        try {
+        return try {
             objectFacade.deleteObjectBean(id)
-            return true
+            true
         } catch (ex: Exception) {
-            //TODO: use either return type
-            return false
+            false
         }
     }
 
