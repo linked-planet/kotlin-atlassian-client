@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
+import arrow.core.computations.either
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
@@ -29,7 +30,10 @@ import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredFileMa
 import com.linkedplanet.kotlininsightclient.sdk.util.catchInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
+import java.io.ByteArrayOutputStream
 import java.nio.file.Path
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.io.path.createTempFile
 
 object SdkInsightAttachmentOperator : InsightAttachmentOperator {
@@ -56,8 +60,26 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         }
 
     override suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray> =
-        Either.catchInsightClientError {
-            TODO("Not yet implemented")
+        either {
+            val attachments = getAttachments(objectId).bind()
+            val fileMap: List<Pair<String, ByteArray>> = attachments.mapNotNull { attachment ->
+                val attachmentContent = downloadAttachment(attachment.url).bind()
+                attachmentContent?.let { attachment.filename to attachmentContent }
+            }
+
+            ByteArrayOutputStream().use { byteOutputStream ->
+                ZipOutputStream(byteOutputStream).use { zip ->
+                    fileMap.forEach {
+                        val zipEntry1 = ZipEntry(it.first)
+                        zip.putNextEntry(zipEntry1)
+                        zip.write(it.second)
+                        zip.closeEntry()
+                    }
+                }
+
+                val toByteArray = byteOutputStream.toByteArray()
+                toByteArray
+            }
         }
 
     override suspend fun uploadAttachment(
