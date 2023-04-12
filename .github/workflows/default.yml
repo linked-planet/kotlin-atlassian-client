@@ -296,7 +296,7 @@ jobs:
 
   deploy-to-central:
     runs-on: ubuntu-20.04
-    needs: [ build, kotlin-jira-client-test-sdk, kotlin-jira-client-test-ktor, kotlin-jira-client-test-applink, kotlin-insight-client-test-ktor, kotlin-insight-client-test-applink ]
+    needs: [ build, kotlin-jira-client-test-sdk, kotlin-jira-client-test-ktor, kotlin-jira-client-test-applink, kotlin-insight-client-test-ktor, kotlin-insight-client-test-applink, kotlin-insight-client-test-sdk ]
     if: ${{ github.event_name == 'release' }}
     steps:
       - name: Checkout Source
