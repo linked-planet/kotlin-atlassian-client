@@ -35,17 +35,16 @@ object SdkInsightHistoryOperator : InsightHistoryOperator {
 
     override suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>> =
         Either.catchInsightClientError {
-            val findObjectHistoryBean: MutableList<ObjectHistoryBean> = objectFacade.findObjectHistoryBean(objectId)
-            findObjectHistoryBean.map {
-                it.run {
+            objectFacade.findObjectHistoryBean(objectId).map { objectHistoryBean: ObjectHistoryBean ->
+                objectHistoryBean.run {
                     InsightHistoryItem(
-                        id,
-                        affectedAttribute,
-                        newValue,
-                        Actor(actorUserKey),
-                        type,
+                        id, //TODO:hg can be null by definition
+                        affectedAttribute ?: "", //TODO:hg can be null by definition
+                        newValue ?: "", //TODO:hg can be null by definition
+                        Actor(actorUserKey), //TODO:hg key vs name
+                        type ?: 0,
                         created.toString(),
-                        updated = "", //TODO set updated (no property is available)
+                        updated = "", //TODO:hg set updated (no property is available)
                         objectId
                     )
                 }

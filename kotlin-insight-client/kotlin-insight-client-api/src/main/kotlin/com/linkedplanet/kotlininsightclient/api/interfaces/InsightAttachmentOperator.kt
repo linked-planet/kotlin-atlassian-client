@@ -27,7 +27,7 @@ interface InsightAttachmentOperator {
 
     suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>>
 
-    suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray?>
+    suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray?> // TODO:hg why is it optional?
 
     suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray>
 
