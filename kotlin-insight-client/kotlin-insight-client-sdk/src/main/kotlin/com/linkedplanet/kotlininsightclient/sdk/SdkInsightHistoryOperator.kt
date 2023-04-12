@@ -20,13 +20,35 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
+import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightHistoryOperator
+import com.linkedplanet.kotlininsightclient.api.model.Actor
 import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
+import com.linkedplanet.kotlininsightclient.sdk.util.catchInsightClientError
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
+import com.riadalabs.jira.plugins.insight.services.model.ObjectHistoryBean
 
 object SdkInsightHistoryOperator : InsightHistoryOperator {
 
-    override suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>> {
-        TODO("implement")
-    }
+    private val objectFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
+
+    override suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>> =
+        Either.catchInsightClientError {
+            val findObjectHistoryBean: MutableList<ObjectHistoryBean> = objectFacade.findObjectHistoryBean(objectId)
+            findObjectHistoryBean.map {
+                it.run {
+                    InsightHistoryItem(
+                        id,
+                        affectedAttribute,
+                        newValue,
+                        Actor(actorUserKey),
+                        type,
+                        created.toString(),
+                        updated = "", //TODO set updated (no property is available)
+                        objectId
+                    )
+                }
+            }
+        }
 }
