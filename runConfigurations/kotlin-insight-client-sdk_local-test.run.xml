@@ -19,12 +19,12 @@
           <option name="pomFileName" />
           <option name="profilesMap">
             <map>
-              <entry key="jira-ci-sdk" value="true" />
+              <entry key="insight-itest-sdk" value="true" />
+              <entry key="jira-ci-sdk" value="false" />
               <entry key="jira-itest-applink" value="false" />
               <entry key="insight-itest-ktor" value="false" />
               <entry key="insight-itest-applink" value="false" />
               <entry key="jira-itest-ktor" value="false" />
-              <entry key="jira-itest-sdk" value="false" />
             </map>
           </option>
           <option name="resolveToWorkspace" value="false" />
