@@ -37,11 +37,10 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         objectTypeId: Int,
         withChildren: Boolean,
         pageFrom: Int,
-        pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> = either {
         val iql = getIQLWithChildren(objectTypeId, withChildren)
-        getObjectsByIQL(iql, pageFrom, pageTo, perPage).bind()
+        getObjectsByIQL(iql, pageFrom, perPage).bind()
     }
 
     override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
@@ -58,14 +57,12 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         withChildren: Boolean,
         iql: String,
         pageFrom: Int,
-        pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> = either {
         val fullIql = "${getIQLWithChildren(objectTypeId, withChildren)} AND $iql"
         getObjectsByIQL(
             fullIql,
             pageFrom,
-            pageTo,
             perPage
         ).bind()
     }
@@ -73,15 +70,12 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     override suspend fun getObjectsByIQL(
         iql: String,
         pageFrom: Int,
-        pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> = either {
         val objectsAmount = getObjectCount(iql).bind()
         val maxPage = getObjectPages(iql, perPage).bind()
-        val lastPage = pageTo ?: maxPage
-        lastPage.let { maxPageSize ->
-            (pageFrom..maxPageSize).toList()
-        }.flatMap { page ->
+        (pageFrom..maxPage).toList()
+        .flatMap { page ->
             context.httpClient.executeRest<InsightObjectEntries>(
                 "GET",
                 "rest/insight/1.0/iql/objects",

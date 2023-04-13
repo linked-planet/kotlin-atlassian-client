@@ -32,7 +32,6 @@ interface InsightObjectOperator {
         objectTypeId: Int,
         withChildren: Boolean = false,
         pageFrom: Int = 1,
-        pageTo: Int? = null, //TODO: remove
         perPage: Int = RESULTS_PER_PAGE
     ): Either<InsightClientError, InsightObjects>
 
@@ -47,14 +46,12 @@ interface InsightObjectOperator {
         withChildren: Boolean = false,
         iql: String,
         pageFrom: Int = 1,
-        pageTo: Int? = null,
         perPage: Int = RESULTS_PER_PAGE
     ): Either<InsightClientError, InsightObjects>
 
     suspend fun getObjectsByIQL(
         iql: String,
         pageFrom: Int,
-        pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects>
 

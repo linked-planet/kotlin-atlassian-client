@@ -79,7 +79,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         objectTypeId: Int,
         withChildren: Boolean,
         pageFrom: Int,
-        pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> {
         val iql = getIQLWithChildren(objectTypeId, withChildren)
@@ -92,7 +91,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         withChildren: Boolean,
         iql: String,
         pageFrom: Int,
-        pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> {
         val compositeIql = getIQLWithChildren(objectTypeId, withChildren) + " AND " + iql
@@ -103,7 +101,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     override suspend fun getObjectsByIQL(
         iql: String,
         pageFrom: Int,
-        pageTo: Int?,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> {
         val objs = iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)

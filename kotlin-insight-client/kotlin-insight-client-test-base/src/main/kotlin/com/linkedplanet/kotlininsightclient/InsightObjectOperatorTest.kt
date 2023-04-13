@@ -334,10 +334,14 @@ interface InsightObjectOperatorTest {
     fun testGetObjectsWithChildrenPaginated() {
         println("### START object_testGetObjectsWithChildrenPaginated")
 
-        // page 1 and 2 implicit
+        // results 1 and 2
         val allINSIGHTOBJECTList = runBlocking {
-            insightObjectOperator.getObjects(InsightObject.Abstract.id, withChildren = true, pageFrom = 1, perPage = 1)
-                .orNull()!!
+            insightObjectOperator.getObjects(
+                InsightObject.Abstract.id,
+                withChildren = true,
+                pageFrom = 1,
+                perPage = 2
+            ).orNull()!!
         }
         assertTrue(allINSIGHTOBJECTList.searchResult == 2)
         val allObjects = allINSIGHTOBJECTList.objects
@@ -345,14 +349,13 @@ interface InsightObjectOperatorTest {
         assertEquals(94, allObjects[0].id)
         assertEquals(95, allObjects[1].id)
 
-        // page 1 and 2 explicit
+        // results 1 and 2
         val allExplINSIGHTOBJECTList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObject.Abstract.id,
                 withChildren = true,
                 pageFrom = 1,
-                pageTo = 2,
-                perPage = 1
+                perPage = 5
             ).orNull()!!
         }
         assertTrue(allExplINSIGHTOBJECTList.searchResult == 2)
@@ -361,32 +364,28 @@ interface InsightObjectOperatorTest {
         assertEquals(94, allExplObjects[0].id)
         assertEquals(95, allExplObjects[1].id)
 
-        // page 1
+        // result 1
         val firstINSIGHTOBJECTList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObject.Abstract.id,
                 withChildren = true,
                 pageFrom = 1,
-                pageTo = 1,
                 perPage = 1
-            )
-                .orNull()!!
+            ).orNull()!!
         }
         assertTrue(firstINSIGHTOBJECTList.searchResult == 2)
         val firstObjects = firstINSIGHTOBJECTList.objects
         assertEquals(1, firstObjects.size)
         assertEquals(94, firstObjects[0].id)
 
-        // page 2
+        // result 2
         val secondINSIGHTOBJECTList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObject.Abstract.id,
                 withChildren = true,
                 pageFrom = 2,
-                pageTo = 2,
                 perPage = 1
-            )
-                .orNull()!!
+            ).orNull()!!
         }
         assertTrue(secondINSIGHTOBJECTList.searchResult == 2)
         val secondObjects = secondINSIGHTOBJECTList.objects
@@ -395,10 +394,14 @@ interface InsightObjectOperatorTest {
 
         // page doesn't exist
         val emptyINSIGHTOBJECTList = runBlocking {
-            insightObjectOperator.getObjects(InsightObject.Abstract.id, withChildren = true, pageFrom = 3, perPage = 1)
-                .orNull()!!
+            insightObjectOperator.getObjects(
+                InsightObject.Abstract.id,
+                withChildren = true,
+                pageFrom = 3,
+                perPage = 2
+            ).orNull()!!
         }
-        assertEquals(2, emptyINSIGHTOBJECTList.searchResult)
+        assertTrue(firstINSIGHTOBJECTList.searchResult == 2)
         val emptyObjects = emptyINSIGHTOBJECTList.objects
         assertTrue(emptyObjects.isEmpty())
 
