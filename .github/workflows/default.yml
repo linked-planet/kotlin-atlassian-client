@@ -241,13 +241,6 @@ jobs:
           VERSION="${{ needs.build.outputs.version }}"
           mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
-      - name: Startup Jira and Insight
-        # Loop is needed to prevent Jira from suspension
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
-
-      - name: Wait for Jira and Insight
-        run: ./scripts/wait-for-jira.sh
-
       - name: Integration tests using sdk
         run: mvn -B verify -Pinsight-itest-sdk,insight-ci-sdk,-insight-itest-ktor,-insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
