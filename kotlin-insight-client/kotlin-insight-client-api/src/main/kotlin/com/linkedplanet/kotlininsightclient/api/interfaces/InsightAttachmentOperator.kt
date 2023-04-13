@@ -38,5 +38,5 @@ interface InsightAttachmentOperator {
         comment: String = ""
     ): Either<InsightClientError, List<InsightAttachment>>
 
-    suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String>
+    suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String> //TODO: why string?
 }

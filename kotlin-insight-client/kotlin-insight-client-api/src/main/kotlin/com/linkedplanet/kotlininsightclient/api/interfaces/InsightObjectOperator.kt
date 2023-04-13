@@ -32,7 +32,7 @@ interface InsightObjectOperator {
         objectTypeId: Int,
         withChildren: Boolean = false,
         pageFrom: Int = 1,
-        pageTo: Int? = null,
+        pageTo: Int? = null, //TODO: remove
         perPage: Int = RESULTS_PER_PAGE
     ): Either<InsightClientError, InsightObjects>
 

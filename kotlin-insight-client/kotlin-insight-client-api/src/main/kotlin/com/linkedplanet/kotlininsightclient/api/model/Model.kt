@@ -23,7 +23,7 @@ import java.time.ZonedDateTime
 import java.util.Collections.emptyList
 
 data class InsightObjects(
-    val searchResult: Int = -1,
+    val searchResult: Int = -1, //TODO:hg:1:what does this mean? is this the resultSize?
     val objects: List<InsightObject> = emptyList()
 )
 
@@ -420,8 +420,8 @@ data class InsightAttachment(
     val author: String,
     val mimeType: String,
     val filename: String,
-    val filesize: String,
-    val created: String,
+    val filesize: String, //TODO:hg long
+    val created: String,  //TODO:hg date?
     val comment: String,
     val commentOutput: String,
     val url: String
