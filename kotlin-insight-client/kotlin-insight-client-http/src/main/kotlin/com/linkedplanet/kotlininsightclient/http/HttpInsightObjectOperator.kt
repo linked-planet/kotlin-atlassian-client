@@ -72,36 +72,25 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         pageFrom: Int,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> = either {
-        val objectsAmount = getObjectCount(iql).bind()
-        val maxPage = getObjectPages(iql, perPage).bind()
-        (pageFrom..maxPage).toList()
-        .flatMap { page ->
-            context.httpClient.executeRest<InsightObjectEntries>(
-                "GET",
-                "rest/insight/1.0/iql/objects",
-                mapOf(
-                    "iql" to iql,
-                    "includeTypeAttributes" to "true",
-                    "includeExtendedInfo" to "true",
-                    "page" to "$page",
-                    "resultPerPage" to perPage.toString()
-                ),
-                null,
-                "application/json",
-                InsightObjectEntries::class.java
-            )
-                .map { it.body }
-                .mapLeft { it.toInsightClientError() }
-                .bind()
-                ?.toValues()
-                ?.objects
-                ?: emptyList()
-        }.let {
-            InsightObjects(
-                objectsAmount,
-                it
-            )
-        }
+        val objects = context.httpClient.executeRest<InsightObjectEntries>(
+            "GET",
+            "rest/insight/1.0/iql/objects",
+            mapOf(
+                "iql" to iql,
+                "includeTypeAttributes" to "true",
+                "includeExtendedInfo" to "true",
+                "page" to "$pageFrom",
+                "resultPerPage" to perPage.toString()
+            ),
+            null,
+            "application/json",
+            InsightObjectEntries::class.java
+        )
+            .map { it.body }
+            .mapLeft { it.toInsightClientError() }
+            .bind()
+            ?.toValues()
+        objects ?: InsightObjects(getObjectCount(iql).bind(), emptyList())
     }
 
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
@@ -153,27 +142,6 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
 
     // PRIVATE DOWN HERE
-    private suspend fun getObjectPages(
-        iql: String,
-        resultsPerPage: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, Int> =
-        context.httpClient.executeGetCall(
-            "rest/insight/1.0/iql/objects",
-            mapOf(
-                "iql" to iql,
-                "includeTypeAttributes" to "true",
-                "includeExtendedInfo" to "true",
-                "page" to "1",
-                "resultsPerPage" to resultsPerPage.toString()
-            )
-        )
-            .map { response ->
-                // Keep JsonParser instantiation for downwards compatibility
-                @Suppress("DEPRECATION")
-                JsonParser().parse(response.body).asJsonObject.get("toIndex").asInt
-            }
-            .mapLeft { it.toInsightClientError() }
-
     private fun InsightObjectEntries.toValues(): InsightObjects =
         InsightObjects(
             this.totalFilterCount,
