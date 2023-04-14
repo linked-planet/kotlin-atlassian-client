@@ -242,8 +242,7 @@ jobs:
           mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
 
       - name: Integration tests using sdk
-        run: mvn -B verify -Pinsight-itest-sdk,insight-ci-sdk,-insight-itest-ktor,-insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}"
-
+        run: mvn -B verify -Pinsight-itest-sdk,insight-ci-sdk,-insight-itest-ktor,-insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink "-Djira.service.management.license=${{ secrets.JIRA_SERVICE_MANAGEMENT_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_LICENSE }}" "-Dbaseurl=http://localhost:2990"
   kotlin-insight-client-test-applink:
     runs-on: ubuntu-20.04
     needs: build
