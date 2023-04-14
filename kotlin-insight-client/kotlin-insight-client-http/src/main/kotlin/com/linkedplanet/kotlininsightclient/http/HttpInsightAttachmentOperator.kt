@@ -79,7 +79,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
         getAttachments(objectId).bind()
     }
 
-    override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String> =
+    override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
             "DELETE",
             "/rest/insight/1.0/attachments/${attachmentId}",
@@ -87,7 +87,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             null,
             "application/json"
         )
-            .map { it.body }
+            .map { }
             .mapLeft { it.toInsightClientError() }
 
     override suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray> = either {

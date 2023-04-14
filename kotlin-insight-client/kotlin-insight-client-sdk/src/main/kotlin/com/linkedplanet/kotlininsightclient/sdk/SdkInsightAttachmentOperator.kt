@@ -50,7 +50,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
                 .map(::beanToInsightAttachment)
         }
 
-    override suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray?> =
+    override suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray> =
         Either.catchInsightClientError {
             val attachmentId = attachmentUrlResolver.parseAttachmentIdFromPathInformation(url)
             val attachmentBean = objectFacade.loadAttachmentBeanById(attachmentId)
@@ -62,9 +62,9 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
     override suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray> =
         either {
             val attachments = getAttachments(objectId).bind()
-            val fileMap: List<Pair<String, ByteArray>> = attachments.mapNotNull { attachment ->
+            val fileMap: List<Pair<String, ByteArray>> = attachments.map { attachment ->
                 val attachmentContent = downloadAttachment(attachment.url).bind()
-                attachmentContent?.let { attachment.filename to attachmentContent }
+                attachment.filename to attachmentContent
             }
 
             ByteArrayOutputStream().use { byteOutputStream ->
@@ -97,7 +97,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             listOf(insightAttachment)
         }
 
-    override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String> =
+    override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit> =
         Either.catchInsightClientError {
             objectFacade.deleteAttachmentBean(attachmentId).toString()
         }

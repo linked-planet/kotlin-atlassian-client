@@ -27,7 +27,7 @@ interface InsightAttachmentOperator {
 
     suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>>
 
-    suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray?> // TODO:hg why is it optional?
+    suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray>
 
     suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray>
 
@@ -38,5 +38,5 @@ interface InsightAttachmentOperator {
         comment: String = ""
     ): Either<InsightClientError, List<InsightAttachment>>
 
-    suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String> //TODO: why string?
+    suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit>
 }
