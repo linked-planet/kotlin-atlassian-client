@@ -302,7 +302,7 @@ interface InsightObjectOperatorTest {
         val objectResponse = runBlocking {
             insightObjectOperator.getObjects(InsightObject.Abstract.id, withChildren = false).orNull()!!
         }
-        assertEquals(0, objectResponse.searchResult)
+        assertEquals(0, objectResponse.totalFilterCount)
 
         val objects = objectResponse.objects
         assertTrue(objects.isEmpty())
@@ -316,7 +316,7 @@ interface InsightObjectOperatorTest {
         val objectResponse = runBlocking {
             insightObjectOperator.getObjects(InsightObject.Abstract.id, withChildren = true).orNull()!!
         }
-        assertEquals(2, objectResponse.searchResult)
+        assertEquals(2, objectResponse.totalFilterCount)
 
         val objects = objectResponse.objects
         assertEquals(2, objects.size)
@@ -343,7 +343,7 @@ interface InsightObjectOperatorTest {
                 perPage = 2
             ).orNull()!!
         }
-        assertTrue(allINSIGHTOBJECTList.searchResult == 2)
+        assertTrue(allINSIGHTOBJECTList.totalFilterCount == 2)
         val allObjects = allINSIGHTOBJECTList.objects
         assertEquals(2, allObjects.size)
         assertEquals(94, allObjects[0].id)
@@ -358,7 +358,7 @@ interface InsightObjectOperatorTest {
                 perPage = 5
             ).orNull()!!
         }
-        assertTrue(allExplINSIGHTOBJECTList.searchResult == 2)
+        assertTrue(allExplINSIGHTOBJECTList.totalFilterCount == 2)
         val allExplObjects = allExplINSIGHTOBJECTList.objects
         assertEquals(2, allExplObjects.size)
         assertEquals(94, allExplObjects[0].id)
@@ -373,7 +373,7 @@ interface InsightObjectOperatorTest {
                 perPage = 1
             ).orNull()!!
         }
-        assertTrue(firstINSIGHTOBJECTList.searchResult == 2)
+        assertTrue(firstINSIGHTOBJECTList.totalFilterCount == 2)
         val firstObjects = firstINSIGHTOBJECTList.objects
         assertEquals(1, firstObjects.size)
         assertEquals(94, firstObjects[0].id)
@@ -387,7 +387,7 @@ interface InsightObjectOperatorTest {
                 perPage = 1
             ).orNull()!!
         }
-        assertTrue(secondINSIGHTOBJECTList.searchResult == 2)
+        assertTrue(secondINSIGHTOBJECTList.totalFilterCount == 2)
         val secondObjects = secondINSIGHTOBJECTList.objects
         assertEquals(1, secondObjects.size)
         assertEquals(95, secondObjects[0].id)
@@ -401,7 +401,7 @@ interface InsightObjectOperatorTest {
                 perPage = 2
             ).orNull()!!
         }
-        assertTrue(firstINSIGHTOBJECTList.searchResult == 2)
+        assertTrue(firstINSIGHTOBJECTList.totalFilterCount == 2)
         val emptyObjects = emptyINSIGHTOBJECTList.objects
         assertTrue(emptyObjects.isEmpty())
 

@@ -23,13 +23,13 @@ import java.time.ZonedDateTime
 import java.util.Collections.emptyList
 
 data class InsightObjects(
-    val searchResult: Int = -1, //TODO:hg:1:what does this mean? is this the resultSize?
+    val totalFilterCount: Int = -1,
     val objects: List<InsightObject> = emptyList()
 )
 
 fun InsightObjects.plus(insightObjects: InsightObjects): InsightObjects =
     InsightObjects(
-        this.searchResult + insightObjects.searchResult,
+        this.totalFilterCount + insightObjects.totalFilterCount,
         this.objects.plus(insightObjects.objects)
     )
 
