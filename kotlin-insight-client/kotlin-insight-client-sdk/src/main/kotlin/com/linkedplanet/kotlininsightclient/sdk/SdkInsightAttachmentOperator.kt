@@ -136,7 +136,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
     }
 
     private val simpleDateFormatter by lazy {
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").apply {
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
     }

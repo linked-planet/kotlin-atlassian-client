@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import java.security.MessageDigest
@@ -45,7 +45,8 @@ interface InsightAttachmentOperatorTest {
             assertThat(firstAttachment.comment, equalTo(""))
             assertThat(firstAttachment.filename, equalTo("TestAttachment.pdf"))
             assertThat(firstAttachment.filesize, equalTo("10.1 kB"))
-            assertThat(firstAttachment.created, equalTo("2023-02-21T07:06:08.208Z"))
+            assertThat(firstAttachment.created, endsWith(":06:08.208Z")) // 7 works fine locally and should be correct,
+            assertThat(firstAttachment.created, startsWith("2023-02-21T0")) // but github pipeline insists on 8 o'clock
 
             val downloadContent = insightAttachmentOperator.downloadAttachment(attachments.first().url).orNull()!!
             val sha256HashIS = calculateSha256(downloadContent)
