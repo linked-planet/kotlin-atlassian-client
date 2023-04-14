@@ -20,7 +20,10 @@
 package com.linkedplanet.kotlinjiraclient.util
 
 import com.linkedplanet.kotlinjiraclient.api.model.JiraUser
-import org.junit.Assert.*
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 
 class JiraUserTestHelper {
 
@@ -36,9 +39,9 @@ class JiraUserTestHelper {
 
         fun checkUser(expectedName: String, expectedDisplayName: String, expectedEmail: String, jiraUser: JiraUser?) {
             assertNotNull(jiraUser)
-            assertEquals(expectedName, jiraUser!!.name)
-            assertEquals(expectedDisplayName, jiraUser.displayName)
-            assertEquals(expectedEmail, jiraUser.emailAddress)
+            assertThat(jiraUser!!.name, equalTo(expectedName))
+            assertThat(jiraUser.displayName, equalTo(expectedDisplayName))
+            assertThat(jiraUser.emailAddress, equalTo(expectedEmail))
             assertTrue(jiraUser.key.isNotEmpty())
             assertNotNull(jiraUser.avatarUrl)
             assertTrue(jiraUser.avatarUrl!!.startsWith("https://www.gravatar.com/avatar"))

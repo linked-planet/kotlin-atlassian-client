@@ -21,7 +21,10 @@ package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 interface InsightObjectTypeOperatorTest {
@@ -36,26 +39,26 @@ interface InsightObjectTypeOperatorTest {
         }
         assertNotNull(objectType)
         assertTrue(objectType!!.name == "Company")
-        assertNull(objectType.parentObjectTypeId)
+        assertThat(objectType.parentObjectTypeId, equalTo(null))
 
-        assertEquals(5, objectType.attributes.size)
+        assertThat(objectType.attributes.size, equalTo(5))
 
         val nameAttribute = objectType.attributes.singleOrNull {it.name == "Name"}
         assertNotNull(nameAttribute)
-        assertNull(nameAttribute?.referenceType)
-        assertEquals(nameAttribute?.defaultType?.name, "Text")
+        assertThat(nameAttribute?.referenceType, equalTo(null))
+        assertThat("Text", equalTo(nameAttribute?.defaultType?.name))
 
         val createdAttribute = objectType.attributes.singleOrNull {it.name == "Created"}
         assertNotNull(createdAttribute)
-        assertNull(createdAttribute?.referenceType)
-        assertEquals(createdAttribute?.defaultType?.name, "DateTime")
+        assertThat(createdAttribute?.referenceType, equalTo(null))
+        assertThat("DateTime", equalTo(createdAttribute?.defaultType?.name))
 
         val countryAttribute = objectType.attributes.singleOrNull {it.name == "Country"}
         assertNotNull(countryAttribute)
-        assertNull(countryAttribute?.defaultType)
-        assertEquals(countryAttribute?.referenceType?.name, "Reference")
-        assertEquals(countryAttribute?.minimumCardinality, 0)
-        assertEquals(countryAttribute?.maximumCardinality, 1)
+        assertThat(countryAttribute?.defaultType, equalTo(null))
+        assertThat("Reference", equalTo(countryAttribute?.referenceType?.name))
+        assertThat(0, equalTo(countryAttribute?.minimumCardinality))
+        assertThat(1, equalTo(countryAttribute?.maximumCardinality))
 
         println("### END testGetObjectType")
     }

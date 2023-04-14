@@ -20,6 +20,8 @@
 package com.linkedplanet.kotlinjiraclient
 
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -41,7 +43,7 @@ interface JiraTransitionOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jir
         val transitionToInProgress = jiraTransitionTestHelper.doTransition(issue.key, doIt)
         assertTrue(transitionToInProgress)
         val issueInProgress = jiraIssueTestHelper.getIssueByKey(issue.key)
-        assertEquals("In Progress", issueInProgress.status.name)
+        assertThat(issueInProgress.status.name, equalTo("In Progress"))
 
         // get "To Do" transition
         val transitionsFromInProgress = jiraTransitionTestHelper.getAvailableTransitions(issue.key)
@@ -52,7 +54,7 @@ interface JiraTransitionOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jir
         val transitionToToDo = jiraTransitionTestHelper.doTransition(issue.key, fromInProgressTransitions)
         assertTrue(transitionToToDo)
         val issueTodo = jiraIssueTestHelper.getIssueByKey(issue.key)
-        assertEquals("To Do", issueTodo.status.name)
+        assertThat(issueTodo.status.name, equalTo("To Do"))
 
         println("### END transitions_01Transitions")
     }

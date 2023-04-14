@@ -24,7 +24,6 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.security.MessageDigest
 
@@ -39,18 +38,18 @@ interface InsightAttachmentOperatorTest {
             val country = insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
             val attachments = insightAttachmentOperator.getAttachments(country.id).orNull() ?: emptyList()
             val firstAttachment = attachments.first()
-            assertEquals(1, attachments.size)
-            assertEquals(1, firstAttachment.id)
-            assertEquals("application/pdf", firstAttachment.mimeType)
-            assertEquals("admin", firstAttachment.author)
-            assertEquals("", firstAttachment.comment)
-            assertEquals("TestAttachment.pdf", firstAttachment.filename)
-            assertEquals("10.1 kB", firstAttachment.filesize)
+            assertThat(attachments.size, equalTo(1))
+            assertThat(firstAttachment.id, equalTo(1))
+            assertThat(firstAttachment.mimeType, equalTo("application/pdf"))
+            assertThat(firstAttachment.author, equalTo("admin"))
+            assertThat(firstAttachment.comment, equalTo(""))
+            assertThat(firstAttachment.filename, equalTo("TestAttachment.pdf"))
+            assertThat(firstAttachment.filesize, equalTo("10.1 kB"))
             assertThat(firstAttachment.created, equalTo("2023-02-21T07:06:08.208Z"))
 
             val downloadContent = insightAttachmentOperator.downloadAttachment(attachments.first().url).orNull()!!
             val sha256HashIS = calculateSha256(downloadContent)
-            assertEquals("fd411837a51c43670e8d7367e64f72dbbcda5016f59988547c12d067505ef75b", sha256HashIS)
+            assertThat(sha256HashIS, equalTo("fd411837a51c43670e8d7367e64f72dbbcda5016f59988547c12d067505ef75b"))
         }
         println("### END attachment_testGetAndDownloadAttachments")
     }

@@ -26,7 +26,10 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
@@ -76,8 +79,8 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         keys.forEach { searchedKeyIndex ->
             val issue = issues.firstOrNull { "Test-$searchedKeyIndex" == it.summary }
             assertNotNull(issue)
-            assertEquals("IT-1", issue!!.insightObjectKey)
-            assertEquals("To Do", issue.status.name)
+            assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
+            assertThat(issue.status.name, equalTo("To Do"))
         }
         println("### END issues_02GetIssuesByIssueType")
     }
@@ -88,12 +91,12 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val issues: List<Story> = runBlocking {
             issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).orNull() ?: emptyList()
         }
-        assertEquals(10, issues.size)
+        assertThat(issues.size, equalTo(10))
         val keys = 1..10
         keys.forEach { searchedKeyIndex ->
             val issue = issues.first { "Test-$searchedKeyIndex" == it.summary }
-            assertEquals("IT-1", issue.insightObjectKey)
-            assertEquals("To Do", issue.status.name)
+            assertThat(issue.insightObjectKey, equalTo("IT-1"))
+            assertThat(issue.status.name, equalTo("To Do"))
         }
         println("### END issues_03GetIssuesByJQL")
     }
@@ -113,19 +116,19 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                 ).orNull()
             }
             assertNotNull(page)
-            assertEquals(10, page!!.totalItems)
-            assertEquals(10, page.totalPages)
-            assertEquals(pageNumber - 1, page.currentPageIndex)
-            assertEquals(1, page.pageSize)
+            assertThat(page!!.totalItems, equalTo(10))
+            assertThat(page.totalPages, equalTo(10))
+            assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
+            assertThat(page.pageSize, equalTo(1))
             page
         }
-        assertEquals(10, pages.size)
+        assertThat(pages.size, equalTo(10))
 
         pageNumbers.forEach { issueKey ->
             val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
             assertNotNull(issue)
-            assertEquals("IT-1", issue!!.insightObjectKey)
-            assertEquals("To Do", issue.status.name)
+            assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
+            assertThat(issue.status.name, equalTo("To Do"))
         }
         println("### END issues_04GetIssuesByJQLPaginated")
     }
@@ -145,20 +148,20 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                 ).orNull()
             }
             assertNotNull(page)
-            assertEquals(10, page!!.totalItems)
-            assertEquals(5, page.totalPages)
-            assertEquals(pageNumber - 1, page.currentPageIndex)
-            assertEquals(2, page.pageSize)
+            assertThat(page!!.totalItems, equalTo(10))
+            assertThat(page.totalPages, equalTo(5))
+            assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
+            assertThat(page.pageSize, equalTo(2))
             page
         }
-        assertEquals(5, pages.size)
+        assertThat(pages.size, equalTo(5))
 
         val issueKeys = (1..10)
         issueKeys.forEach { issueKey ->
             val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
             assertNotNull(issue)
-            assertEquals("IT-1", issue!!.insightObjectKey)
-            assertEquals("To Do", issue.status.name)
+            assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
+            assertThat(issue.status.name, equalTo("To Do"))
         }
         println("### END issues_05GetIssuesByJQLPaginated")
     }
@@ -178,21 +181,21 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     parser = ::issueParser
                 ).orNull()
                 assertNotNull(page)
-                assertEquals(10, page!!.totalItems)
-                assertEquals(4, page.totalPages)
-                assertEquals(pageNumber - 1, page.currentPageIndex)
-                assertEquals(3, page.pageSize)
+                assertThat(page!!.totalItems, equalTo(10))
+                assertThat(page.totalPages, equalTo(4))
+                assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
+                assertThat(page.pageSize, equalTo(3))
                 page
             }
         }
-        assertEquals(4, pages.size)
+        assertThat(pages.size, equalTo(4))
 
         val issueKeys = (1..10)
         issueKeys.forEach { issueKey ->
             val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
             assertNotNull(issue)
-            assertEquals("IT-1", issue!!.insightObjectKey)
-            assertEquals("To Do", issue.status.name)
+            assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
+            assertThat(issue.status.name, equalTo("To Do"))
         }
         println("### END issues_06GetIssuesByIssueTypePaginated")
     }
@@ -243,27 +246,27 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             issueOperator.getIssueByJQL("key = \"${creationResponse.key}\"", ::issueParser)
         }.rightAssertedJiraClientError()
 
-        assertEquals(projectId, createdIssue.projectId)
-        assertEquals(issueTypeId, createdIssue.issueTypeId)
-        assertEquals(summary, createdIssue.summary)
-        assertEquals(description, createdIssue.description)
-        assertEquals(assignee, createdIssue.assignee)
-        assertEquals(reporter, createdIssue.reporter)
-        assertEquals(radioValue, createdIssue.radio)
-        assertEquals(singleText, createdIssue.singleText)
-        assertEquals(multiText, createdIssue.multiText)
-        assertEquals(doubleNumber, createdIssue.doubleNumber)
-        assertEquals(intNumber, createdIssue.intNumber)
-        assertEquals(insightObjectKey, createdIssue.insightObjectKey)
-        assertEquals(insightObjectsKeys, createdIssue.insightObjectsKeys)
-        assertEquals("new", createdIssue.status.statusCategory)
-        assertEquals(null, createdIssue.epicKey)
+        assertThat(createdIssue.projectId, equalTo(projectId))
+        assertThat(createdIssue.issueTypeId, equalTo(issueTypeId))
+        assertThat(createdIssue.summary, equalTo(summary))
+        assertThat(createdIssue.description, equalTo(description))
+        assertThat(createdIssue.assignee, equalTo(assignee))
+        assertThat(createdIssue.reporter, equalTo(reporter))
+        assertThat(createdIssue.radio, equalTo(radioValue))
+        assertThat(createdIssue.singleText, equalTo(singleText))
+        assertThat(createdIssue.multiText, equalTo(multiText))
+        assertThat(createdIssue.doubleNumber, equalTo(doubleNumber))
+        assertThat(createdIssue.intNumber, equalTo(intNumber))
+        assertThat(createdIssue.insightObjectKey, equalTo(insightObjectKey))
+        assertThat(createdIssue.insightObjectsKeys, equalTo(insightObjectsKeys))
+        assertThat(createdIssue.status.statusCategory, equalTo("new"))
+        assertThat(createdIssue.epicKey, equalTo(null))
 
         // Jira default datetime format has no seconds, millis, etc.
         // Jira instance is using timezone Berlin
-        assertEquals(
-            zonedDateTimeValue.truncatedTo(ChronoUnit.MINUTES).withZoneSameInstant(ZoneOffset.UTC),
-            createdIssue.zonedDateTime?.truncatedTo(ChronoUnit.MINUTES)?.withZoneSameInstant(ZoneOffset.UTC)
+        assertThat(
+            createdIssue.zonedDateTime?.truncatedTo(ChronoUnit.MINUTES)?.withZoneSameInstant(ZoneOffset.UTC),
+            equalTo(zonedDateTimeValue.truncatedTo(ChronoUnit.MINUTES).withZoneSameInstant(ZoneOffset.UTC))
         )
 
         val transitions = createdIssue.transitions
@@ -323,21 +326,21 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             issueOperator.getIssueByKey(issue.key, ::issueParser)
         }.rightAssertedJiraClientError()
 
-        assertEquals(projectId, issueAfterUpdate.projectId)
-        assertEquals(issueTypeId, issueAfterUpdate.issueTypeId)
-        assertEquals(summary, issueAfterUpdate.summary)
-        assertEquals(description, issueAfterUpdate.description)
-        assertEquals(assignee, issueAfterUpdate.assignee)
-        assertEquals(reporter, issueAfterUpdate.reporter)
-        assertEquals(radioValue, issueAfterUpdate.radio)
-        assertEquals(singleText, issueAfterUpdate.singleText)
-        assertEquals(multiText, issueAfterUpdate.multiText)
-        assertEquals(doubleNumber, issueAfterUpdate.doubleNumber)
-        assertEquals(intNumber, issueAfterUpdate.intNumber)
-        assertEquals(insightObjectKey, issueAfterUpdate.insightObjectKey)
-        assertEquals(insightObjectsKeys, issueAfterUpdate.insightObjectsKeys)
-        assertEquals("new", issueAfterUpdate.status.statusCategory)
-        assertEquals(null, issueAfterUpdate.epicKey)
+        assertThat(issueAfterUpdate.projectId, equalTo(projectId))
+        assertThat(issueAfterUpdate.issueTypeId, equalTo(issueTypeId))
+        assertThat(issueAfterUpdate.summary, equalTo(summary))
+        assertThat(issueAfterUpdate.description, equalTo(description))
+        assertThat(issueAfterUpdate.assignee, equalTo(assignee))
+        assertThat(issueAfterUpdate.reporter, equalTo(reporter))
+        assertThat(issueAfterUpdate.radio, equalTo(radioValue))
+        assertThat(issueAfterUpdate.singleText, equalTo(singleText))
+        assertThat(issueAfterUpdate.multiText, equalTo(multiText))
+        assertThat(issueAfterUpdate.doubleNumber, equalTo(doubleNumber))
+        assertThat(issueAfterUpdate.intNumber, equalTo(intNumber))
+        assertThat(issueAfterUpdate.insightObjectKey, equalTo(insightObjectKey))
+        assertThat(issueAfterUpdate.insightObjectsKeys, equalTo(insightObjectsKeys))
+        assertThat(issueAfterUpdate.status.statusCategory, equalTo("new"))
+        assertThat(issueAfterUpdate.epicKey, equalTo(null))
 
         println("### END issues_08UpdateIssue")
     }
@@ -357,7 +360,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val issuesAfterDeletion = runBlocking {
             issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).orNull()
         }
-        assertNull(issuesAfterDeletion)
+        assertThat(issuesAfterDeletion, equalTo(null))
 
         println("### END issues_09DeleteIssue")
     }
@@ -370,7 +373,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             issueOperator.getIssueByKey("BLAAAA") { _, _ -> Either.Right(null) }
         }
         assertTrue(response.isRight())
-        assertNull(response.getOrElse { -1 })
+        assertThat(response.getOrElse { -1 }, equalTo(null))
 
         println("### END issues_10GetNonExistingIssue")
     }
@@ -408,9 +411,9 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         }
 
         assertNotNull(page)
-        assertEquals(0, page!!.totalItems)
-        assertEquals(0, page.totalPages)
-        assertEquals(0, page.currentPageIndex)
+        assertThat(page!!.totalItems, equalTo(0))
+        assertThat(page.totalPages, equalTo(0))
+        assertThat(page.currentPageIndex, equalTo(0))
         assertTrue(page.items.isEmpty())
 
         println("### END issues_13GetIssuesByJQLPaginatedEmpty")

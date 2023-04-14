@@ -22,7 +22,8 @@ package com.linkedplanet.kotlinjiraclient
 import com.linkedplanet.kotlinjiraclient.util.JiraUserTestHelper
 import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 interface JiraUserOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
@@ -32,7 +33,7 @@ interface JiraUserOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraField
         println("### START users_01GetUsersByProjectKey")
 
         val users = runBlocking { userOperator.getUsersByProjectKey(projectKey) }.rightAssertedJiraClientError()
-        assertEquals(2, users.size)
+        assertThat(users.size, equalTo(2))
 
         val admin = users.firstOrNull { it.name == "admin" }
         JiraUserTestHelper.checkAdminUser(admin)
@@ -49,7 +50,7 @@ interface JiraUserOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraField
 
         val users =
             runBlocking { userOperator.getAssignableUsersByProjectKey(projectKey) }.rightAssertedJiraClientError()
-        assertEquals(3, users.size)
+        assertThat(users.size, equalTo(3))
 
         val admin = users.firstOrNull { it.name == "admin" }
         JiraUserTestHelper.checkAdminUser(admin)
@@ -68,7 +69,7 @@ interface JiraUserOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraField
         println("### START users_03GetProjectAdminUsers")
 
         val users = runBlocking { userOperator.getProjectAdminUsers(projectKey) }.rightAssertedJiraClientError()
-        assertEquals(1, users.size)
+        assertThat(users.size, equalTo(1))
 
         val admin = users.firstOrNull { it.name == "admin" }
         JiraUserTestHelper.checkAdminUser(admin)
@@ -81,7 +82,7 @@ interface JiraUserOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraField
         println("### START users_04GetSystemAdminUsers")
 
         val users = runBlocking { userOperator.getSystemAdminUsers() }.rightAssertedJiraClientError()
-        assertEquals(1, users.size)
+        assertThat(users.size, equalTo(1))
 
         val admin = users.firstOrNull { it.name == "admin" }
         JiraUserTestHelper.checkAdminUser(admin)

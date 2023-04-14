@@ -24,7 +24,8 @@ import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraCommentOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueComment
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 
 class JiraCommentTestHelper<JiraFieldType>(
     private val commentOperator: JiraCommentOperator,
@@ -38,7 +39,7 @@ class JiraCommentTestHelper<JiraFieldType>(
         runBlocking { commentOperator.createComment(issue.key, testName) }.rightAssertedJiraClientError()
         val commentsBeforeUpdate =
             runBlocking { commentOperator.getComments(issue.key) }.rightAssertedJiraClientError()
-        assertEquals(1, commentsBeforeUpdate.size)
+        assertThat(commentsBeforeUpdate.size, equalTo(1))
         val commentToUpdate = commentsBeforeUpdate.first()
         return Pair(issue, commentToUpdate)
     }

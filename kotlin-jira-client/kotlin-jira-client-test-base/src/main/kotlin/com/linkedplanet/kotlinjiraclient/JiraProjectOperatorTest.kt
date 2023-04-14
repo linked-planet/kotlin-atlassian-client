@@ -21,7 +21,8 @@ package com.linkedplanet.kotlinjiraclient
 
 import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFieldType> {
@@ -34,10 +35,10 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
             projectOperator.getProjects()
         }.rightAssertedJiraClientError()
 
-        assertEquals(1, projects.size)
-        assertEquals("10000", projects.first().id)
-        assertEquals("TEST", projects.first().key)
-        assertEquals("Test", projects.first().name)
+        assertThat(projects.size, equalTo(1))
+        assertThat(projects.first().id, equalTo("10000"))
+        assertThat(projects.first().key, equalTo("TEST"))
+        assertThat(projects.first().name, equalTo("Test"))
 
         println("### END projects_01GetProjects")
     }
@@ -50,9 +51,9 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
             projectOperator.getProject(projectId)
         }.rightAssertedJiraClientError()
 
-        assertEquals("10000", project.id)
-        assertEquals("TEST", project.key)
-        assertEquals("Test", project.name)
+        assertThat(project.id, equalTo("10000"))
+        assertThat(project.key, equalTo("TEST"))
+        assertThat(project.name, equalTo("Test"))
 
         println("### END projects_02GetProject")
     }
