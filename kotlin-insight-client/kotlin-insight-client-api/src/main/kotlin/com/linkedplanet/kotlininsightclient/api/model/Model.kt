@@ -420,9 +420,8 @@ data class InsightAttachment(
     val author: String,
     val mimeType: String,
     val filename: String,
-    val filesize: String, //TODO:hg long
-    val created: String,  //TODO:hg date?
+    val filesize: String, // for human display e.g. 10.1 kB
+    val created: String, // ISO 8601 String
     val comment: String,
-    val commentOutput: String,
     val url: String
 )

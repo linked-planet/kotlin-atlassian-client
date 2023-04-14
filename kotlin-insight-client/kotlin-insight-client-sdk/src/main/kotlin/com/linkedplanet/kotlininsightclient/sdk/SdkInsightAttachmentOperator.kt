@@ -32,9 +32,14 @@ import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFaca
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
 import java.io.ByteArrayOutputStream
 import java.nio.file.Path
+import java.text.CharacterIterator
+import java.text.SimpleDateFormat
+import java.text.StringCharacterIterator
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.createTempFile
+
 
 object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
@@ -104,17 +109,37 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     private fun beanToInsightAttachment(bean: AttachmentBean): InsightAttachment = bean.run {
         val url = attachmentUrlResolver.buildUrlForAttachment(bean)
+        val humanReadableFileSize = humanReadableByteCountSI(fileSize)
         InsightAttachment(
             id!!, // we assume that when getting existing attachments, the id is always set
             author,
             mimeType,
             filename,
-            fileSize.toString(), //TODO:use long!
-            created.toString(),
+            humanReadableFileSize,
+            created.toISOString(),
             comment ?: "",
-            commentOutput = "", //TODO
             url,
         )
     }
+
+    private fun humanReadableByteCountSI(bytesIn: Long): String {
+        var bytes = bytesIn
+        if (-1000 < bytes && bytes < 1000) {
+            return "$bytes B"
+        }
+        val ci: CharacterIterator = StringCharacterIterator("kMGTPE")
+        while (bytes <= -999950 || bytes >= 999950) {
+            bytes /= 1000
+            ci.next()
+        }
+        return java.lang.String.format("%.1f %cB", bytes / 1000.0, ci.current())
+    }
+
+    private val simpleDateFormatter by lazy {
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").apply {
+            timeZone = TimeZone.getTimeZone("GMT")
+        }
+    }
+    private fun Date.toISOString(): String = simpleDateFormatter.format(this)
 
 }

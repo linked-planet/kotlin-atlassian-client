@@ -21,10 +21,12 @@ package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
-import java.security.MessageDigest
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.security.MessageDigest
 
 interface InsightAttachmentOperatorTest {
     val insightObjectOperator: InsightObjectOperator
@@ -43,7 +45,8 @@ interface InsightAttachmentOperatorTest {
             assertEquals("admin", firstAttachment.author)
             assertEquals("", firstAttachment.comment)
             assertEquals("TestAttachment.pdf", firstAttachment.filename)
-//            assertEquals("10.1 kB", firstAttachment.filesize) //TODO: use long, so the client can decide how to format
+            assertEquals("10.1 kB", firstAttachment.filesize)
+            assertThat(firstAttachment.created, equalTo("2023-02-21T07:06:08.208Z"))
 
             val downloadContent = insightAttachmentOperator.downloadAttachment(attachments.first().url).orNull()!!
             val sha256HashIS = calculateSha256(downloadContent)
