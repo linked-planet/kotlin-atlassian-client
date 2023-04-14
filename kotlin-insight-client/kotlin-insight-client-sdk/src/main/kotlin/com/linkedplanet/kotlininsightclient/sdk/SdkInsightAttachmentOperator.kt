@@ -137,7 +137,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     private val simpleDateFormatter by lazy {
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").apply {
-            timeZone = TimeZone.getTimeZone("CET") //TODO: why CET?
+            timeZone = TimeZone.getTimeZone("UTC")
         }
     }
     private fun Date.toISOString(): String = simpleDateFormatter.format(this)
