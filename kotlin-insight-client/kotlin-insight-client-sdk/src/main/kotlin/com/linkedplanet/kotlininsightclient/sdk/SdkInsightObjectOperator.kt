@@ -61,12 +61,12 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
 
     override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
-        catchAsInsightClientError { objectFacade.loadObjectBean(id) }
+        catchAsInsightClientError { objectFacade.loadObjectBean(id) ?: return@getObjectById Either.Right(null) }
             .flatMap { it.toInsightObject() }
 
 
     override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
-        catchAsInsightClientError { objectFacade.loadObjectBean(key) }
+        catchAsInsightClientError { objectFacade.loadObjectBean(key) ?: return@getObjectByKey Either.Right(null) }
             .flatMap { it.toInsightObject() }
 
     override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> =
