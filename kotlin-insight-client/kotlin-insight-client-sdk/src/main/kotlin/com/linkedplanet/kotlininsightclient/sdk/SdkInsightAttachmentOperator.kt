@@ -33,8 +33,9 @@ import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
 import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 import java.text.CharacterIterator
-import java.text.SimpleDateFormat
 import java.text.StringCharacterIterator
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -135,11 +136,8 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         return java.lang.String.format("%.1f %cB", bytes / 1000.0, ci.current())
     }
 
-    private val simpleDateFormatter by lazy {
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-    }
-    private fun Date.toISOString(): String = simpleDateFormatter.format(this)
+    private fun Date.toISOString(): String = this.toInstant()
+        .atZone(ZoneId.of("Z"))
+        .format(DateTimeFormatter.ISO_DATE_TIME)
 
 }

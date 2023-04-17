@@ -26,6 +26,7 @@ import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import java.security.MessageDigest
+import java.util.*
 
 interface InsightAttachmentOperatorTest {
     val insightObjectOperator: InsightObjectOperator
@@ -34,6 +35,7 @@ interface InsightAttachmentOperatorTest {
     @Test
     fun testAttachments() {
         println("### START attachment_testGetAndDownloadAttachments")
+        println("### TimeZone.getDefault().displayName=${TimeZone.getDefault().displayName}")
         runBlocking {
             val country = insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
             val attachments = insightAttachmentOperator.getAttachments(country.id).orNull() ?: emptyList()
