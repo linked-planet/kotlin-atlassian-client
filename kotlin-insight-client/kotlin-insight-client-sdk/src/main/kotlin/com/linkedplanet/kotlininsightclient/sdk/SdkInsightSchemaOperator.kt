@@ -25,6 +25,7 @@ import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
+import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectSchemaFacade
 import com.riadalabs.jira.plugins.insight.services.model.ObjectSchemaBean
 
@@ -32,12 +33,12 @@ object SdkInsightSchemaOperator : InsightSchemaOperator {
 
     private val objectSchemaFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectSchemaFacade::class.java) }
 
-    override suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>> {
-        val schemas = objectSchemaFacade.findObjectSchemaBeans().map { bean ->
-            insightSchemaFromBean(bean)
+    override suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>> =
+        catchAsInsightClientError {
+            objectSchemaFacade.findObjectSchemaBeans().map { bean ->
+                insightSchemaFromBean(bean)
+            }
         }
-        return schemas.right()
-    }
 
     private fun insightSchemaFromBean(bean: ObjectSchemaBean) =
         InsightSchema(

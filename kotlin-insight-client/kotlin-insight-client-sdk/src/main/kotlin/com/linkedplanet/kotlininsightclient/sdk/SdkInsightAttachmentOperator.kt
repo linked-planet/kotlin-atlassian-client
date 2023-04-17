@@ -27,7 +27,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOper
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredAttachmentUrlResolver
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredFileManager
-import com.linkedplanet.kotlininsightclient.sdk.util.catchInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
 import java.io.ByteArrayOutputStream
@@ -50,14 +50,14 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
     private val attachmentUrlResolver by lazy { ReverseEngineeredAttachmentUrlResolver() }
 
     override suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>> =
-        Either.catchInsightClientError {
+        catchAsInsightClientError {
             objectFacade
                 .findAttachmentBeans(objectId)
                 .map(::beanToInsightAttachment)
         }
 
     override suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray> =
-        Either.catchInsightClientError {
+        catchAsInsightClientError {
             val attachmentId = attachmentUrlResolver.parseAttachmentIdFromPathInformation(url)
             val attachmentBean = objectFacade.loadAttachmentBeanById(attachmentId)
             val inputStream =
@@ -94,7 +94,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         byteArray: ByteArray,
         comment: String
     ): Either<InsightClientError, List<InsightAttachment>> =
-        Either.catchInsightClientError {
+        catchAsInsightClientError {
             val tempFilePath: Path = createTempFile(filename)
             val tempFile = tempFilePath.toFile()
             tempFile.writeBytes(byteArray)
@@ -104,7 +104,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         }
 
     override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit> =
-        Either.catchInsightClientError {
+        catchAsInsightClientError {
             objectFacade.deleteAttachmentBean(attachmentId).toString()
         }
 

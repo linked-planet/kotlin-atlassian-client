@@ -27,6 +27,7 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefault
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttributeReferenceType
+import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.DefaultType
@@ -39,25 +40,25 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
     private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
 
     override suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema> =
-        Either.catch {
+        catchAsInsightClientError {
             val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
             objectTypeSchemaForBean(objectTypeBean)
-        }.mapLeft { InsightClientError.fromException(it) }
+        }
 
     override suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>> =
-        Either.catch {
+        catchAsInsightClientError {
             objectTypeFacade.findObjectTypeBeansFlat(schemaId)
                 .map(::objectTypeSchemaForBean)
-        }.mapLeft { InsightClientError.fromException(it) }
+        }
 
     override suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,
         rootObjectTypeId: Int
     ): Either<InsightClientError, List<ObjectTypeSchema>> =
-        Either.catch {
+        catchAsInsightClientError {
             objectTypeFacade.findObjectTypeBeanChildrens(rootObjectTypeId)
                 .map(::objectTypeSchemaForBean)
-        }.mapLeft { InsightClientError.fromException(it) }
+        }
 
     private fun objectTypeSchemaForBean(objectTypeBean: ObjectTypeBean): ObjectTypeSchema {
         val attributes = attributesForObjectType(objectTypeBean.id)

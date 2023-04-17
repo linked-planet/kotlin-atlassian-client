@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
 import arrow.core.computations.either
+import arrow.core.flatMap
 import arrow.core.left
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
@@ -35,6 +36,7 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectEditItemAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ObjectEditItemAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
+import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
@@ -59,32 +61,31 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
 
     override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
-        objectFacade.loadObjectBean(id)
-            ?.toInsightObject()
-            ?: Either.Right(null)
+        catchAsInsightClientError { objectFacade.loadObjectBean(id) }
+            .flatMap { it.toInsightObject() }
+
 
     override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
-        objectFacade.loadObjectBean(key)
-            ?.toInsightObject()
-            ?: Either.Right(null)
+        catchAsInsightClientError { objectFacade.loadObjectBean(key) }
+            .flatMap { it.toInsightObject() }
 
     override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> =
-        either {
+        catchAsInsightClientError {
             val iql = "objectTypeId=$objectTypeId AND Name=\"$name\""
             val objs = iqlFacade.findObjects(iql)
-            objs.firstOrNull()?.toInsightObject()?.bind()
-        }
+            objs.firstOrNull() ?: return Either.Right(null)
+        }.flatMap { it.toInsightObject() }
 
     override suspend fun getObjects(
         objectTypeId: Int,
         withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> {
-        val iql = getIQLWithChildren(objectTypeId, withChildren)
-        val objs = iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
-        return objs.toInsightObjects()
-    }
+    ): Either<InsightClientError, InsightObjects> =
+        catchAsInsightClientError {
+            val iql = getIQLWithChildren(objectTypeId, withChildren)
+            iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
+        }.flatMap { it.toInsightObjects() }
 
     override suspend fun getObjectsByIQL(
         objectTypeId: Int,
@@ -92,35 +93,35 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         iql: String,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> {
-        val compositeIql = getIQLWithChildren(objectTypeId, withChildren) + " AND " + iql
-        val objs = iqlFacade.findObjects(compositeIql, (pageFrom - 1) * perPage, perPage)
-        return objs.toInsightObjects()
-    }
+    ): Either<InsightClientError, InsightObjects> =
+        catchAsInsightClientError {
+            val compositeIql = getIQLWithChildren(objectTypeId, withChildren) + " AND " + iql
+            iqlFacade.findObjects(compositeIql, (pageFrom - 1) * perPage, perPage)
+        }.flatMap { it.toInsightObjects() }
 
     override suspend fun getObjectsByIQL(
         iql: String,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> {
-        val objs = iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
-        return objs.toInsightObjects()
-    }
+    ): Either<InsightClientError, InsightObjects> =
+        catchAsInsightClientError {
+            iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
+        }.flatMap { it.toInsightObjects() }
 
     override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> =
-        Either.catch {
+        catchAsInsightClientError {
             val objs = iqlFacade.findObjects(iql)
             objs.size
-        }.mapLeft { InsightClientError.fromException(it) }
+        }
 
-    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> {
-        val objectBean = objectFacade.loadObjectBean(obj.id).createMutable()
-        setAttributesForObjectBean(obj, objectBean)
-        objectBean.objectTypeId = obj.objectTypeId
-        objectBean.objectKey = obj.objectKey
-        val resultBean = objectFacade.storeObjectBean(objectBean)
-        return resultBean.toInsightObject()
-    }
+    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> =
+        catchAsInsightClientError {
+            val objectBean = objectFacade.loadObjectBean(obj.id).createMutable()
+            setAttributesForObjectBean(obj, objectBean)
+            objectBean.objectTypeId = obj.objectTypeId
+            objectBean.objectKey = obj.objectKey
+            objectFacade.storeObjectBean(objectBean)
+        }.flatMap { it.toInsightObject() }
 
     private fun setAttributesForObjectBean(
         obj: InsightObject,
@@ -194,15 +195,15 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     override suspend fun createObject(
         objectTypeId: Int,
         func: (InsightObject) -> Unit // to configure the model
-    ): Either<InsightClientError, InsightObject> {
-        val freshInsightObject = createEmptyDomainObject(objectTypeId)
-        func(freshInsightObject)
-        val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
-        val freshObjectBean = objectTypeBean.createMutableObjectBean()
-        setAttributesForObjectBean(freshInsightObject, freshObjectBean)
-        val resultBean = objectFacade.storeObjectBean(freshObjectBean)
-        return resultBean.toInsightObject()
-    }
+    ): Either<InsightClientError, InsightObject> =
+        catchAsInsightClientError {
+            val freshInsightObject = createEmptyDomainObject(objectTypeId)
+            func(freshInsightObject)
+            val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
+            val freshObjectBean = objectTypeBean.createMutableObjectBean()
+            setAttributesForObjectBean(freshInsightObject, freshObjectBean)
+            objectFacade.storeObjectBean(freshObjectBean)
+        }.flatMap { it.toInsightObject() }
 
     private fun createEmptyDomainObject(objectTypeId: Int): InsightObject {
         val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
@@ -224,15 +225,11 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objects.map { it.toInsightObject().bind() })
     }
 
-    private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> {
-        return try {
-            val objectType = objectTypeFacade.loadObjectType(objectTypeId)
-            val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
-            val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
-            createInsightObject(this, objectType, objectTypeAttributeBeans, hasAttachments) // NO BIND!
-        } catch (e: Exception) {
-            InsightClientError.fromException(e).left()
-        }
+    private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> = catchAsInsightClientError {
+        val objectType = objectTypeFacade.loadObjectType(objectTypeId)
+        val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
+        val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
+        return@toInsightObject createInsightObject(this@toInsightObject, objectType, objectTypeAttributeBeans, hasAttachments)
     }
 
     private suspend fun createInsightObject(

@@ -22,8 +22,8 @@ package com.linkedplanet.kotlininsightclient.sdk.util
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 
-inline fun <B> Either.Companion.catchInsightClientError(
+inline fun <B> catchAsInsightClientError(
     f: () -> B
-): Either<InsightClientError, B> = catch(f).mapLeft {
+): Either<InsightClientError, B> = Either.catch(f).mapLeft {
     InsightClientError.fromException(it)
 }
