@@ -52,9 +52,9 @@ fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?
 fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
     this.attributes.firstOrNull { it.attributeName == name }
 
-fun InsightObject.isReferenceAttribute(id: Int): Boolean =
-    getAttribute(id)
-        ?.attributeType == InsightObjectAttributeType.REFERENCE
+fun InsightObject.isReferenceAttribute(id: Int): Boolean = getAttribute(id)?.isReference() ?: false
+
+fun InsightAttribute.isReference() : Boolean = attributeType == InsightObjectAttributeType.REFERENCE
 
 fun InsightObject.isValueAttribute(id: Int): Boolean =
     getAttribute(id)
@@ -230,7 +230,7 @@ fun InsightObject.toEditObjectItem() =
         getEditAttributes()
     )
 
-fun InsightObject.getEditAttributes() =
+fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
     this.attributes.map { insightAttr ->
         val values = insightAttr.value.map {
             if (insightAttr.attributeType == InsightObjectAttributeType.REFERENCE) {
@@ -294,6 +294,7 @@ data class ObjectTypeSchema(
     val parentObjectTypeId: Int?
 )
 
+// TODO:hgthis is sent as gson to the insight api, so this is not really our model object but a DTO
 data class ObjectEditItem(
     val objectTypeId: Int,
     val attributes: List<ObjectEditItemAttribute>

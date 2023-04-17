@@ -23,6 +23,7 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatMap
 import arrow.core.left
+import arrow.core.right
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
@@ -32,10 +33,10 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
-import com.linkedplanet.kotlininsightclient.api.model.ObjectEditItemAttribute
-import com.linkedplanet.kotlininsightclient.api.model.ObjectEditItemAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
+import com.linkedplanet.kotlininsightclient.api.model.isReferenceAttribute
+import com.linkedplanet.kotlininsightclient.api.model.toEditObjectItem
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
@@ -63,7 +64,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
         catchAsInsightClientError { objectFacade.loadObjectBean(id) }
             .flatMap { it.toNullableInsightObject() }
-
 
     override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
         catchAsInsightClientError { objectFacade.loadObjectBean(key) }
@@ -127,61 +127,19 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         obj: InsightObject,
         objectBean: MutableObjectBean
     ) {
-        val objRefEditAttributes = obj.getEditReferences()
-        val objEditAttributes = obj.getEditValues()
+        val editAttributes = obj.toEditObjectItem().attributes.map { editItemAttribute ->
+            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(editItemAttribute.objectTypeAttributeId)
+                .createMutable()
+            val values = editItemAttribute.objectAttributeValues.map { it.value.toString() }.toTypedArray()
 
-        val editAttributes = objEditAttributes.map { editItem ->
-            val attrField =
-                objectTypeAttributeFacade.loadObjectTypeAttribute(editItem.objectTypeAttributeId).createMutable()
-            val values = editItem.objectAttributeValues.map { it.value.toString() }.toTypedArray()
-            val attr = objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, attrField, *values)
-            attr
+            if (obj.isReferenceAttribute(editItemAttribute.objectTypeAttributeId)) {
+                objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id.toString()) }
+            } else {
+                objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, ota, *values)
+            }
         }
-
-        val refAttributes = objRefEditAttributes.map { editItem ->
-            val attrField =
-                objectTypeAttributeFacade.loadObjectTypeAttribute(editItem.objectTypeAttributeId).createMutable()
-            val refObjIds = editItem.objectAttributeValues.map { it.value.toString() }.toTypedArray()
-            objectAttributeBeanFactory.createReferenceAttributeValue(attrField) { refObjIds.contains(it.id.toString()) }
-        }
-        objectBean.setObjectAttributeBeans(editAttributes + refAttributes)
+        objectBean.setObjectAttributeBeans(editAttributes)
     }
-
-    private fun InsightObject.getEditValues(): List<ObjectEditItemAttribute> =
-        this.attributes
-            .filter { insightAttribute ->
-                insightAttribute.value.any { it.value != null }
-                        || (insightAttribute.attributeName?.let { attrName -> this.isSelectField(attrName) } ?: false)
-            }
-            .map {
-                val values = it.value.map { attributeValue ->
-                    ObjectEditItemAttributeValue(
-                        attributeValue.value
-                    )
-                }
-                ObjectEditItemAttribute(
-                    it.attributeId,
-                    values
-                )
-            }
-
-    private fun InsightObject.getEditReferences(): List<ObjectEditItemAttribute> =
-        this.attributes
-            .filter { insightAttribute -> insightAttribute.value.any { it.referencedObject != null } }
-            .map { insightAttribute ->
-                val values = insightAttribute.value.map { attributeValue ->
-                    ObjectEditItemAttributeValue(
-                        attributeValue.referencedObject!!.id
-                    )
-                }
-                ObjectEditItemAttribute(
-                    insightAttribute.attributeId,
-                    values
-                )
-            }
-
-    private fun InsightObject.isSelectField(attributeName: String): Boolean = false // TODO
-//        this.getAttributeType(attributeName)?.takeIf { it == "Select" }?.let { true } ?: false
 
     override suspend fun deleteObject(id: Int): Boolean {
         return try {
@@ -230,13 +188,19 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         return this.toInsightObject()
     }
 
-    private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> = catchAsInsightClientError {
+    private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> =
+        catchAsInsightClientError {
 
-        val objectType = objectTypeFacade.loadObjectType(objectTypeId)
-        val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
-        val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
-        return@toInsightObject createInsightObject(this@toInsightObject, objectType, objectTypeAttributeBeans, hasAttachments)
-    }
+            val objectType = objectTypeFacade.loadObjectType(objectTypeId)
+            val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
+            val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
+            return@toInsightObject createInsightObject(
+                this@toInsightObject,
+                objectType,
+                objectTypeAttributeBeans,
+                hasAttachments
+            )
+        }
 
     private suspend fun createInsightObject(
         objectBean: ObjectBean,
@@ -245,10 +209,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         hasAttachments: Boolean
     ): Either<InsightClientError, InsightObject> = either {
         val attributes = objectBean.objectAttributeBeans.map { objAttributeBean ->
-            val objTypeAttributeBean =
-                objectTypeAttributeBeans
-                    .singleOrNull { it.id == objAttributeBean.objectTypeAttributeId }
-                    ?: ObjectTypeNotFoundError().left().bind()
+            val objTypeAttributeBean = objectTypeAttributeBeans.typeForBean(objAttributeBean).bind()
             createInsightAttribute(objAttributeBean, objTypeAttributeBean).bind()
         }
 
@@ -263,6 +224,13 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             attributes.singleOrNull { it.attributeName == "Link" }?.toDisplayValue() as? String ?: "NO SELF!!!"
         )
     }
+
+    private fun List<ObjectTypeAttributeBean>.typeForBean(
+        objAttributeBean: ObjectAttributeBean
+    ): Either<InsightClientError, ObjectTypeAttributeBean> =
+        singleOrNull { it.id == objAttributeBean.objectTypeAttributeId }
+            ?.right()
+            ?: ObjectTypeNotFoundError().left()
 
     private suspend fun createInsightAttribute(
         objectAttributeBean: ObjectAttributeBean, objectTypeAttributeBean: ObjectTypeAttributeBean
