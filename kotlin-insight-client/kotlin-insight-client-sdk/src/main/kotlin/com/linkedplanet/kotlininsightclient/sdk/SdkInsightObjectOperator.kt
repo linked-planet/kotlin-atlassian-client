@@ -61,20 +61,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
 
     override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
-        catchAsInsightClientError { objectFacade.loadObjectBean(id) ?: return@getObjectById Either.Right(null) }
-            .flatMap { it.toInsightObject() }
+        catchAsInsightClientError { objectFacade.loadObjectBean(id) }
+            .flatMap { it.toNullableInsightObject() }
 
 
     override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
-        catchAsInsightClientError { objectFacade.loadObjectBean(key) ?: return@getObjectByKey Either.Right(null) }
-            .flatMap { it.toInsightObject() }
+        catchAsInsightClientError { objectFacade.loadObjectBean(key) }
+            .flatMap { it.toNullableInsightObject() }
 
     override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> =
         catchAsInsightClientError {
             val iql = "objectTypeId=$objectTypeId AND Name=\"$name\""
             val objs = iqlFacade.findObjects(iql)
-            objs.firstOrNull() ?: return Either.Right(null)
-        }.flatMap { it.toInsightObject() }
+            objs.firstOrNull()
+        }.flatMap { it.toNullableInsightObject() }
 
     override suspend fun getObjects(
         objectTypeId: Int,
@@ -225,7 +225,13 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objects.map { it.toInsightObject().bind() })
     }
 
+    private suspend fun ObjectBean?.toNullableInsightObject(): Either<InsightClientError, InsightObject?> {
+        if (this == null) return Either.Right(null)
+        return this.toInsightObject()
+    }
+
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> = catchAsInsightClientError {
+
         val objectType = objectTypeFacade.loadObjectType(objectTypeId)
         val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
         val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
