@@ -21,9 +21,9 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
+import com.linkedplanet.kotlininsightclient.api.model.InsightHistory
 
 interface InsightHistoryOperator {
 
-    suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>>
+    suspend fun getHistory(objectId: Int): Either<InsightClientError, InsightHistory>
 }

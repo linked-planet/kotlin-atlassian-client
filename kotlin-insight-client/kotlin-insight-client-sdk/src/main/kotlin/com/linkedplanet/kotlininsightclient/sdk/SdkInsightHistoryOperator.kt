@@ -24,6 +24,7 @@ import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.api.model.Actor
+import com.linkedplanet.kotlininsightclient.api.model.InsightHistory
 import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
@@ -33,9 +34,9 @@ object SdkInsightHistoryOperator : InsightHistoryOperator {
 
     private val objectFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
 
-    override suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>> =
+    override suspend fun getHistory(objectId: Int): Either<InsightClientError, InsightHistory> =
         catchAsInsightClientError {
-            objectFacade.findObjectHistoryBean(objectId).map { objectHistoryBean: ObjectHistoryBean ->
+            val historyItems = objectFacade.findObjectHistoryBean(objectId).map { objectHistoryBean: ObjectHistoryBean ->
                 objectHistoryBean.run {
                     InsightHistoryItem(
                         id, //TODO:hg can be null by definition
@@ -49,5 +50,6 @@ object SdkInsightHistoryOperator : InsightHistoryOperator {
                     )
                 }
             }
+            InsightHistory(objectId, historyItems)
         }
 }

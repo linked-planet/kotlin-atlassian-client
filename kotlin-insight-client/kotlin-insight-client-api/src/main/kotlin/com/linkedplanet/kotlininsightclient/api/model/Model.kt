@@ -396,6 +396,11 @@ data class ReferencedObjectType(
     val name: String
 )
 
+data class InsightHistory(
+    val objectId: Int,
+    val historyItems: List<InsightHistoryItem>
+)
+
 data class InsightHistoryItem(
     val id: Int,
     val affectedAttribute: String,
