@@ -114,6 +114,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objs.size
         }
 
+    @Suppress("DEPRECATION") // fix it with the newest insight version
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
             val objectBean = objectFacade.loadObjectBean(obj.id).createMutable()
