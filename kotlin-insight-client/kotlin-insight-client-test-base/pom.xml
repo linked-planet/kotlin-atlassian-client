@@ -22,13 +22,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
-
-        <!-- TODO: remove -->
-        <dependency>
-            <groupId>com.linked-planet.client</groupId>
-            <artifactId>kotlin-insight-client-http</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>
