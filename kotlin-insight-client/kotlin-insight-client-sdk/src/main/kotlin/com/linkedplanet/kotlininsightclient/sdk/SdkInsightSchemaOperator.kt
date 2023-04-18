@@ -20,41 +20,46 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
-import arrow.core.right
 import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectSchemaFacade
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
 import com.riadalabs.jira.plugins.insight.services.model.ObjectSchemaBean
 
 object SdkInsightSchemaOperator : InsightSchemaOperator {
 
     private val objectSchemaFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectSchemaFacade::class.java) }
+    private val objectTypeFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
+    private val objectFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
 
     override suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>> =
         catchAsInsightClientError {
-            objectSchemaFacade.findObjectSchemaBeans().map { bean ->
-                insightSchemaFromBean(bean)
+            objectSchemaFacade.findObjectSchemaBeans().map { schemaBean: ObjectSchemaBean ->
+                insightSchemaFromBean(schemaBean)
             }
         }
 
-    private fun insightSchemaFromBean(bean: ObjectSchemaBean) =
-        InsightSchema(
-            id = bean.id,
-            name = bean.name,
-            objectCount = 0, //TODO
-            objectTypeCount = 0 //TODO
+    private fun insightSchemaFromBean(schemaBean: ObjectSchemaBean): InsightSchema {
+        val objectTypeBeans = objectTypeFacade.findObjectTypeBeansFlat(schemaBean.id)
+        val objectCount = objectTypeBeans.fold(0) { count, objectTypeBean ->
+            count + objectFacade.countObjectBeans(objectTypeBean.id)
+        }
+        return InsightSchema(
+            id = schemaBean.id,
+            name = schemaBean.name,
+            objectCount = objectCount,
+            objectTypeCount = objectTypeBeans.count(),
         )
-
-
-    //TODO: getSChema is untested
-
-    override suspend fun getSchema(id: Int): Either<InsightClientError, InsightSchema> {
-        val objectSchema = objectSchemaFacade.loadObjectSchema(id)
-        val schema = insightSchemaFromBean(objectSchema)
-        return schema.right()
     }
+
+    override suspend fun getSchema(id: Int): Either<InsightClientError, InsightSchema> =
+        catchAsInsightClientError {
+            val objectSchemaBean = objectSchemaFacade.loadObjectSchema(id)
+            insightSchemaFromBean(objectSchemaBean)
+        }
 
 }

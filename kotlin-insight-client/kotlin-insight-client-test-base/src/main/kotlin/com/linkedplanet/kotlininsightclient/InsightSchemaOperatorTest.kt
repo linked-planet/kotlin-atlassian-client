@@ -21,7 +21,9 @@ package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertTrue
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.junit.Test
 
 interface InsightSchemaOperatorTest {
@@ -30,11 +32,14 @@ interface InsightSchemaOperatorTest {
     @Test
     fun testSchemaLoad() {
         println("### START schema_testSchemaLoad")
+        val schemas = runBlocking { insightSchemaOperator.getSchemas() }.orFail()
+        val retrievedSchema = schemas.firstOrNull { it.id == 1 }!!
+        assertThat(retrievedSchema.name, equalTo("ITest"))
+        assertThat(retrievedSchema.objectTypeCount,  greaterThanOrEqualTo (7)) // 7 when test was written
+        assertThat(retrievedSchema.objectCount,  greaterThanOrEqualTo (64)) // 64 when test was written
 
-        val schemas = runBlocking {
-            insightSchemaOperator.getSchemas()
-        }
-        assertTrue(schemas.isNotEmpty())
+        val retrievedSchemaDirectly = runBlocking { insightSchemaOperator.getSchema(1) }.orFail()
+        assertThat(retrievedSchemaDirectly, equalTo(retrievedSchema))
 
         println("### END schema_testSchemaLoad")
     }
