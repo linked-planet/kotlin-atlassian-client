@@ -141,14 +141,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         objectBean.setObjectAttributeBeans(editAttributes)
     }
 
-    override suspend fun deleteObject(id: Int): Boolean {
-        return try {
+    override suspend fun deleteObject(id: Int): Either<InsightClientError, Unit> =
+        catchAsInsightClientError {
             objectFacade.deleteObjectBean(id)
-            true
-        } catch (ex: Exception) {
-            false
         }
-    }
 
     override suspend fun createObject(
         objectTypeId: Int,

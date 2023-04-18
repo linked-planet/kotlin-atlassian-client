@@ -59,7 +59,7 @@ interface InsightObjectOperator {
 
     suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>
 
-    suspend fun deleteObject(id: Int): Boolean
+    suspend fun deleteObject(id: Int): Either<InsightClientError, Unit>
 
     suspend fun createObject(
         objectTypeId: Int,

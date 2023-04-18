@@ -244,15 +244,15 @@ interface InsightObjectOperatorTest {
                 countryAfterCreate.getStringValue(InsightAttribute.CountryName.attributeId),
                 equalTo(countryReference.objectName)
             )
-            assertTrue(companyAfterCreate.id == company1.id)
+            assertThat(companyAfterCreate.id, equalTo(company1.id))
 
             // Check Delete
             insightObjectOperator.deleteObject(countryReference.objectId)
             insightObjectOperator.deleteObject(company1.id)
             val companyAfterDelete = insightObjectOperator.getObjectById(countryReference.objectId).orNull()
             val countryAfterDelete = insightObjectOperator.getObjectById(country1.id).orNull()
-            assertTrue(companyAfterDelete == null)
-            assertTrue(countryAfterDelete == null)
+            assertThat(companyAfterDelete, equalTo(null))
+            assertThat(countryAfterDelete, equalTo(null))
         }
         println("### END object_testCreateAndDelete")
     }

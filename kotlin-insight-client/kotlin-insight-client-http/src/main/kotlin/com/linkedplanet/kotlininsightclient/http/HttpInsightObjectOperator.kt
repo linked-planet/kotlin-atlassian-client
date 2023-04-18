@@ -108,14 +108,16 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .bind()
     }
 
-    override suspend fun deleteObject(id: Int): Boolean =
+    override suspend fun deleteObject(id: Int): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
             "DELETE",
             "/rest/insight/1.0/object/$id",
             emptyMap(),
             null,
             "application/json"
-        ).fold({ false }, { true })
+        )
+            .mapLeft { it.toInsightClientError() }
+            .map { /*to Unit*/ }
 
     override suspend fun createObject(
         objectTypeId: Int,
