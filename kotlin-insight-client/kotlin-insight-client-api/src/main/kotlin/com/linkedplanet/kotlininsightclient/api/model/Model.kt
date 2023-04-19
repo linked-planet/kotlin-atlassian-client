@@ -153,7 +153,7 @@ fun InsightObject.getDateTimeValue(id: Int): ZonedDateTime? =
 fun InsightObject.getSingleReferenceValue(id: Int): InsightReference? =
     getAttribute(id)
         ?.value
-        ?.single()
+        ?.firstOrNull()
         ?.referencedObject
         ?.let {
             InsightReference(
