@@ -116,7 +116,7 @@ fun InsightObject.addValue(id: Int, name: String? = null, value: Any?) {
 fun <T> InsightObject.getValue(id: Int, transform: (Any) -> T): T? =
     getAttribute(id)
         ?.value
-        ?.single()
+        ?.firstOrNull()
         ?.value
         ?.let { transform(it) }
 
