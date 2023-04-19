@@ -29,7 +29,7 @@ internal class ReverseEngineeredAttachmentUrlResolver {
 
     private val applicationProperties by lazy { getComponent(ApplicationProperties::class.java) }
 
-    private val pattern = Pattern.compile(".*/(\\d)/?")
+    private val pattern = Pattern.compile(".*/(\\d+)/?")
     private val INSIGHT_REST_BASE_URL = "/rest/insight/1.0"
 
     private fun getInsightBaseUrl(): String {

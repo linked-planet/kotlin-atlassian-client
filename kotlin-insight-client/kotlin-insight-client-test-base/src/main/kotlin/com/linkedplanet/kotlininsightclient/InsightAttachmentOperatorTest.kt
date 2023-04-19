@@ -19,8 +19,12 @@
  */
 package com.linkedplanet.kotlininsightclient
 
+import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryName
+import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryShortName
+import com.linkedplanet.kotlininsightclient.InsightObject.Country
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -33,12 +37,12 @@ interface InsightAttachmentOperatorTest {
     val insightAttachmentOperator: InsightAttachmentOperator
 
     @Test
-    fun testAttachments() {
+    fun testGetAttachments() {
         println("### START attachment_testGetAndDownloadAttachments")
         println("### TimeZone.getDefault().displayName=${TimeZone.getDefault().displayName}")
         runBlocking {
-            val country = insightObjectOperator.getObjectByName(InsightObject.Country.id, "Germany").orNull()!!
-            val attachments = insightAttachmentOperator.getAttachments(country.id).orNull() ?: emptyList()
+            val country = insightObjectOperator.getObjectByName(Country.id, "Germany").orFail()!!
+            val attachments = insightAttachmentOperator.getAttachments(country.id).orFail()
             val firstAttachment = attachments.first()
             assertThat(attachments.size, equalTo(1))
             assertThat(firstAttachment.id, equalTo(1))
@@ -57,7 +61,46 @@ interface InsightAttachmentOperatorTest {
         println("### END attachment_testGetAndDownloadAttachments")
     }
 
-
     private fun calculateSha256(bytes: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(bytes).fold("") { str, it -> str + "%02x".format(it) }
+
+    @Test
+    fun testAttachmentCRUD() {
+        println("### START attachment_testDownloadAttachment")
+        println("### TimeZone.getDefault().displayName=${TimeZone.getDefault().displayName}")
+        runBlocking {
+            makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
+            val disclaimer = "created by Test and should only exist during test run."
+            val country = insightObjectOperator.createObject(Country.id) {
+                it.setValue(CountryName.attributeId, "Attachistan")
+                it.setValue(CountryShortName.attributeId, disclaimer)
+            }.orFail()
+
+            val attachment = insightAttachmentOperator.uploadAttachment(
+                country.id, "attachistan.txt", "content".toByteArray(), disclaimer
+            ).orFail().first()
+
+            assertThat(attachment.comment, equalTo(disclaimer))
+
+            val downloadContent = insightAttachmentOperator.downloadAttachment(attachment.url).orFail()
+            val downloadContentString = String(downloadContent)
+            assertThat(downloadContentString, equalTo("content"))
+
+            insightAttachmentOperator.deleteAttachment(attachment.id).orFail()
+            assertThat(insightAttachmentOperator.downloadAttachment(attachment.url).isLeft(), equalTo(true))
+
+            makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
+        }
+        println("### END attachment_testDownloadAttachment")
+    }
+
+    suspend fun makeSureObjectWithNameDoesNotExist(objectTypeId: Int, name: String) {
+        val objectBeforeTest = insightObjectOperator.getObjectByName(objectTypeId, name).orFail()
+        if (objectBeforeTest != null) {
+            insightObjectOperator.deleteObject(objectBeforeTest.id)
+        }
+        assertThat(insightObjectOperator.getObjectByName(objectTypeId, name).orFail(), equalTo(null))
+        //if the former assertion failed that means deleteObject is not working, so this attachment test fails too
+    }
+
 }

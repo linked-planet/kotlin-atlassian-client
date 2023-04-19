@@ -24,19 +24,14 @@ import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
 import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.call.receive
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.features.auth.Auth
-import io.ktor.client.features.auth.providers.BasicAuthCredentials
-import io.ktor.client.features.auth.providers.basic
-import io.ktor.client.features.json.GsonSerializer
-import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.features.auth.*
+import io.ktor.client.features.auth.providers.*
+import io.ktor.client.features.json.*
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.*
 import io.ktor.http.*
 
 class KtorHttpClient(
@@ -130,23 +125,24 @@ class KtorHttpClient(
         mimeType: String,
         filename: String,
         byteArray: ByteArray
-    ): Either<HttpDomainError, HttpResponse<ByteArray>> =
-        httpClient.post<io.ktor.client.statement.HttpResponse> {
-            url("$baseUrl$url")
+    ): Either<HttpDomainError, HttpResponse<ByteArray>> {
+        val post = httpClient.submitFormWithBinaryData<io.ktor.client.statement.HttpResponse>(
+            path = "$baseUrl$url",
+            formData = formData {
+                append(
+                    key = "file",
+                    byteArray,
+                    Headers.build {
+                        append(HttpHeaders.ContentType, mimeType)
+                        append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
+                    })
+            }
+        ) {
             header("Connection", "keep-alive")
             header("Cache-Control", "no-cache")
-            body = MultiPartFormDataContent(
-                formData {
-                    this.append(
-                        "file",
-                        byteArray,
-                        Headers.build {
-                            append(HttpHeaders.ContentType, mimeType)
-                            append(HttpHeaders.ContentDisposition, "filename=$filename")
-                        })
-                }
-            )
-        }.handleResponse()
+        }
+        return post.handleResponse()
+    }
 
 
     private suspend inline fun <reified T> io.ktor.client.statement.HttpResponse.handleResponse(): Either<HttpDomainError, HttpResponse<T>> =

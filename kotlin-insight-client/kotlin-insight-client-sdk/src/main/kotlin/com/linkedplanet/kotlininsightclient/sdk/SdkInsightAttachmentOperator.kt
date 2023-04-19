@@ -31,6 +31,7 @@ import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
 import java.io.ByteArrayOutputStream
+import java.net.URLConnection
 import java.nio.file.Path
 import java.text.CharacterIterator
 import java.text.StringCharacterIterator
@@ -72,7 +73,6 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
                 val attachmentContent = downloadAttachment(attachment.url).bind()
                 attachment.filename to attachmentContent
             }
-
             ByteArrayOutputStream().use { byteOutputStream ->
                 ZipOutputStream(byteOutputStream).use { zip ->
                     fileMap.forEach {
@@ -98,7 +98,8 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             val tempFilePath: Path = createTempFile(filename)
             val tempFile = tempFilePath.toFile()
             tempFile.writeBytes(byteArray)
-            val bean = objectFacade.addAttachmentBean(objectId, tempFile, filename, "", comment) //TODO content-type
+            val mimeType = URLConnection.guessContentTypeFromName(filename)
+            val bean = objectFacade.addAttachmentBean(objectId, tempFile, filename, mimeType, comment)
             val insightAttachment = beanToInsightAttachment(bean)
             listOf(insightAttachment)
         }
