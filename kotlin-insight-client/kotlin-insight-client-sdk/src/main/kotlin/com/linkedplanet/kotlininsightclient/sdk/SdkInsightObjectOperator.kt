@@ -36,7 +36,6 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.api.model.isReferenceAttribute
-import com.linkedplanet.kotlininsightclient.api.model.toEditObjectItem
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
@@ -128,18 +127,17 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         obj: InsightObject,
         objectBean: MutableObjectBean
     ) {
-        val editAttributes = obj.toEditObjectItem().attributes.map { editItemAttribute ->
-            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(editItemAttribute.objectTypeAttributeId)
-                .createMutable()
-            val values = editItemAttribute.objectAttributeValues.map { it.value.toString() }.toTypedArray()
-
-            if (obj.isReferenceAttribute(editItemAttribute.objectTypeAttributeId)) {
+        val attributeBeans = obj.attributes.map { insightAttr ->
+            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId).createMutable()
+            if (obj.isReferenceAttribute(insightAttr.attributeId)) {
+                val values = insightAttr.value.map { it.referencedObject!!.id.toString() }.toTypedArray()
                 objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id.toString()) }
             } else {
+                val values = insightAttr.value.map { it.value.toString() }.toTypedArray()
                 objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, ota, *values)
             }
         }
-        objectBean.setObjectAttributeBeans(editAttributes)
+        objectBean.setObjectAttributeBeans(attributeBeans)
     }
 
     override suspend fun deleteObject(id: Int): Either<InsightClientError, Unit> =

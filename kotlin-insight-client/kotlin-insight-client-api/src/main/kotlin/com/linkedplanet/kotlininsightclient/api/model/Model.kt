@@ -224,31 +224,6 @@ fun InsightObject.setSingleReference(id: Int, name: String?, referencedObjectId:
     this.addReference(id, name, referencedObjectId)
 }
 
-fun InsightObject.toEditObjectItem() =
-    ObjectEditItem(
-        objectTypeId,
-        getEditAttributes()
-    )
-
-fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
-    this.attributes.map { insightAttr ->
-        val values = insightAttr.value.map {
-            if (insightAttr.attributeType == InsightObjectAttributeType.REFERENCE) {
-                ObjectEditItemAttributeValue(
-                    it.referencedObject!!.id
-                )
-            } else {
-                ObjectEditItemAttributeValue(
-                    it.value
-                )
-            }
-        }
-        ObjectEditItemAttribute(
-            insightAttr.attributeId,
-            values
-        )
-    }
-
 /**
  * See type attribute in response of https://insight-javadoc.riada.io/insight-javadoc-8.6/insight-rest/#object__id__attributes_get
  */
@@ -292,21 +267,6 @@ data class ObjectTypeSchema(
     val name: String,
     var attributes: List<ObjectTypeSchemaAttribute>,
     val parentObjectTypeId: Int?
-)
-
-// TODO:hgthis is sent as gson to the insight api, so this is not really our model object but a DTO
-data class ObjectEditItem(
-    val objectTypeId: Int,
-    val attributes: List<ObjectEditItemAttribute>
-)
-
-data class ObjectEditItemAttribute(
-    val objectTypeAttributeId: Int,
-    val objectAttributeValues: List<ObjectEditItemAttributeValue>
-)
-
-data class ObjectEditItemAttributeValue(
-    val value: Any?
 )
 
 data class ObjectTypeSchemaAttribute(
