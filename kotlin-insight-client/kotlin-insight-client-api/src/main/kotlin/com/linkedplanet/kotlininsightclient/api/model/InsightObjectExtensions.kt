@@ -107,7 +107,7 @@ fun InsightObject.addValue(id: Int, name: String? = null, value: Any?) {
 fun <T> InsightObject.getValue(id: Int, transform: (Any) -> T): T? =
     getAttribute(id)
         ?.value
-        ?.single()
+        ?.firstOrNull()
         ?.value
         ?.let { transform(it) }
 
@@ -144,7 +144,7 @@ fun InsightObject.getDateTimeValue(id: Int): ZonedDateTime? =
 fun InsightObject.getSingleReferenceValue(id: Int): InsightReference? =
     getAttribute(id)
         ?.value
-        ?.single()
+        ?.firstOrNull()
         ?.referencedObject
         ?.let {
             InsightReference(
