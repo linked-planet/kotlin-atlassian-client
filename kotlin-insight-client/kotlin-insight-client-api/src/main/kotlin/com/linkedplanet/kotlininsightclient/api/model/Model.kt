@@ -403,17 +403,17 @@ data class InsightHistory(
 
 data class InsightHistoryItem(
     val id: Int,
-    val affectedAttribute: String,
-    val newValue: String,
+    val affectedAttribute: String?,
+    val oldValue: String?,
+    val newValue: String?,
     val actor: Actor,
     val type: Int,
-    val created: String,
-    val updated: String,
+    val created: String, // updated is neither available through sdk nor ktor
     val objectId: Int
 )
 
 data class Actor(
-    val name: String
+    val key: String
 )
 
 data class ObjectUpdateResponse(

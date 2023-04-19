@@ -27,6 +27,7 @@ import com.linkedplanet.kotlininsightclient.api.model.Actor
 import com.linkedplanet.kotlininsightclient.api.model.InsightHistory
 import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.toISOString
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.ObjectHistoryBean
 
@@ -36,20 +37,21 @@ object SdkInsightHistoryOperator : InsightHistoryOperator {
 
     override suspend fun getHistory(objectId: Int): Either<InsightClientError, InsightHistory> =
         catchAsInsightClientError {
-            val historyItems = objectFacade.findObjectHistoryBean(objectId).map { objectHistoryBean: ObjectHistoryBean ->
-                objectHistoryBean.run {
-                    InsightHistoryItem(
-                        id, //TODO:hg can be null by definition
-                        affectedAttribute ?: "", //TODO:hg can be null by definition
-                        newValue ?: "", //TODO:hg can be null by definition
-                        Actor(actorUserKey), //TODO:hg key vs name
-                        type ?: 0,
-                        created.toString(),
-                        updated = "", //TODO:hg set updated (no property is available)
-                        objectId
-                    )
+            val historyItems =
+                objectFacade.findObjectHistoryBean(objectId).map { objectHistoryBean: ObjectHistoryBean ->
+                    objectHistoryBean.run {
+                        InsightHistoryItem(
+                            id,
+                            affectedAttribute,
+                            oldValue,
+                            newValue,
+                            Actor(key = actorUserKey),
+                            type,
+                            created.toISOString(),
+                            objectId
+                        )
+                    }
                 }
-            }
             InsightHistory(objectId, historyItems)
         }
 }

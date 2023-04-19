@@ -28,6 +28,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredAttachmentUrlResolver
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredFileManager
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.toISOString
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
 import java.io.ByteArrayOutputStream
@@ -35,9 +36,6 @@ import java.net.URLConnection
 import java.nio.file.Path
 import java.text.CharacterIterator
 import java.text.StringCharacterIterator
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.createTempFile
@@ -136,9 +134,5 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         }
         return java.lang.String.format("%.1f %cB", bytes / 1000.0, ci.current())
     }
-
-    private fun Date.toISOString(): String = this.toInstant()
-        .atZone(ZoneId.of("Z"))
-        .format(DateTimeFormatter.ISO_DATE_TIME)
 
 }
