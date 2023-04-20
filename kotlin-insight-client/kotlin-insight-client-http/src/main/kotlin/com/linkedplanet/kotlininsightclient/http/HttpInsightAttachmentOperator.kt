@@ -45,7 +45,6 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
 
-    // TODO: Downloads not working in both
     override suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray> =
         context.httpClient.executeDownload(
             "GET",
@@ -57,7 +56,6 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
 
-    // TODO: Uploads not working in both
     override suspend fun uploadAttachment(
         objectId: Int,
         filename: String,
