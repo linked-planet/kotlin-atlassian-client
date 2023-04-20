@@ -19,8 +19,9 @@
  */
 package com.linkedplanet.kotlinhttpclient.ktor
 
-import arrow.core.*
-import com.google.gson.JsonParser
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
 import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
@@ -62,8 +63,7 @@ class KtorHttpClient(
         requestBuilder.url("$baseUrl/$path$parameterString")
         requestBuilder.contentType(parsedContentType)
         if (bodyIn != null) {
-            // Keep JsonParser instantiation for downwards compatibility
-            requestBuilder.setBody(JsonParser().parse(bodyIn))
+            requestBuilder.setBody(bodyIn)
         }
     }
 
