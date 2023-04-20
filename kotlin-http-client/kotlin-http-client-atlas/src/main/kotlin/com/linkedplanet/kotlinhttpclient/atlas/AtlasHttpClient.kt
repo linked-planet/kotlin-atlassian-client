@@ -131,7 +131,7 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
 
             val file: java.io.File = org.jetbrains.kotlin.konan.file.createTempFile(filename).javaFile()
             file.writeBytes(byteArray)
-            val filePart = RequestFilePart(file, "file")
+            val filePart = RequestFilePart(mimeType, filename, file, "file")
 
             val request = requestWithoutBody.setFiles(listOf(filePart))
             request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
