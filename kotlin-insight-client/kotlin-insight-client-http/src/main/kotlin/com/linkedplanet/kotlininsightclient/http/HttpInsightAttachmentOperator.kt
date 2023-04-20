@@ -69,7 +69,8 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             emptyMap(),
             mimeType,
             filename,
-            byteArray
+            byteArray,
+            comment
         )
             .mapLeft { it.toInsightClientError() }
             .bind()

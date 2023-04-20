@@ -32,6 +32,8 @@ import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import org.apache.http.HttpHeaders
 import org.jetbrains.kotlin.library.impl.javaFile
+import java.io.File
+import java.net.URLEncoder
 
 class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
 
@@ -74,7 +76,13 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(HttpDomainError(400, "Jira/Insight hat ein internes Problem festgestellt", e.message.toString()))
+            Either.Left(
+                HttpDomainError(
+                    400,
+                    "Jira/Insight hat ein internes Problem festgestellt",
+                    e.message.toString()
+                )
+            )
         }
 
     override suspend fun executeDownload(
@@ -115,7 +123,13 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(HttpDomainError(400, "Jira/Insight hat ein internes Problem festgestellt", e.message.toString()))
+            Either.Left(
+                HttpDomainError(
+                    400,
+                    "Jira/Insight hat ein internes Problem festgestellt",
+                    e.message.toString()
+                )
+            )
         }
 
     override suspend fun executeUpload(
@@ -124,16 +138,33 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         params: Map<String, String>,
         mimeType: String,
         filename: String,
-        byteArray: ByteArray
+        byteArray: ByteArray,
+        comment: String?
     ): Either<HttpDomainError, HttpResponse<ByteArray>> =
         try {
             val requestWithoutBody = applicationLinkRequest(method, params, url)
 
-            val file: java.io.File = org.jetbrains.kotlin.konan.file.createTempFile(filename).javaFile()
-            file.writeBytes(byteArray)
+            val file = tempFileWithData(filename, byteArray)
             val filePart = RequestFilePart(mimeType, filename, file, "file")
+            val commentFileParts = comment?.let {
+                listOf(
+                    RequestFilePart(
+                        "text/plain",
+                        "comment.txt",
+                        tempFileWithData("comment", comment.toByteArray()),
+                        "comment"
+                    ),
+                    RequestFilePart(
+                        "text/plain",
+                        "encodedComment.txt",
+                        tempFileWithData("encodedComment", URLEncoder.encode(comment, "UTF-8").toByteArray()),
+                        "encodedComment"
+                    )
+                )
+            } ?: emptyList()
 
-            val request = requestWithoutBody.setFiles(listOf(filePart))
+            val request = requestWithoutBody.setFiles(listOf(filePart) + commentFileParts)
+
             request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
                 override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>>? {
                     return null
@@ -158,8 +189,20 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(HttpDomainError(400, "Jira/Insight hat ein internes Problem festgestellt", e.message.toString()))
+            Either.Left(
+                HttpDomainError(
+                    400,
+                    "Jira/Insight hat ein internes Problem festgestellt",
+                    e.message.toString()
+                )
+            )
         }
+
+    private fun tempFileWithData(filename: String, byteArray: ByteArray): File {
+        val file: File = org.jetbrains.kotlin.konan.file.createTempFile(filename).javaFile()
+        file.writeBytes(byteArray)
+        return file
+    }
 
     private fun applicationLinkRequest(
         method: String,

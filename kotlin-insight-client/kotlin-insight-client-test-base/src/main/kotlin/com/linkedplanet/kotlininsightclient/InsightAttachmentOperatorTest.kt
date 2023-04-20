@@ -70,7 +70,7 @@ interface InsightAttachmentOperatorTest {
         println("### TimeZone.getDefault().displayName=${TimeZone.getDefault().displayName}")
         runBlocking {
             makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
-            val disclaimer = "created by Test and should only exist during test run."
+            val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
             val country = insightObjectOperator.createObject(Country.id) {
                 it.setValue(CountryName.attributeId, "Attachistan")
                 it.setValue(CountryShortName.attributeId, disclaimer)
@@ -81,7 +81,7 @@ interface InsightAttachmentOperatorTest {
             ).orFail().first()
 
             assertThat(attachment.filename, equalTo("attachistan.txt"))
-//            assertThat(attachment.comment, equalTo(disclaimer)) // comments not working with http clients
+            assertThat(attachment.comment, equalTo(disclaimer)) // comments not working with http clients
 
             val downloadContent = insightAttachmentOperator.downloadAttachment(attachment.url).orFail()
             val downloadContentString = String(downloadContent)
