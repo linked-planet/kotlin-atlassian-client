@@ -21,8 +21,12 @@ package com.linkedplanet.kotlinhttpclient.atlas
 
 import arrow.core.Either
 import com.atlassian.applinks.api.ApplicationLink
+import com.atlassian.applinks.api.ApplicationLinkRequest
 import com.atlassian.applinks.api.ApplicationLinkResponseHandler
-import com.atlassian.sal.api.net.*
+import com.atlassian.sal.api.net.Request
+import com.atlassian.sal.api.net.RequestFilePart
+import com.atlassian.sal.api.net.Response
+import com.atlassian.sal.api.net.ResponseException
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
 import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
@@ -40,16 +44,11 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         headers: Map<String, String>
     ): Either<HttpDomainError, HttpResponse<String>> =
         try {
-            val atlasMethod = Request.MethodType.valueOf(method)
-            val parameters = encodeParams(params)
-            val pathWithParams = if (params.isNotEmpty()) "$path?${parameters}" else path
-
-            val requestFactory = appLink.createAuthenticatedRequestFactory()
-            val requestWithoutBody = requestFactory.createRequest(atlasMethod, pathWithParams)
-            val request = if (body == null) {
-                requestWithoutBody
-            } else {
-                requestWithoutBody.setRequestBody(body).setHeader(HttpHeaders.CONTENT_TYPE, contentType)
+            val request = applicationLinkRequest(method, params, path)
+            if (body != null) {
+                request
+                    .setRequestBody(body)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, contentType)
             }
             request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<String>>> {
                 override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<String>>? {
@@ -86,16 +85,11 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         contentType: String?
     ): Either<HttpDomainError, HttpResponse<ByteArray>> =
         try {
-            val atlasMethod = Request.MethodType.valueOf(method)
-            val parameters = encodeParams(params)
-            val pathWithParams = if (params.isNotEmpty()) "$path?${parameters}" else path
-
-            val requestFactory = appLink.createAuthenticatedRequestFactory()
-            val requestWithoutBody = requestFactory.createRequest(atlasMethod, pathWithParams)
-            val request = if (body == null) {
-                requestWithoutBody
-            } else {
-                requestWithoutBody.setRequestBody(body).setHeader(HttpHeaders.CONTENT_TYPE, contentType)
+            val request = applicationLinkRequest(method, params, path)
+            if (body != null) {
+                request
+                    .setRequestBody(body)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, contentType)
             }
             request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
                 override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>>? {
@@ -133,12 +127,7 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         byteArray: ByteArray
     ): Either<HttpDomainError, HttpResponse<ByteArray>> =
         try {
-            val atlasMethod = Request.MethodType.valueOf(method)
-            val parameters = encodeParams(params)
-            val pathWithParams = if (params.isNotEmpty()) "$url?${parameters}" else url
-
-            val requestFactory = appLink.createAuthenticatedRequestFactory()
-            val requestWithoutBody = requestFactory.createRequest(atlasMethod, pathWithParams)
+            val requestWithoutBody = applicationLinkRequest(method, params, url)
 
             val file: java.io.File = org.jetbrains.kotlin.konan.file.createTempFile(filename).javaFile()
             file.writeBytes(byteArray)
@@ -171,4 +160,18 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         } catch (e: ResponseException) {
             Either.Left(HttpDomainError(400, "Jira/Insight hat ein internes Problem festgestellt", e.message.toString()))
         }
+
+    private fun applicationLinkRequest(
+        method: String,
+        params: Map<String, String>,
+        path: String
+    ): ApplicationLinkRequest {
+        val atlasMethod = Request.MethodType.valueOf(method)
+        val parameters = encodeParams(params)
+        val pathWithParams = if (params.isNotEmpty()) "$path?${parameters}" else path
+
+        val requestFactory = appLink.createAuthenticatedRequestFactory()
+        val requestWithoutBody = requestFactory.createRequest(atlasMethod, pathWithParams)
+        return requestWithoutBody
+    }
 }
