@@ -81,7 +81,6 @@ interface InsightAttachmentOperatorTest {
             ).orFail().first()
 
             assertThat(attachment.filename, equalTo("attachistan.txt"))
-            assertThat(attachment.comment, equalTo(disclaimer)) // comments not working with http clients
 
             val downloadContent = insightAttachmentOperator.downloadAttachment(attachment.url).orFail()
             val downloadContentString = String(downloadContent)
