@@ -89,15 +89,14 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
     override suspend fun uploadAttachment(
         objectId: Int,
         filename: String,
-        byteArray: ByteArray,
-        comment: String
+        byteArray: ByteArray
     ): Either<InsightClientError, List<InsightAttachment>> =
         catchAsInsightClientError {
             val tempFilePath: Path = createTempFile(filename)
             val tempFile = tempFilePath.toFile()
             tempFile.writeBytes(byteArray)
             val mimeType = URLConnection.guessContentTypeFromName(filename)
-            val bean = objectFacade.addAttachmentBean(objectId, tempFile, filename, mimeType, comment)
+            val bean = objectFacade.addAttachmentBean(objectId, tempFile, filename, mimeType, null)
             val insightAttachment = beanToInsightAttachment(bean)
             listOf(insightAttachment)
         }

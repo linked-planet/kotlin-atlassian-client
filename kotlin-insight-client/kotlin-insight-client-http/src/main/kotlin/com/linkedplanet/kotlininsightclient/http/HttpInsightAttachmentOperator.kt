@@ -59,8 +59,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
     override suspend fun uploadAttachment(
         objectId: Int,
         filename: String,
-        byteArray: ByteArray,
-        comment: String
+        byteArray: ByteArray
     ): Either<InsightClientError, List<InsightAttachment>> = either {
         val mimeType = URLConnection.guessContentTypeFromName(filename)
         context.httpClient.executeUpload(
@@ -69,8 +68,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             emptyMap(),
             mimeType,
             filename,
-            byteArray,
-            comment
+            byteArray
         )
             .mapLeft { it.toInsightClientError() }
             .bind()

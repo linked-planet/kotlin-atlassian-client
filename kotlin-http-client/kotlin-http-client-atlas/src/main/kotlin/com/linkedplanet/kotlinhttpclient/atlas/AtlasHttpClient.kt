@@ -33,7 +33,6 @@ import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import org.apache.http.HttpHeaders
 import org.jetbrains.kotlin.library.impl.javaFile
 import java.io.File
-import java.net.URLEncoder
 
 class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
 
@@ -53,36 +52,20 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                     .setHeader(HttpHeaders.CONTENT_TYPE, contentType)
             }
             request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<String>>> {
-                override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<String>>? {
-                    return null
-                }
+                override fun credentialsRequired(response: Response) = null
 
-                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<String>> {
-                    return when {
-                        response.isSuccessful -> Either.Right(
-                            HttpResponse(
-                                response.statusCode,
-                                response.responseBodyAsString
-                            )
+                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<String>> = when {
+                    response.isSuccessful -> Either.Right(
+                        HttpResponse(
+                            response.statusCode,
+                            response.responseBodyAsString
                         )
-                        else -> {
-                            val errorWithStatusCode = """Call to $path failed with 
-                            status [${response.statusCode}]
-                            statusText [${response.statusText}]
-                            body [${response.responseBodyAsString}]"""
-                            return Either.Left(HttpDomainError(response.statusCode, "HTTP ERROR", errorWithStatusCode))
-                        }
-                    }
+                    )
+                    else -> httpDomainErrorFromResponse(path, response)
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(
-                HttpDomainError(
-                    400,
-                    "Jira/Insight hat ein internes Problem festgestellt",
-                    e.message.toString()
-                )
-            )
+            wrapAsGenericHttpDomainError(e)
         }
 
     override suspend fun executeDownload(
@@ -100,36 +83,21 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                     .setHeader(HttpHeaders.CONTENT_TYPE, contentType)
             }
             request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
-                override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>>? {
-                    return null
-                }
+                override fun credentialsRequired(response: Response) = null
 
-                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>> {
-                    return when {
+                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>> =
+                    when {
                         response.isSuccessful -> Either.Right(
                             HttpResponse(
                                 response.statusCode,
                                 response.responseBodyAsStream.readBytes()
                             )
                         )
-                        else -> {
-                            val errorWithStatusCode = """Call to $path failed with 
-                            status [${response.statusCode}]
-                            statusText [${response.statusText}]
-                            body [${response.responseBodyAsString}]"""
-                            return Either.Left(HttpDomainError(response.statusCode, "HTTP ERROR", errorWithStatusCode))
-                        }
+                        else -> httpDomainErrorFromResponse(path, response)
                     }
-                }
             })
         } catch (e: ResponseException) {
-            Either.Left(
-                HttpDomainError(
-                    400,
-                    "Jira/Insight hat ein internes Problem festgestellt",
-                    e.message.toString()
-                )
-            )
+            wrapAsGenericHttpDomainError(e)
         }
 
     override suspend fun executeUpload(
@@ -138,64 +106,25 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         params: Map<String, String>,
         mimeType: String,
         filename: String,
-        byteArray: ByteArray,
-        comment: String?
+        byteArray: ByteArray
     ): Either<HttpDomainError, HttpResponse<ByteArray>> =
         try {
-            val requestWithoutBody = applicationLinkRequest(method, params, url)
-
+            val request: ApplicationLinkRequest = applicationLinkRequest(method, params, url)
             val file = tempFileWithData(filename, byteArray)
             val filePart = RequestFilePart(mimeType, filename, file, "file")
-            val commentFileParts = comment?.let {
-                listOf(
-                    RequestFilePart(
-                        "text/plain",
-                        "comment.txt",
-                        tempFileWithData("comment", comment.toByteArray()),
-                        "comment"
-                    ),
-                    RequestFilePart(
-                        "text/plain",
-                        "encodedComment.txt",
-                        tempFileWithData("encodedComment", URLEncoder.encode(comment, "UTF-8").toByteArray()),
-                        "encodedComment"
-                    )
-                )
-            } ?: emptyList()
-
-            val request = requestWithoutBody.setFiles(listOf(filePart) + commentFileParts)
+            request.setFiles(listOf(filePart))
 
             request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
-                override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>>? {
-                    return null
-                }
+                override fun credentialsRequired(response: Response) = null
 
-                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>> {
-                    return when {
-                        response.isSuccessful -> Either.Right(
-                            HttpResponse(
-                                response.statusCode,
-                                byteArray
-                            )
-                        )
-                        else -> {
-                            val errorWithStatusCode = """Call to $url failed with 
-                            status [${response.statusCode}]
-                            statusText [${response.statusText}]
-                            body [${response.responseBodyAsString}]"""
-                            return Either.Left(HttpDomainError(response.statusCode, "HTTP ERROR", errorWithStatusCode))
-                        }
+                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>> =
+                    when {
+                        response.isSuccessful -> Either.Right(HttpResponse(response.statusCode, byteArray))
+                        else -> httpDomainErrorFromResponse(url, response)
                     }
-                }
             })
         } catch (e: ResponseException) {
-            Either.Left(
-                HttpDomainError(
-                    400,
-                    "Jira/Insight hat ein internes Problem festgestellt",
-                    e.message.toString()
-                )
-            )
+            wrapAsGenericHttpDomainError(e)
         }
 
     private fun tempFileWithData(filename: String, byteArray: ByteArray): File {
@@ -203,6 +132,25 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         file.writeBytes(byteArray)
         return file
     }
+
+    private fun httpDomainErrorFromResponse(
+        path: String,
+        response: Response
+    ): Either.Left<HttpDomainError> {
+        val errorWithStatusCode = """Call to $path failed with 
+                                status [${response.statusCode}]
+                                statusText [${response.statusText}]
+                                body [${response.responseBodyAsString}]"""
+        return Either.Left(HttpDomainError(response.statusCode, "HTTP ERROR", errorWithStatusCode))
+    }
+
+    private fun wrapAsGenericHttpDomainError(e: ResponseException) = Either.Left(
+        HttpDomainError(
+            400,
+            "Jira/Insight hat ein internes Problem festgestellt",
+            e.message.toString()
+        )
+    )
 
     private fun applicationLinkRequest(
         method: String,

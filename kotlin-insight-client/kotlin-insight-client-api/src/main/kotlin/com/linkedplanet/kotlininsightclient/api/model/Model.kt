@@ -388,6 +388,6 @@ data class InsightAttachment(
     val filename: String,
     val filesize: String, // for human display e.g. 10.1 kB
     val created: String, // ISO 8601 String
-    val comment: String,
+    val comment: String, // we are only able to download them but can not create attachments with comments
     val url: String
 )

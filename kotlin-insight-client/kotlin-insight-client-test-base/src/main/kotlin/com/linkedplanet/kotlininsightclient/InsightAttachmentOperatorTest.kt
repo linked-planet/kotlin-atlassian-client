@@ -77,7 +77,7 @@ interface InsightAttachmentOperatorTest {
             }.orFail()
 
             val attachment = insightAttachmentOperator.uploadAttachment(
-                country.id, "attachistan.txt", "content".toByteArray(), comment = disclaimer
+                country.id, "attachistan.txt", "content".toByteArray()
             ).orFail().first()
 
             assertThat(attachment.filename, equalTo("attachistan.txt"))

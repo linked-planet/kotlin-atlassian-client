@@ -47,8 +47,7 @@ interface HttpClient {
         params: Map<String, String>,
         mimeType: String,
         filename: String,
-        byteArray: ByteArray,
-        comment: String? = null
+        byteArray: ByteArray
     ): Either<HttpDomainError, HttpResponse<ByteArray>>
 
     suspend fun <T> executeRest(

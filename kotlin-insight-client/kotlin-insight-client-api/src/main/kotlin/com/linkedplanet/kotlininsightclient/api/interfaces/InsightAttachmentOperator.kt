@@ -34,8 +34,9 @@ interface InsightAttachmentOperator {
     suspend fun uploadAttachment(
         objectId: Int,
         filename: String,
-        byteArray: ByteArray,
-        comment: String = ""
+        byteArray: ByteArray
+        // comment is not supported due to AtlasHttpClient missing support for multipart uploads
+        // git history contains the code for ktor and sdk
     ): Either<InsightClientError, List<InsightAttachment>>
 
     suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit>

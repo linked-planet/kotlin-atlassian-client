@@ -35,7 +35,6 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
-import java.net.URLEncoder
 import java.text.DateFormat
 
 class KtorHttpClient(
@@ -126,8 +125,7 @@ class KtorHttpClient(
         params: Map<String, String>,
         mimeType: String,
         filename: String,
-        byteArray: ByteArray,
-        comment: String?
+        byteArray: ByteArray
     ): Either<HttpDomainError, HttpResponse<ByteArray>> {
         val post = httpClient.submitFormWithBinaryData(
             formData = formData {
@@ -138,21 +136,6 @@ class KtorHttpClient(
                         append(HttpHeaders.ContentType, mimeType)
                         append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
                     })
-                if (comment != null) {
-                    // the api requires both "comment" and "encodedComment" to work, only encodedComment is used though
-                    append(
-                        key = "comment",
-                        comment,
-                        Headers.build {
-                            append(HttpHeaders.ContentDisposition, "form-data;")
-                        })
-                    append(
-                        key = "encodedComment",
-                        URLEncoder.encode(comment, "UTF-8"),
-                        Headers.build {
-                            append(HttpHeaders.ContentDisposition, "form-data;")
-                        })
-                }
             }
         ) {
             url("$baseUrl$url")
