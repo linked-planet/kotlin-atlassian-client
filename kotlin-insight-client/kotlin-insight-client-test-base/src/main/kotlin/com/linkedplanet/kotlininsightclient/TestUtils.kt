@@ -21,16 +21,24 @@ package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 
 /**
  * Uses hamcrest matchers, so the test result tells you which exception was thrown
  */
 fun <T> Either<InsightClientError, T>.orFail(): T {
     when (this) {
-        is Either.Left<InsightClientError> -> MatcherAssert.assertThat(this, CoreMatchers.equalTo(null))
+        is Either.Left<InsightClientError> -> assertThat(this, equalTo(null))
         is Either.Right -> return this.value
     }
     return (this as Either<InsightClientError, T>).orNull()!!
+}
+
+fun <T> Either<InsightClientError, T>.asError(): InsightClientError {
+    when (this) {
+        is Either.Left<InsightClientError> -> return this.value
+        is Either.Right -> assertThat(this, equalTo(InsightClientError("","")))
+    }
+    return InsightClientError("error is neither left nor right", "$this")
 }
