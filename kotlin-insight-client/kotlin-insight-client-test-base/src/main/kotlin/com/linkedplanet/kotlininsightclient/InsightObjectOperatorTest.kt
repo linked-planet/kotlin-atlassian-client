@@ -262,7 +262,7 @@ interface InsightObjectOperatorTest {
         println("### START object_testFilter")
         runBlocking {
             val countries =
-                insightObjectOperator.getObjectsByIQL(InsightObject.Country.id, false, "\"ShortName\"=\"DE\"")
+                insightObjectOperator.getObjectsByIQL(InsightObject.Country.id, """"ShortName"="DE"""")
                     .orNull()!!.objects
             assertTrue(countries.size == 1)
             assertThat(countries.first().getStringValue(InsightAttribute.CountryShortName.attributeId), equalTo("DE"))

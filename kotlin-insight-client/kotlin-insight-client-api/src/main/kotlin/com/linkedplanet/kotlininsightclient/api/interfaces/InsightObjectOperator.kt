@@ -43,16 +43,16 @@ interface InsightObjectOperator {
 
     suspend fun getObjectsByIQL(
         objectTypeId: Int,
-        withChildren: Boolean = false,
         iql: String,
+        withChildren: Boolean = false,
         pageFrom: Int = 1,
         perPage: Int = RESULTS_PER_PAGE
     ): Either<InsightClientError, InsightObjects>
 
     suspend fun getObjectsByIQL(
         iql: String,
-        pageFrom: Int,
-        perPage: Int
+        pageFrom: Int = 1,
+        perPage: Int = RESULTS_PER_PAGE
     ): Either<InsightClientError, InsightObjects>
 
     suspend fun getObjectCount(iql: String): Either<InsightClientError, Int>

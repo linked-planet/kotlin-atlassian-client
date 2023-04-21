@@ -57,8 +57,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     override suspend fun getObjectsByIQL(
         objectTypeId: Int,
-        withChildren: Boolean,
         iql: String,
+        withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> = either {

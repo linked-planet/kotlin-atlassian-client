@@ -88,8 +88,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override suspend fun getObjectsByIQL(
         objectTypeId: Int,
-        withChildren: Boolean,
         iql: String,
+        withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> =
