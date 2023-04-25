@@ -63,6 +63,6 @@ interface InsightObjectOperator {
 
     suspend fun createObject(
         objectTypeId: Int,
-        func: (InsightObject) -> Unit
+        func: suspend (InsightObject) -> Unit
     ): Either<InsightClientError, InsightObject>
 }

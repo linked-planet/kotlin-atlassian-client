@@ -147,7 +147,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override suspend fun createObject(
         objectTypeId: Int,
-        func: (InsightObject) -> Unit // to configure the model
+        func: suspend (InsightObject) -> Unit // to configure the model
     ): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
             val freshInsightObject = createEmptyDomainObject(objectTypeId)

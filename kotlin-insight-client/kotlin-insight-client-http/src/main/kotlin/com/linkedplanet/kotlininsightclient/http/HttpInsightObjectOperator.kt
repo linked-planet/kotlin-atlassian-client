@@ -124,7 +124,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     override suspend fun createObject(
         objectTypeId: Int,
-        func: (InsightObject) -> Unit
+        func: suspend (InsightObject) -> Unit
     ): Either<InsightClientError, InsightObject> = either {
         val obj = createEmptyObject(objectTypeId)
         func(obj)
