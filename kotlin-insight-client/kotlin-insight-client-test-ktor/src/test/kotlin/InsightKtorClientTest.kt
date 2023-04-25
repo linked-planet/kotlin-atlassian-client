@@ -19,6 +19,7 @@
  */
 import com.linkedplanet.kotlinhttpclient.ktor.KtorHttpClient
 import com.linkedplanet.kotlininsightclient.InsightClientTest
+import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.http.*
 
 
@@ -40,5 +41,9 @@ class InsightKtorClientTest : InsightClientTest() {
             "admin"
         )
         clientContext = HttpInsightClientContext("http://localhost:2990", httpClient)
+
+        GenericInsightObjectOperatorImpl.insightObjectOperator = insightObjectOperator
+        GenericInsightObjectOperatorImpl.insightObjectTypeOperator = insightObjectTypeOperator
+        GenericInsightObjectOperatorImpl.insightSchemaOperator = insightSchemaOperator
     }
 }

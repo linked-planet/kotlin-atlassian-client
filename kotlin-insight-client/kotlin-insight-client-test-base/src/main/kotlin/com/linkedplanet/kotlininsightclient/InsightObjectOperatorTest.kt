@@ -19,18 +19,82 @@
  */
 package com.linkedplanet.kotlininsightclient
 
+import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
-import com.linkedplanet.kotlininsightclient.api.model.*
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
+import com.linkedplanet.kotlininsightclient.api.model.addValue
+import com.linkedplanet.kotlininsightclient.api.model.getAttributeByName
+import com.linkedplanet.kotlininsightclient.api.model.getAttributeIdByName
+import com.linkedplanet.kotlininsightclient.api.model.getMultiReferenceValue
+import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
+import com.linkedplanet.kotlininsightclient.api.model.getStringValue
+import com.linkedplanet.kotlininsightclient.api.model.getValueList
+import com.linkedplanet.kotlininsightclient.api.model.removeValue
+import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
+import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
+import org.junit.Assert.*
 import org.junit.Test
 
 interface InsightObjectOperatorTest {
     val insightObjectOperator: InsightObjectOperator
+    val insightObjectTypeOperator: InsightObjectTypeOperator
+    val insightSchemaOperator: InsightSchemaOperator
+
+    @Test
+    fun testReflectionFun() = runBlocking {
+        val countryOperator =
+            GenericInsightObjectOperatorImpl(
+                klass = Country::class,
+                insightObjectForDomainObject = { objectTypeId: Int, domainObject: Country ->
+                    insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
+                }
+            )
+
+        val companyOperator =
+            GenericInsightObjectOperatorImpl(
+                klass = Company::class,
+                insightObjectForDomainObject = { objectTypeId: Int, domainObject: Company ->
+                    insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
+                },
+                referenceAttributeToValue = { insightAttribute ->
+                    val movie = insightAttribute.value.first().referencedObject!!.id
+                    val eitherMovie = countryOperator.getById(movie)
+                    eitherMovie.orNull()!!
+                },
+                attributeToReferencedObjectId = { _: ObjectTypeSchemaAttribute, obj: Any? ->
+                    val country = obj as Country
+                    insightObjectOperator.getObjectByName(countryOperator.objectTypeSchema.id, country.name)
+                        .orNull()?.id
+                }
+            )
+
+        val country = Country(
+            name = "United States of America",
+            shortName = "USA"
+        )
+        val company = Company(
+            name = "Boring Company",
+            country = country,
+        )
+
+        companyOperator.delete(company).orFail()
+        countryOperator.delete(country).orFail()
+
+        countryOperator.create(country).orFail()
+        val countryByName = countryOperator.getByName(country.name).orFail()
+        assertThat(countryByName, equalTo(country))
+        companyOperator.create(company).orFail()
+        val companyByName = companyOperator.getByName(company.name).orFail()
+        assertThat(companyByName, equalTo(company))
+
+        companyOperator.delete(company).orFail()
+        countryOperator.delete(country).orFail()
+    }
 
     @Test
     fun testObjectListWithFlatReference() {

@@ -46,3 +46,13 @@ enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
     SimpleObjectFirstname(15, "Firstname"),
     SimpleObjectLastname(16, "Lastname"),
 }
+
+data class Company(
+    val name: String,
+    val country: Country?
+)
+
+data class Country(
+    val name: String,
+    val shortName: String,
+)

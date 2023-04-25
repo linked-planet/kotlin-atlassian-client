@@ -33,6 +33,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.api.model.isReferenceAttribute
@@ -234,6 +235,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectTypeAttributeBean.id,
             objectTypeAttributeBean.name,
             InsightObjectAttributeType.parse(objectTypeAttributeBean.type.typeId),
+            defaultType = ObjectTypeAttributeDefaultType(objectTypeAttributeBean.defaultType.defaultTypeId, objectTypeAttributeBean.defaultType.name),
+            options = objectTypeAttributeBean.options,
+            minimumCardinality = objectTypeAttributeBean.maximumCardinality,
+            maximumCardinality = objectTypeAttributeBean.minimumCardinality,
             objectAttributeBean.objectAttributeValueBeans.map {
                 if (objectTypeAttributeBean.isObjectReference) {
                     val refObj = getObjectById(it.referencedObjectBeanId).bind()

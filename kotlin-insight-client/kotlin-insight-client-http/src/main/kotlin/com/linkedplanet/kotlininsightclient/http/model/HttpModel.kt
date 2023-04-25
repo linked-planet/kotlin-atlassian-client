@@ -24,3 +24,8 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
 data class HttpInsightSchemaList(
     val objectschemas: List<InsightSchema>
 )
+
+data class ObjectUpdateResponse(
+    val id: Int,
+    val objectKey: String
+)
