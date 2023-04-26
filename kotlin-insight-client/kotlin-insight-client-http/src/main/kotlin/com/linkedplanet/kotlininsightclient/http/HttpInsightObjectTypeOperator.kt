@@ -26,26 +26,34 @@ import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
-import com.linkedplanet.kotlininsightclient.api.model.*
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
+import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttributeReferenceType
+import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeSchemaApiResponse
+import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeSchemaAttributeApiResponse
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
 class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContext) : InsightObjectTypeOperator {
 
     override suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema> = either {
-        context.httpClient.executeRest<ObjectTypeSchema>(
+        context.httpClient.executeRest<ObjectTypeSchemaApiResponse>(
             "GET",
             "/rest/insight/1.0/objecttype/$objectTypeId",
             emptyMap(),
             null,
             "application/json",
-            object : TypeToken<ObjectTypeSchema>() {}.type
+            object : TypeToken<ObjectTypeSchemaApiResponse>() {}.type
         )
             .map { it.body!! }
             .mapLeft { it.toInsightClientError() }
             .bind()
             .let { populateObjectTypeSchemaAttributes(it).bind() }
+            .let { apiResponse ->
+                mapToPublicApiModel(apiResponse)
+            }
     }
-
 
     override suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,
@@ -62,31 +70,56 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
 
     override suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>> =
         either {
-            context.httpClient.executeRestList<ObjectTypeSchema>(
+            context.httpClient.executeRestList<ObjectTypeSchemaApiResponse>(
                 "GET",
                 "rest/insight/1.0/objectschema/$schemaId/objecttypes/flat",
                 emptyMap(),
                 null,
                 "application/json",
-                object : TypeToken<List<ObjectTypeSchema>>() {}.type
+                object : TypeToken<List<ObjectTypeSchemaApiResponse>>() {}.type
             )
                 .map { it.body }
                 .mapLeft { it.toInsightClientError() }
                 .bind()
                 .map {
                     populateObjectTypeSchemaAttributes(it).bind()
+                }.map { apiResponse ->
+                    mapToPublicApiModel(apiResponse)
                 }
         }
 
-    private suspend fun populateObjectTypeSchemaAttributes(objectTypeSchema: ObjectTypeSchema): Either<InsightClientError, ObjectTypeSchema> =
+    private fun mapToPublicApiModel(apiResponse: ObjectTypeSchemaApiResponse): ObjectTypeSchema =
+        ObjectTypeSchema(
+            apiResponse.id,
+            apiResponse.name,
+            apiResponse.attributes.map { attributeApiResponse: ObjectTypeSchemaAttributeApiResponse ->
+                ObjectTypeSchemaAttribute(
+                    id = attributeApiResponse.id,
+                    name = attributeApiResponse.name,
+                    defaultType = attributeApiResponse.defaultType?.id?.let { DefaultType.parse(it) },
+                    options = attributeApiResponse.options,
+                    minimumCardinality = attributeApiResponse.minimumCardinality,
+                    maximumCardinality = attributeApiResponse.maximumCardinality,
+                    referenceType = attributeApiResponse.referenceType?.let {
+                        ObjectTypeSchemaAttributeReferenceType(it.id, it.name)
+                    },
+                    includeChildObjectTypes = attributeApiResponse.includeChildObjectTypes,
+                    type = InsightObjectAttributeType.parse(attributeApiResponse.id),
+                )
+
+            },
+            apiResponse.parentObjectTypeId,
+        )
+
+    private suspend fun populateObjectTypeSchemaAttributes(objectTypeSchema: ObjectTypeSchemaApiResponse): Either<InsightClientError, ObjectTypeSchemaApiResponse> =
         either {
-            val attributes = context.httpClient.executeRestList<ObjectTypeSchemaAttribute>(
+            val attributes = context.httpClient.executeRestList<ObjectTypeSchemaAttributeApiResponse>(
                 "GET",
                 "rest/insight/1.0/objecttype/${objectTypeSchema.id}/attributes",
                 emptyMap(),
                 null,
                 "application/json",
-                object : TypeToken<List<ObjectTypeSchemaAttribute>>() {}.type
+                object : TypeToken<List<ObjectTypeSchemaAttributeApiResponse>>() {}.type
             )
                 .map { it.body }
                 .mapLeft { it.toInsightClientError() }

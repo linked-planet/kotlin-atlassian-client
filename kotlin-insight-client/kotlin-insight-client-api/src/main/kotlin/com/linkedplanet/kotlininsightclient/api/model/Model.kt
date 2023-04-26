@@ -46,14 +46,20 @@ data class InsightObject(
 /**
  * See type attribute in response of https://insight-javadoc.riada.io/insight-javadoc-8.6/insight-rest/#object__id__attributes_get
  */
-enum class InsightObjectAttributeType(val value: Int) {
+enum class InsightObjectAttributeType(val attributeTypeId: Int) {
+    UNKNOWN(-1),
     DEFAULT(0),
     REFERENCE(1),
-    UNKNOWN(-1);
+    USER(2),
+    CONFLUENCE(3),
+    GROUP(4),
+    VERSION(5),
+    PROJECT(6),
+    STATUS(7);
 
     companion object {
         fun parse(value: Int) =
-            values().singleOrNull { it.value == value } ?: UNKNOWN
+            values().singleOrNull { it.attributeTypeId == value } ?: UNKNOWN
     }
 }
 
@@ -83,23 +89,49 @@ data class InsightAttribute(
 data class ObjectTypeSchema(
     val id: Int,
     val name: String,
-    var attributes: List<ObjectTypeSchemaAttribute>,
+    val attributes: List<ObjectTypeSchemaAttribute>,
     val parentObjectTypeId: Int?
 )
 
 data class ObjectTypeSchemaAttribute(
     val id: Int,
     val name: String,
-    val defaultType: ObjectTypeAttributeDefaultType?,
+    val defaultType: DefaultType?,
     val options: String,
     val minimumCardinality: Int,
     val maximumCardinality: Int,
-    val referenceType: ObjectTypeSchemaAttributeReferenceType?
+    val referenceType: ObjectTypeSchemaAttributeReferenceType?,
+    val includeChildObjectTypes: Boolean,
+//    val referenceObjectTypeId: Int?, // use referenceType.id
+    val type: InsightObjectAttributeType
 )
+
+// if attributeType is default, this determines which kind of default type the value is
+enum class DefaultType(var defaultTypeId: Int) {
+    NONE(-1),
+    TEXT(0),
+    INTEGER(1),
+    BOOLEAN(2),
+    DOUBLE(3),
+    DATE(4),
+    TIME(5),
+    DATE_TIME(6),
+    URL(7),
+    EMAIL(8),
+    TEXTAREA(9),
+    SELECT(10),
+    IPADDRESS(11);
+
+    companion object {
+        fun parse(defaultTypeId: Int) =
+            DefaultType.values().singleOrNull { it.defaultTypeId == defaultTypeId } ?: NONE
+    }
+}
 
 data class ObjectTypeSchemaAttributeReferenceType(
     val id: Int, // id 3, name = "Reference"; prefer an ENUM
     val name: String
+    //sdk also offers gives us objectSchemaId
 )
 
 data class ObjectTypeAttributeDefaultType(
@@ -116,7 +148,6 @@ data class InsightSchema(
     val objectTypeCount: Int
 )
 // endregion InsightSchemaOperator
-
 
 data class ObjectAttributeValue(
     var value: Any?,

@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
+import com.linkedplanet.kotlininsightclient.api.model.DefaultType
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -43,22 +44,22 @@ interface InsightObjectTypeOperatorTest {
 
         assertThat(objectType.attributes.size, equalTo(5))
 
-        val nameAttribute = objectType.attributes.singleOrNull {it.name == "Name"}
+        val nameAttribute = objectType.attributes.singleOrNull { it.name == "Name" }
         assertNotNull(nameAttribute)
         assertThat(nameAttribute?.referenceType, equalTo(null))
-        assertThat("Text", equalTo(nameAttribute?.defaultType?.name))
+        assertThat(nameAttribute?.defaultType, equalTo(DefaultType.TEXT))
 
-        val createdAttribute = objectType.attributes.singleOrNull {it.name == "Created"}
+        val createdAttribute = objectType.attributes.singleOrNull { it.name == "Created" }
         assertNotNull(createdAttribute)
         assertThat(createdAttribute?.referenceType, equalTo(null))
-        assertThat("DateTime", equalTo(createdAttribute?.defaultType?.name))
+        assertThat(createdAttribute?.defaultType, equalTo(DefaultType.DATE_TIME))
 
-        val countryAttribute = objectType.attributes.singleOrNull {it.name == "Country"}
+        val countryAttribute = objectType.attributes.singleOrNull { it.name == "Country" }
         assertNotNull(countryAttribute)
         assertThat(countryAttribute?.defaultType, equalTo(null))
-        assertThat("Reference", equalTo(countryAttribute?.referenceType?.name))
-        assertThat(0, equalTo(countryAttribute?.minimumCardinality))
-        assertThat(1, equalTo(countryAttribute?.maximumCardinality))
+        assertThat(countryAttribute?.referenceType?.name, equalTo("Reference"))
+        assertThat(countryAttribute?.minimumCardinality, equalTo(0))
+        assertThat(countryAttribute?.maximumCardinality, equalTo(1))
 
         println("### END testGetObjectType")
     }

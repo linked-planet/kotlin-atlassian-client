@@ -29,7 +29,9 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntries
+import com.linkedplanet.kotlininsightclient.http.model.ObjectAttributeValueApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectEditItem
+import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeAttributeDefaultTypeApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectUpdateResponse
 import com.linkedplanet.kotlininsightclient.http.model.getEditAttributes
 import com.linkedplanet.kotlininsightclient.http.model.toEditObjectItem
@@ -213,11 +215,19 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 it.objectTypeAttributeId,
                 it.objectTypeAttribute?.name,
                 attributeType,
-                it.objectTypeAttribute?.defaultType,
+                it.objectTypeAttribute?.defaultType?.let { dt: ObjectTypeAttributeDefaultTypeApiResponse ->
+                    ObjectTypeAttributeDefaultType(dt.id, dt.name)
+                },
                 it.objectTypeAttribute?.options,
                 it.objectTypeAttribute?.minimumCardinality,
                 it.objectTypeAttribute?.maximumCardinality,
-                it.objectAttributeValues
+                it.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
+                    ObjectAttributeValue(av.value, av.displayValue, av.referencedObject?.let { ro ->
+                        ReferencedObject(ro.id, ro.label, ro.objectKey, ro.objectType?.let { ot ->
+                            ReferencedObjectType(ot.id, ot.name)
+                        })
+                    })
+                }
             )
         }
         val objectSelf = "${context.baseUrl}/secure/insight/assets/${this.objectKey}"

@@ -19,9 +19,6 @@
  */
 package com.linkedplanet.kotlininsightclient.http.model
 
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType // TODO: do not mix our objects with atlassian rest responses
-
 // This file contains objects that are received from Insights REST API
 
 internal data class InsightObjectEntries(
@@ -54,7 +51,7 @@ internal data class InsightAttributeApiResponse(
     val objectTypeAttribute: ObjectTypeAttribute?,
     val objectTypeAttributeId: Int,
     val objectId: Int,
-    val objectAttributeValues: List<ObjectAttributeValue>
+    val objectAttributeValues: List<ObjectAttributeValueApiResponse>
 )
 
 internal data class ObjectTypeAttribute/*ApiResponse*/(
@@ -63,9 +60,38 @@ internal data class ObjectTypeAttribute/*ApiResponse*/(
     val referenceObjectTypeId: Int,
     val referenceObjectType: InsightMetaObjectType,
     val type: Int,
-    val defaultType: ObjectTypeAttributeDefaultType?,
+    val defaultType: ObjectTypeAttributeDefaultTypeApiResponse?,
     val options: String,
     val minimumCardinality: Int,
     val maximumCardinality: Int,
     val includeChildObjectTypes: Boolean
+)
+
+internal data class ObjectAttributeValueApiResponse(
+    var value: Any?,
+    var displayValue: Any?,
+    var referencedObject: ReferencedObjectApiResponse?,
+)
+
+internal data class ReferencedObjectApiResponse(
+    var id: Int,
+    var label: String,
+    var objectKey: String,
+    var objectType: ReferencedObjectTypeApiResponse?
+)
+
+internal data class ReferencedObjectTypeApiResponse(
+    val id: Int,
+    val name: String
+)
+
+internal data class ObjectTypeAttributeDefaultTypeApiResponse(
+    val id: Int,
+    val name: String
+)
+
+internal data class ObjectTypeSchemaAttributeReferenceTypeApiResponse(
+    val id: Int, // id 3, name = "Reference"; prefer an ENUM
+    val name: String,
+    val type: Int
 )

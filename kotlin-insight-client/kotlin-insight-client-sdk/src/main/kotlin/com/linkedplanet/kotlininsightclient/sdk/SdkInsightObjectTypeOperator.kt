@@ -23,16 +23,16 @@ import arrow.core.Either
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
+import com.linkedplanet.kotlininsightclient.api.model.DefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttributeReferenceType
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
-import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.DefaultType
+import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
-import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
 
 object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
 
@@ -71,7 +71,7 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
     }
 
     private fun attributesForObjectType(objectTypeId: Int): List<ObjectTypeSchemaAttribute> =
-        objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectTypeId).map { bean ->
+        objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectTypeId).map { bean: ObjectTypeAttributeBean ->
             bean.run {
                 ObjectTypeSchemaAttribute(
                     id,
@@ -80,21 +80,39 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
                     options,
                     minimumCardinality,
                     maximumCardinality,
-                    referenceTypeBean?.run { ObjectTypeSchemaAttributeReferenceType(id, name) }
+                    referenceTypeBean?.run { ObjectTypeSchemaAttributeReferenceType(id, name) },
+                    isIncludeChildObjectTypes,
+                    mapAttributeType(type)
                 )
             }
         }
 
-    private fun mapDefaultType(defaultType: DefaultType) =
-        when (defaultType) {
-            DefaultType.NONE -> null
-            else -> ObjectTypeAttributeDefaultType(
-                defaultType.defaultTypeId,
-                defaultType.name.upperCaseToPascalCase()
-            )
+    private fun mapAttributeType(type: ObjectTypeAttributeBean.Type): InsightObjectAttributeType =
+        when(type){
+            ObjectTypeAttributeBean.Type.DEFAULT -> InsightObjectAttributeType.DEFAULT
+            ObjectTypeAttributeBean.Type.REFERENCED_OBJECT -> InsightObjectAttributeType.REFERENCE
+            ObjectTypeAttributeBean.Type.USER -> InsightObjectAttributeType.USER
+            ObjectTypeAttributeBean.Type.CONFLUENCE -> InsightObjectAttributeType.CONFLUENCE
+            ObjectTypeAttributeBean.Type.GROUP -> InsightObjectAttributeType.GROUP
+            ObjectTypeAttributeBean.Type.VERSION -> InsightObjectAttributeType.VERSION
+            ObjectTypeAttributeBean.Type.PROJECT -> InsightObjectAttributeType.PROJECT
+            ObjectTypeAttributeBean.Type.STATUS -> InsightObjectAttributeType.STATUS
         }
 
-    private fun String.upperCaseToPascalCase() =
-        split("_").joinToString("") { it.lowercase().capitalizeAsciiOnly() }
-
+    private fun mapDefaultType(defaultType: ObjectTypeAttributeBean.DefaultType) =
+        when (defaultType) {
+            ObjectTypeAttributeBean.DefaultType.NONE -> DefaultType.NONE
+            ObjectTypeAttributeBean.DefaultType.TEXT -> DefaultType.TEXT
+            ObjectTypeAttributeBean.DefaultType.INTEGER -> DefaultType.INTEGER
+            ObjectTypeAttributeBean.DefaultType.BOOLEAN -> DefaultType.BOOLEAN
+            ObjectTypeAttributeBean.DefaultType.DOUBLE -> DefaultType.DOUBLE
+            ObjectTypeAttributeBean.DefaultType.DATE -> DefaultType.DATE
+            ObjectTypeAttributeBean.DefaultType.TIME -> DefaultType.TIME
+            ObjectTypeAttributeBean.DefaultType.DATE_TIME -> DefaultType.DATE_TIME
+            ObjectTypeAttributeBean.DefaultType.URL -> DefaultType.URL
+            ObjectTypeAttributeBean.DefaultType.EMAIL -> DefaultType.EMAIL
+            ObjectTypeAttributeBean.DefaultType.TEXTAREA -> DefaultType.TEXTAREA
+            ObjectTypeAttributeBean.DefaultType.SELECT -> DefaultType.SELECT
+            ObjectTypeAttributeBean.DefaultType.IPADDRESS -> DefaultType.IPADDRESS
+        }
 }
