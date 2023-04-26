@@ -23,18 +23,18 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 
 // this is serialized and sent to insight, so it is not part of the model we control
-data class ObjectEditItem(
+internal data class ObjectEditItem(
     val objectTypeId: Int,
     val attributes: List<ObjectEditItemAttribute>
 )
 
-fun InsightObject.toEditObjectItem() =
+internal fun InsightObject.toEditObjectItem() =
     ObjectEditItem(
         objectTypeId,
         getEditAttributes()
     )
 
-fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
+internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
     this.attributes.map { insightAttr ->
         val values = insightAttr.value.map {
             if (insightAttr.attributeType == InsightObjectAttributeType.REFERENCE) {
@@ -53,11 +53,11 @@ fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
         )
     }
 
-data class ObjectEditItemAttribute(
+internal data class ObjectEditItemAttribute(
     val objectTypeAttributeId: Int,
     val objectAttributeValues: List<ObjectEditItemAttributeValue>
 )
 
-data class ObjectEditItemAttributeValue(
+internal data class ObjectEditItemAttributeValue(
     val value: Any?
 )

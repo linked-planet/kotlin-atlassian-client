@@ -21,11 +21,11 @@ package com.linkedplanet.kotlininsightclient.http.model
 
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
 
-data class HttpInsightSchemaList(
+internal data class HttpInsightSchemaList(
     val objectschemas: List<InsightSchema>
 )
 
-data class ObjectUpdateResponse(
+internal data class ObjectUpdateResponse(
     val id: Int,
     val objectKey: String
 )

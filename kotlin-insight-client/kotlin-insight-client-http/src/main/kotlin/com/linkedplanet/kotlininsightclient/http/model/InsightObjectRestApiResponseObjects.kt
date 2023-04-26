@@ -24,12 +24,12 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefault
 
 // This file contains objects that are received from Insights REST API
 
-data class InsightObjectEntries(
+internal data class InsightObjectEntries(
     val totalFilterCount: Int,
     val objectEntries: List<InsightObjectApiResponse>
 )
 
-data class InsightObjectApiResponse(
+internal data class InsightObjectApiResponse(
     val id: Int,
     val label: String,
     val objectKey: String,
@@ -38,18 +38,18 @@ data class InsightObjectApiResponse(
     val extendedInfo: InsightExtendedInfo
 )
 
-data class InsightExtendedInfo/*ApiResponse*/(
+internal data class InsightExtendedInfo/*ApiResponse*/(
     val openIssuesExists: Boolean,
     val attachmentsExists: Boolean
 )
 
-data class InsightMetaObjectType/*ApiResponse*/(
+internal data class InsightMetaObjectType/*ApiResponse*/(
     val id: Int,
     val name: String,
     val objectSchemaId: Int
 )
 
-data class InsightAttributeApiResponse(
+internal data class InsightAttributeApiResponse(
     val id: Int,
     val objectTypeAttribute: ObjectTypeAttribute?,
     val objectTypeAttributeId: Int,
@@ -57,7 +57,7 @@ data class InsightAttributeApiResponse(
     val objectAttributeValues: List<ObjectAttributeValue>
 )
 
-data class ObjectTypeAttribute/*ApiResponse*/(
+internal data class ObjectTypeAttribute/*ApiResponse*/(
     val id: Int,
     val name: String,
     val referenceObjectTypeId: Int,
