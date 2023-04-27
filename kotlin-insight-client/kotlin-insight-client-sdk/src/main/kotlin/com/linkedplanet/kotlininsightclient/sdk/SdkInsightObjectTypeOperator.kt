@@ -101,7 +101,7 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
 
     private fun mapDefaultType(defaultType: ObjectTypeAttributeBean.DefaultType) =
         when (defaultType) {
-            ObjectTypeAttributeBean.DefaultType.NONE -> DefaultType.NONE
+            ObjectTypeAttributeBean.DefaultType.NONE -> null
             ObjectTypeAttributeBean.DefaultType.TEXT -> DefaultType.TEXT
             ObjectTypeAttributeBean.DefaultType.INTEGER -> DefaultType.INTEGER
             ObjectTypeAttributeBean.DefaultType.BOOLEAN -> DefaultType.BOOLEAN

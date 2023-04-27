@@ -108,7 +108,7 @@ data class ObjectTypeSchemaAttribute(
 
 // if attributeType is default, this determines which kind of default type the value is
 enum class DefaultType(var defaultTypeId: Int) {
-    NONE(-1),
+//    NONE(-1),  HTTP API models this with null, sdk with NONE
     TEXT(0),
     INTEGER(1),
     BOOLEAN(2),
@@ -123,8 +123,8 @@ enum class DefaultType(var defaultTypeId: Int) {
     IPADDRESS(11);
 
     companion object {
-        fun parse(defaultTypeId: Int) =
-            DefaultType.values().singleOrNull { it.defaultTypeId == defaultTypeId } ?: NONE
+        fun parse(defaultTypeId: Int): DefaultType? =
+            DefaultType.values().singleOrNull { it.defaultTypeId == defaultTypeId }
     }
 }
 
