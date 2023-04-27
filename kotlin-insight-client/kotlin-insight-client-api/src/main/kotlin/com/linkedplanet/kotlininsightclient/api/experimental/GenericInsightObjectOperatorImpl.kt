@@ -28,23 +28,27 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOper
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
+import com.linkedplanet.kotlininsightclient.api.model.addReference
 import com.linkedplanet.kotlininsightclient.api.model.getAttribute
+import com.linkedplanet.kotlininsightclient.api.model.isReference
 import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
 import com.linkedplanet.kotlininsightclient.api.model.setValue
+import com.linkedplanet.kotlininsightclient.api.model.setValueList
 import jdk.jfr.Experimental
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KType
+import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.typeOf
 
 /**
- * TODO: add support for collections
  * idea: check type safety when operator is initialized
  * idea: automatically create insight object types when they do not exist already
  * idea: Semi-Automatic but overridable manual mapping
@@ -58,7 +62,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
     // having InsightObject as return type will prevent us to change the internal implementation later on
     private val insightObjectForDomainObject: suspend (objectTypeId: Int, domainObject: DomainType) -> Either<InsightClientError, InsightObject?>,
     private val referenceAttributeToValue: suspend (attribute: InsightAttribute) -> Any? = { null },
-    private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> Int? = { _, _ -> null },
+    private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<Int> = { _, _ -> emptyList() },
 ) : GenericInsightObjectOperator<DomainType> {
     private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
     var objectTypeSchema: ObjectTypeSchema
@@ -86,31 +90,38 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
 
     override suspend fun create(domainObject: DomainType): Either<InsightClientError, Int> = either {
         val insightObject = insightObjectOperator.createObject(objectTypeSchema.id) { io ->
-            io.setAttributesFromDomainObject(domainObject)
+            setAttributesFromDomainObject(io, domainObject)
         }.bind()
         insightObject.id
     }
 
     override suspend fun update(domainObject: DomainType): Either<InsightClientError, Int> = either {
         val insightObject = insightObjectForDomainObject(objectTypeSchema.id, domainObject).bind()!!
-        insightObject.setAttributesFromDomainObject(domainObject)
+        setAttributesFromDomainObject(insightObject, domainObject)
         insightObjectOperator.updateObject(insightObject).bind()
         insightObject.objectTypeId
     }
 
-    private suspend fun InsightObject.setAttributesFromDomainObject(domainObject: DomainType) {
+    private suspend fun setAttributesFromDomainObject(insightObject: InsightObject, domainObject: DomainType) {
         props.forEach { prop ->
             val attribute = attrsMap[prop.name.lowercase()]!!
+            val value = prop.get(domainObject)
             if (attribute.referenceType == null) {
-                setValue(attribute.id, prop.get(domainObject))
+                if (value is List<Any?>) {
+                    insightObject.setValueList(attribute.id, value)
+                } else {
+                    insightObject.setValue(attribute.id, value)
+                }
             } else {
-                val referencedObjectId =
-                    this@GenericInsightObjectOperatorImpl.attributeToReferencedObjectId(
-                        attribute,
-                        prop.get(domainObject)
-                    )
-                if (referencedObjectId != null) {
-                    setSingleReference(attribute.id, referencedObjectId)
+                val referencedObjectIds = attributeToReferencedObjectId(attribute, value)
+                if (value is List<Any?>) {
+                    referencedObjectIds.forEach {
+                            insightObject.addReference(attribute.id, it)
+                        }
+                } else {
+                    if (referencedObjectIds.isNotEmpty()) {
+                        insightObject.setSingleReference(attribute.id, referencedObjectIds.first())
+                    }
                 }
             }
         }
@@ -145,11 +156,11 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         val constructor = klass.primaryConstructor!!
         val args = constructor.parameters.map { param ->
             val attributeId = attrsMap[param.name!!.lowercase()]!!.id
-            val attribute = insightObject.getAttribute(attributeId)!!
-            val mappedValue = if (attribute.attributeType != InsightObjectAttributeType.DEFAULT) {
-                referenceAttributeToValue(attribute)
-            } else {
-                defaultAttributeToValue(attribute, param).bind()
+            val attribute = insightObject.getAttribute(attributeId)
+            val mappedValue = when {
+                attribute?.isReference() == true -> referenceAttributeToValue(attribute)
+                param.type.isSubtypeOf(typeOf<List<Any>>()) -> extractListValues(param, attribute).bind()
+                else -> defaultAttributeToValue(attribute?.value?.single()?.value?.toString(), param.type).bind()
             }
             mappedValue
 
@@ -158,13 +169,24 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         domainObject
     }
 
+    private suspend fun extractListValues(
+        param: KParameter,
+        attribute: InsightAttribute?
+    ): Either<InsightClientError, List<Any?>> = either {
+        if (attribute == null) return@either emptyList()
+        val genericTypeParam: KType = param.type.arguments.first().type!!
+        attribute.value.map { objectAttributeValue ->
+            defaultAttributeToValue(objectAttributeValue.value.toString(), genericTypeParam).bind()
+        }
+    }
+
     private suspend fun defaultAttributeToValue(
-        attribute: InsightAttribute,
-        param: KParameter
+        valueAsString: String?,
+        kType: KType
     ): Either<InsightClientError, Any?> = either {
-        val value: String? = attribute.value.single().value?.toString()
+        val value: String? = valueAsString
         value?.let {
-            when (param.type.classifier) {
+            when (kType.classifier) {
                 String::class -> value
                 Int::class -> value.toInt()
                 Boolean::class -> value.toBoolean()

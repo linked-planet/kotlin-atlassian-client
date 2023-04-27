@@ -49,16 +49,14 @@ interface InsightObjectOperatorTest {
     @Test
     fun testGenericInsightObjectOperatorCrud() = runBlocking {
         val countryOperator =
-            GenericInsightObjectOperatorImpl(
-                klass = Country::class,
+            GenericInsightObjectOperatorImpl(Country::class,
                 insightObjectForDomainObject = { objectTypeId: Int, domainObject: Country ->
                     insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
                 }
             )
 
         val companyOperator =
-            GenericInsightObjectOperatorImpl(
-                klass = Company::class,
+            GenericInsightObjectOperatorImpl(Company::class,
                 insightObjectForDomainObject = { objectTypeId: Int, domainObject: Company ->
                     insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
                 },
@@ -67,10 +65,12 @@ interface InsightObjectOperatorTest {
                     val eitherMovie = countryOperator.getById(movie)
                     eitherMovie.orNull()!!
                 },
-                attributeToReferencedObjectId = { _: ObjectTypeSchemaAttribute, obj: Any? ->
+                attributeToReferencedObjectId = { schema: ObjectTypeSchemaAttribute, obj: Any? ->
                     val country = obj as Country
-                    insightObjectOperator.getObjectByName(countryOperator.objectTypeSchema.id, country.name)
-                        .orNull()?.id
+                    listOfNotNull(
+                        insightObjectOperator.getObjectByName(schema.referenceType!!.id, country.name)
+                            .orNull()?.id
+                    )
                 }
             )
 
@@ -85,16 +85,62 @@ interface InsightObjectOperatorTest {
 
         companyOperator.delete(company).orFail()
         countryOperator.delete(country).orFail()
+        try {
+            countryOperator.create(country).orFail()
+            val countryByName = countryOperator.getByName(country.name).orFail()
+            assertThat(countryByName, equalTo(country))
+            companyOperator.create(company).orFail()
+            val companyByName = companyOperator.getByName(company.name).orFail()
+            assertThat(companyByName, equalTo(company))
+        } finally {
+            companyOperator.delete(company).orFail()
+            countryOperator.delete(country).orFail()
+        }
+    }
 
-        countryOperator.create(country).orFail()
-        val countryByName = countryOperator.getByName(country.name).orFail()
-        assertThat(countryByName, equalTo(country))
-        companyOperator.create(company).orFail()
-        val companyByName = companyOperator.getByName(company.name).orFail()
-        assertThat(companyByName, equalTo(company))
+    @Test
+    fun testGenericInsightObjectOperatorCrudWithListAttribute() = runBlocking {
+        println("### START object_testGenericInsightObjectOperatorCrudWithListAttribute")
 
-        companyOperator.delete(company).orFail()
-        countryOperator.delete(country).orFail()
+        val simpleObjectOperator = GenericInsightObjectOperatorImpl(SimpleObject::class,
+            insightObjectForDomainObject = { objectTypeId: Int, domainObject: SimpleObject ->
+                insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
+            }
+        )
+        val testWithListsOperator = GenericInsightObjectOperatorImpl(TestWithLists::class,
+            insightObjectForDomainObject = { objectTypeId: Int, domainObject: TestWithLists ->
+                insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
+            },
+            referenceAttributeToValue = { insightAttribute ->
+                val listOfObjects = insightAttribute.value
+                    .mapNotNull { it.referencedObject?.id }
+                    .mapNotNull { id -> simpleObjectOperator.getById(id).orNull() }
+                listOfObjects
+            },
+            attributeToReferencedObjectId = { schema: ObjectTypeSchemaAttribute, domainObjects ->
+                (domainObjects as List<*>)
+                    .mapNotNull { it as? SimpleObject }
+                    .mapNotNull {
+                        insightObjectOperator.getObjectByName(schema.referenceType!!.id, it.name).orNull()?.id
+                    }
+            }
+        )
+
+        val simpleObjects = listOf("Object2", "Object3").map { simpleObjectOperator.getByName(it).orFail()!! }
+        val objWithLists = TestWithLists(
+            name = "CreatedByIntegrationTest",
+            itemList = simpleObjects,
+            stringList = listOf("A", "B", "C")
+        )
+
+        testWithListsOperator.delete(objWithLists).orFail()
+        try {
+            testWithListsOperator.create(objWithLists).orFail()
+            val byName = testWithListsOperator.getByName(objWithLists.name).orFail()
+            assertThat(byName, equalTo(objWithLists))
+        } finally {
+            testWithListsOperator.delete(objWithLists).orFail()
+        }
     }
 
     @Test

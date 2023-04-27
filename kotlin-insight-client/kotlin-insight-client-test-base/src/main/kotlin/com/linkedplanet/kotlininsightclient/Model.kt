@@ -56,3 +56,15 @@ data class Country(
     val name: String,
     val shortName: String,
 )
+
+data class SimpleObject(
+    val name: String,
+    val firstName: String,
+    val lastName: String,
+)
+
+data class TestWithLists(
+    val name: String,
+    val itemList: List<SimpleObject>,
+    val stringList: List<String>,
+)
