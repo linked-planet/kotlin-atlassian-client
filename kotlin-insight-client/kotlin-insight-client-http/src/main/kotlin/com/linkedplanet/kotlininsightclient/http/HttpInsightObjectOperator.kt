@@ -32,7 +32,7 @@ import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntries
 import com.linkedplanet.kotlininsightclient.http.model.ObjectAttributeValueApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectEditItem
 import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeAttributeDefaultTypeApiResponse
-import com.linkedplanet.kotlininsightclient.http.model.ObjectUpdateResponse
+import com.linkedplanet.kotlininsightclient.http.model.ObjectUpdateApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.getEditAttributes
 import com.linkedplanet.kotlininsightclient.http.model.toEditObjectItem
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
@@ -102,13 +102,13 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
-        context.httpClient.executeRest<ObjectUpdateResponse>(
+        context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "PUT",
             "rest/insight/1.0/object/${obj.id}",
             emptyMap(),
             GSON.toJson(obj.toEditObjectItem()),
             "application/json",
-            ObjectUpdateResponse::class.java
+            ObjectUpdateApiResponse::class.java
         )
             .map { updateResponse -> getObjectById(updateResponse.body!!.id).map { it!! } }
             .mapLeft { it.toInsightClientError() }
@@ -138,13 +138,13 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             obj.getEditAttributes()
         )
         // TODO: ensure object type has the specified attributes
-        val response = context.httpClient.executeRest<ObjectUpdateResponse>(
+        val response = context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "POST",
             "rest/insight/1.0/object/create",
             emptyMap(),
             GSON.toJson(editItem),
             "application/json",
-            ObjectUpdateResponse::class.java
+            ObjectUpdateApiResponse::class.java
         )
         obj.id = response.mapLeft { it.toInsightClientError() }.bind().body!!.id
         getObjectById(obj.id).bind()!!

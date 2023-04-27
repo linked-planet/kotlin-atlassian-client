@@ -30,17 +30,17 @@ internal data class InsightObjectApiResponse(
     val id: Int,
     val label: String,
     val objectKey: String,
-    val objectType: InsightMetaObjectType,
+    val objectType: InsightMetaObjectTypeApiResponse,
     val attributes: List<InsightAttributeApiResponse>,
-    val extendedInfo: InsightExtendedInfo
+    val extendedInfo: InsightExtendedInfoApiResponse
 )
 
-internal data class InsightExtendedInfo/*ApiResponse*/(
+internal data class InsightExtendedInfoApiResponse(
     val openIssuesExists: Boolean,
     val attachmentsExists: Boolean
 )
 
-internal data class InsightMetaObjectType/*ApiResponse*/(
+internal data class InsightMetaObjectTypeApiResponse(
     val id: Int,
     val name: String,
     val objectSchemaId: Int
@@ -48,17 +48,17 @@ internal data class InsightMetaObjectType/*ApiResponse*/(
 
 internal data class InsightAttributeApiResponse(
     val id: Int,
-    val objectTypeAttribute: ObjectTypeAttribute?,
+    val objectTypeAttribute: ObjectTypeAttributeApiResponse?,
     val objectTypeAttributeId: Int,
     val objectId: Int,
     val objectAttributeValues: List<ObjectAttributeValueApiResponse>
 )
 
-internal data class ObjectTypeAttribute/*ApiResponse*/(
+internal data class ObjectTypeAttributeApiResponse(
     val id: Int,
     val name: String,
     val referenceObjectTypeId: Int,
-    val referenceObjectType: InsightMetaObjectType,
+    val referenceObjectType: InsightMetaObjectTypeApiResponse,
     val type: Int,
     val defaultType: ObjectTypeAttributeDefaultTypeApiResponse?,
     val options: String,
