@@ -46,7 +46,7 @@ interface InsightObjectOperatorTest {
     val insightSchemaOperator: InsightSchemaOperator
 
     @Test
-    fun testReflectionFun() = runBlocking {
+    fun testGenericInsightObjectOperatorCrud() = runBlocking {
         val countryOperator =
             GenericInsightObjectOperatorImpl(
                 klass = Country::class,
