@@ -60,6 +60,11 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> =
         getObjectByPlainIQL("objectTypeId=$objectTypeId AND Name=\"$name\"")
 
+    override suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>> {
+        val iql = "objectType=$objectTypeName"
+        return getObjectsByIQL(iql, 1, Int.MAX_VALUE).map { it.objects }
+    }
+
     override suspend fun getObjectsByIQL(
         objectTypeId: Int,
         iql: String,

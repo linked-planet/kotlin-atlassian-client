@@ -37,6 +37,7 @@ import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -200,6 +201,14 @@ interface InsightObjectOperatorTest {
 
         assertFalse(company.attachmentsExist)
         println("### END object_testObjectById")
+    }
+
+    @Test
+    fun testGetObjectsByObjectTypeName() = runBlocking {
+        println("### START object_testGetObjecsByObjectTypeName")
+        val objs = insightObjectOperator.getObjectsByObjectTypeName("Country").orFail()
+        val allCountryNames = objs.map { it.getStringValue(InsightAttribute.CountryName.attributeId) }
+        assertThat(allCountryNames, Matchers.hasItem("Germany")) // among other items
     }
 
     @Test

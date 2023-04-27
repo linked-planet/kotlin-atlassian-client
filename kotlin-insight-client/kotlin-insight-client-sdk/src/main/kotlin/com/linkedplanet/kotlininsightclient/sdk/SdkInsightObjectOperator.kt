@@ -76,6 +76,11 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objs.firstOrNull()
         }.flatMap { it.toNullableInsightObject() }
 
+    override suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>> {
+        val iql = "objectType=$objectTypeName"
+        return getObjectsByIQL(iql, 1, Int.MAX_VALUE).map { it.objects }
+    }
+
     override suspend fun getObjects(
         objectTypeId: Int,
         withChildren: Boolean,

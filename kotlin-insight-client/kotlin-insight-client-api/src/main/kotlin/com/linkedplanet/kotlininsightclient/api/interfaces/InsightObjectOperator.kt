@@ -41,6 +41,8 @@ interface InsightObjectOperator {
 
     suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?>
 
+    suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>>
+
     suspend fun getObjectsByIQL(
         objectTypeId: Int,
         iql: String,
