@@ -125,7 +125,7 @@ interface InsightObjectOperatorTest {
             }
         )
 
-        val simpleObjects = listOf("Object2", "Object3").map { simpleObjectOperator.getByName(it).orFail()!! }
+        val simpleObjects = simpleObjectOperator.getByIQL("Name in (Object2, Object3)").orFail()
         val objWithLists = TestWithLists(
             name = "CreatedByIntegrationTest",
             itemList = simpleObjects,

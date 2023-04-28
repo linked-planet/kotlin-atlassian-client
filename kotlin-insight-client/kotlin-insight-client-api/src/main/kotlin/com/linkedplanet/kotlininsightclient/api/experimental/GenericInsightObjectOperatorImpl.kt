@@ -148,6 +148,19 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         domainObjectByInsightObject(insightObject).bind()
     }
 
+    override suspend fun getByIQL(
+        iql: String,
+        withChildren: Boolean,
+        pageFrom: Int,
+        perPage: Int
+    ): Either<InsightClientError, List<DomainType>> = either {
+        val insightObjects =
+            insightObjectOperator.getObjectsByIQL(objectTypeSchema.id, iql, withChildren, pageFrom, perPage)
+                .bind()
+        insightObjects.objects.map {
+            domainObjectByInsightObject(it).bind()
+        }
+    }
 
     override suspend fun getById(objectId: Int): Either<InsightClientError, DomainType?> = either {
         val insightObject = insightObjectOperator.getObjectById(objectId).bind()

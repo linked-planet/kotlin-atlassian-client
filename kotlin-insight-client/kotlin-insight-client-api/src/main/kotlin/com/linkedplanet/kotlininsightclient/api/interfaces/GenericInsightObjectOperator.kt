@@ -34,4 +34,11 @@ interface GenericInsightObjectOperator<DomainType> {
 
     suspend fun getById(objectId: Int): Either<InsightClientError, DomainType?>
 
+    suspend fun getByIQL(
+        iql: String,
+        withChildren: Boolean = false,
+        pageFrom: Int = 1,
+        perPage: Int = Int.MAX_VALUE
+    ): Either<InsightClientError, List<DomainType>>
+
 }
