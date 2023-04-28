@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -46,18 +47,18 @@ interface InsightObjectTypeOperatorTest {
 
         val nameAttribute = objectType.attributes.singleOrNull { it.name == "Name" }
         assertNotNull(nameAttribute)
-        assertThat(nameAttribute?.referenceType, equalTo(null))
+        assertThat(nameAttribute?.referenceKind, equalTo(null))
         assertThat(nameAttribute?.defaultType, equalTo(DefaultType.TEXT))
 
         val createdAttribute = objectType.attributes.singleOrNull { it.name == "Created" }
         assertNotNull(createdAttribute)
-        assertThat(createdAttribute?.referenceType, equalTo(null))
+        assertThat(createdAttribute?.referenceKind, equalTo(null))
         assertThat(createdAttribute?.defaultType, equalTo(DefaultType.DATE_TIME))
 
         val countryAttribute = objectType.attributes.singleOrNull { it.name == "Country" }
         assertNotNull(countryAttribute)
         assertThat(countryAttribute?.defaultType, equalTo(null))
-        assertThat(countryAttribute?.referenceType?.name, equalTo("Reference"))
+        assertThat(countryAttribute?.referenceKind, equalTo(ReferenceKind.REFERENCE))
         assertThat(countryAttribute?.minimumCardinality, equalTo(0))
         assertThat(countryAttribute?.maximumCardinality, equalTo(1))
 

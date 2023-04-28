@@ -100,9 +100,9 @@ data class ObjectTypeSchemaAttribute(
     val options: String,
     val minimumCardinality: Int,
     val maximumCardinality: Int,
-    val referenceType: ObjectTypeSchemaAttributeReferenceType?,
+    val referenceKind: ReferenceKind?,
     val includeChildObjectTypes: Boolean,
-//    val referenceObjectTypeId: Int?, // use referenceType.id
+    val referenceObjectTypeId: Int?, // objectTypeId of the referenced object
     val type: InsightObjectAttributeType
 )
 
@@ -128,11 +128,21 @@ enum class DefaultType(var defaultTypeId: Int) {
     }
 }
 
-data class ObjectTypeSchemaAttributeReferenceType(
-    val id: Int, // id 3, name = "Reference"; prefer an ENUM
-    val name: String
-    //sdk also offers gives us objectSchemaId
-)
+/**
+ * This is the "Additional Value" one can select when choosing object as the attribute type.
+ */
+enum class ReferenceKind(var referenceKindId: Int) {
+    UNKNOWN(-1),
+    DEPENDENCY(1),
+    LINK(2),
+    REFERENCE(3),
+    FINANCIAL(4),
+    TECHNICAL(5);
+    companion object {
+        fun parse(referenceKindId: Int): ReferenceKind =
+            ReferenceKind.values().singleOrNull { it.referenceKindId == referenceKindId } ?: UNKNOWN
+    }
+}
 
 data class ObjectTypeAttributeDefaultType(
     val id: Int,

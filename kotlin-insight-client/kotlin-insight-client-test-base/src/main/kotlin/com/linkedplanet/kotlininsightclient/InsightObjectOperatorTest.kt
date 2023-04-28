@@ -54,7 +54,6 @@ interface InsightObjectOperatorTest {
                     insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
                 }
             )
-
         val companyOperator =
             GenericInsightObjectOperatorImpl(Company::class,
                 insightObjectForDomainObject = { objectTypeId: Int, domainObject: Company ->
@@ -68,7 +67,7 @@ interface InsightObjectOperatorTest {
                 attributeToReferencedObjectId = { schema: ObjectTypeSchemaAttribute, obj: Any? ->
                     val country = obj as Country
                     listOfNotNull(
-                        insightObjectOperator.getObjectByName(schema.referenceType!!.id, country.name)
+                        insightObjectOperator.getObjectByName(schema.referenceObjectTypeId!!, country.name)
                             .orNull()?.id
                     )
                 }
@@ -121,7 +120,7 @@ interface InsightObjectOperatorTest {
                 (domainObjects as List<*>)
                     .mapNotNull { it as? SimpleObject }
                     .mapNotNull {
-                        insightObjectOperator.getObjectByName(schema.referenceType!!.id, it.name).orNull()?.id
+                        insightObjectOperator.getObjectByName(schema.referenceObjectTypeId!!, it.name).orNull()?.id
                     }
             }
         )

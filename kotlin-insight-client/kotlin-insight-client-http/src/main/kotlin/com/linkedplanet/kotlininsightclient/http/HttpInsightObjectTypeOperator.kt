@@ -30,7 +30,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttributeReferenceType
+import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
 import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeSchemaApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeSchemaAttributeApiResponse
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
@@ -100,10 +100,11 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
                     options = attributeApiResponse.options,
                     minimumCardinality = attributeApiResponse.minimumCardinality,
                     maximumCardinality = attributeApiResponse.maximumCardinality,
-                    referenceType = attributeApiResponse.referenceType?.let {
-                        ObjectTypeSchemaAttributeReferenceType(it.id, it.name)
+                    referenceKind = attributeApiResponse.referenceType?.let {
+                        ReferenceKind.parse(it.id)
                     },
                     includeChildObjectTypes = attributeApiResponse.includeChildObjectTypes,
+                    referenceObjectTypeId = attributeApiResponse.referenceObjectTypeId,
                     type = InsightObjectAttributeType.parse(attributeApiResponse.id),
                 )
 

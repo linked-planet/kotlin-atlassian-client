@@ -27,7 +27,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttributeReferenceType
+import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
@@ -80,8 +80,9 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
                     options,
                     minimumCardinality,
                     maximumCardinality,
-                    referenceTypeBean?.run { ObjectTypeSchemaAttributeReferenceType(id, name) },
+                    referenceTypeBean?.run { ReferenceKind.parse(id) },
                     isIncludeChildObjectTypes,
+                    referenceObjectTypeId,
                     mapAttributeType(type)
                 )
             }

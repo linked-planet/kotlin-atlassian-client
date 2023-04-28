@@ -106,7 +106,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         props.forEach { prop ->
             val attribute = attrsMap[prop.name.lowercase()]!!
             val value = prop.get(domainObject)
-            if (attribute.referenceType == null) {
+            if (attribute.referenceKind == null) {
                 if (value is List<Any?>) {
                     insightObject.setValueList(attribute.id, value)
                 } else {
