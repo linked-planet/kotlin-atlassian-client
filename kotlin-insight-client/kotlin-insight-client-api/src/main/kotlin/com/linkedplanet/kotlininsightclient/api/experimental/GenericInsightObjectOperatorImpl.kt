@@ -28,6 +28,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOper
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addReference
@@ -106,23 +107,27 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         props.forEach { prop ->
             val attribute = attrsMap[prop.name.lowercase()]!!
             val value = prop.get(domainObject)
-            if (attribute.referenceKind == null) {
-                if (value is List<Any?>) {
-                    insightObject.setValueList(attribute.id, value)
-                } else {
-                    insightObject.setValue(attribute.id, value)
-                }
-            } else {
-                val referencedObjectIds = attributeToReferencedObjectId(attribute, value)
-                if (value is List<Any?>) {
-                    referencedObjectIds.forEach {
-                            insightObject.addReference(attribute.id, it)
-                        }
-                } else {
-                    if (referencedObjectIds.isNotEmpty()) {
-                        insightObject.setSingleReference(attribute.id, referencedObjectIds.first())
+            when (attribute.type) {
+                InsightObjectAttributeType.DEFAULT -> {
+                    if (value is List<Any?>) {
+                        insightObject.setValueList(attribute.id, value)
+                    } else {
+                        insightObject.setValue(attribute.id, value)
                     }
                 }
+                InsightObjectAttributeType.REFERENCE -> {
+                    val referencedObjectIds = attributeToReferencedObjectId(attribute, value)
+                    if (value is List<Any?>) {
+                        referencedObjectIds.forEach {
+                            insightObject.addReference(attribute.id, it)
+                        }
+                    } else {
+                        if (referencedObjectIds.isNotEmpty()) {
+                            insightObject.setSingleReference(attribute.id, referencedObjectIds.first())
+                        }
+                    }
+                }
+                else -> invalidArgumentError<DomainType>("Attribute.type ${attribute.type.name} is not supported")
             }
         }
     }
@@ -197,15 +202,17 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
                 Long::class -> value.toLong()
                 Float::class -> value.toFloat()
                 Number::class -> value.toDouble()
-                else -> invalidArgumentError<DomainType?>().bind()
+                else -> invalidArgumentError<DomainType?>(
+                    "kType.classifier ${kType.classifier} is not supported."
+                ).bind()
             }
         }
     }
 
-    private fun <T> invalidArgumentError(): Either<InsightClientError, T> = Either.Left(
+    private fun <T> invalidArgumentError(message: String): Either<InsightClientError, T> = Either.Left(
         InsightClientError(
             "InvalidArgumentError",
-            "attribute is Type.Default, but type is unknown"
+            message
         )
     )
 }

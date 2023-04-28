@@ -105,7 +105,7 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
                     },
                     includeChildObjectTypes = attributeApiResponse.includeChildObjectTypes,
                     referenceObjectTypeId = attributeApiResponse.referenceObjectTypeId,
-                    type = InsightObjectAttributeType.parse(attributeApiResponse.id),
+                    type = InsightObjectAttributeType.parse(attributeApiResponse.type),
                 )
 
             },
