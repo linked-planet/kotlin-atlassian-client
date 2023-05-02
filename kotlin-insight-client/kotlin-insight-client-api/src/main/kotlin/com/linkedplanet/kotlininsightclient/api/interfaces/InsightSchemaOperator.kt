@@ -23,9 +23,23 @@ import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
 
+/**
+ * This interface provides methods to retrieve information about Insight schemas.
+ */
 interface InsightSchemaOperator {
 
+    /**
+     * Retrieves a list of all Insight schemas.
+     *
+     * @return Either an [InsightClientError] or a list of [InsightSchema]s.
+     */
     suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>>
 
+    /**
+     * Retrieves a specific Insight schema by its ID.
+     *
+     * @param id The ID of the schema to retrieve.
+     * @return Either an [InsightClientError] or the [InsightSchema] with the specified ID.
+     */
     suspend fun getSchema(id: Int): Either<InsightClientError, InsightSchema>
 }

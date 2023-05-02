@@ -23,21 +23,54 @@ import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 
+/**
+ * The InsightAttachmentOperator interface provides methods to interact with attachments belonging to an InsightObject.
+ */
 interface InsightAttachmentOperator {
 
+    /**
+     * Returns a list of attachments for the specified insight object.
+     *
+     * @param objectId The id of the insight object the attachment belongs to
+     * @return Either an [InsightClientError] or a list of [InsightAttachment] objects
+     */
     suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>>
 
+    /**
+     * Downloads the attachment content from the specified URL.
+     *
+     * @param url The URL of the attachment to download
+     * @return Either an [InsightClientError] or a [ByteArray] containing the attachment data
+     */
     suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray>
 
+    /**
+     * Downloads a zip file containing all attachments for the specified insight object.
+     *
+     * @param objectId The id of the insight object to download attachments for
+     * @return Either an [InsightClientError] or a [ByteArray] containing the zip file data
+     */
     suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray>
 
+    /**
+     * Uploads an attachment to the specified insight object.
+     *
+     * @param objectId The id of the insight object to upload the attachment to
+     * @param filename The name of the attachment file (not the path to the file, so avoid "/")
+     * @param byteArray The byte array containing the attachment data
+     * @return Either an [InsightClientError] or a list of [InsightAttachment] objects
+     */
     suspend fun uploadAttachment(
         objectId: Int,
         filename: String,
         byteArray: ByteArray
-        // comment is not supported due to AtlasHttpClient missing support for multipart uploads
-        // git history contains the code for ktor and sdk
     ): Either<InsightClientError, List<InsightAttachment>>
 
+    /**
+     * Deletes the specified attachment.
+     *
+     * @param attachmentId The id of the attachment to delete
+     * @return Either an [InsightClientError] or Unit if the deletion was successful
+     */
     suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit>
 }
