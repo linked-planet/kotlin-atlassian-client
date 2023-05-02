@@ -115,8 +115,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> =
         catchAsInsightClientError {
-            val objs = iqlFacade.findObjects(iql)
-            objs.size
+            val objs = iqlFacade.findObjects(iql, 0, 1)
+            objs.totalFilterSize
         }
 
     @Suppress("DEPRECATION") // fix it with the newest insight version

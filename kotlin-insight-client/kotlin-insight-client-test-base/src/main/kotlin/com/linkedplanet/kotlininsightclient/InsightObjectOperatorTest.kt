@@ -535,4 +535,12 @@ interface InsightObjectOperatorTest {
 
         println("### END testGetObjectsWithChildrenPaginated")
     }
+
+    @Test
+    fun testObjectCount() = runBlocking {
+        println("### START object_testGetObjectsWithChildrenPaginated")
+        val count = insightObjectOperator.getObjectCount("objectType = Many").orFail()
+        assertThat(count, equalTo(55))
+    }
+
 }
