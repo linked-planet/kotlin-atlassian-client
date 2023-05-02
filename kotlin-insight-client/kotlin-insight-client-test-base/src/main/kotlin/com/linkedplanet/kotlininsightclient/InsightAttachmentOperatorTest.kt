@@ -24,6 +24,7 @@ import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryShortName
 import com.linkedplanet.kotlininsightclient.InsightObject.Country
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
@@ -70,7 +71,7 @@ interface InsightAttachmentOperatorTest {
     fun attachmentTestAttachmentCRUD() = runBlocking {
         println("### START attachment_testDownloadAttachment")
 
-        makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
+        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
         val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
         val country = insightObjectOperator.createObject(Country.id) {
             it.setValue(CountryName.attributeId, "Attachistan")
@@ -90,25 +91,17 @@ interface InsightAttachmentOperatorTest {
         insightAttachmentOperator.deleteAttachment(attachment.id).orFail()
         assertThat(insightAttachmentOperator.downloadAttachment(attachment.url).isLeft(), equalTo(true))
 
-        makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
+        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
 
         println("### END attachment_testDownloadAttachment")
     }
 
-    suspend fun makeSureObjectWithNameDoesNotExist(objectTypeId: Int, name: String) {
-        val objectBeforeTest = insightObjectOperator.getObjectByName(objectTypeId, name).orFail()
-        if (objectBeforeTest != null) {
-            insightObjectOperator.deleteObject(objectBeforeTest.id)
-        }
-        assertThat(insightObjectOperator.getObjectByName(objectTypeId, name).orFail(), equalTo(null))
-        //if the former assertion failed that means deleteObject is not working, so this attachment test fails too
-    }
 
     @Test
     fun attachmentTestGetAttachmentsForNotExistingObject() = runBlocking {
         println("### Integration Test Start: testGetAttachmentsForNotExistingObject")
 
-        val responseError = insightAttachmentOperator.getAttachments(-1).asError()
+        val responseError = insightAttachmentOperator.getAttachments(InsightObjectId.notPersistedObjectId).asError()
         assertThat(responseError.message, containsString("-1"))
 
         println("### Integration Test End: testGetAttachmentsForNotExistingObject")
@@ -117,7 +110,7 @@ interface InsightAttachmentOperatorTest {
     @Test
     fun attachmentTestDownloadNonExistingAttachment() = runBlocking {
         println("### Integration Test Start: testDownloadNonExistingAttachment")
-        makeSureObjectWithNameDoesNotExist(Country.id, "NoAttachment")
+        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "NoAttachment")
 
         val disclaimer = "'NoAttachment' created by Test and should only exist during test run."
         val country = insightObjectOperator.createObject(Country.id) {
@@ -128,14 +121,14 @@ interface InsightAttachmentOperatorTest {
         val emptyList = insightAttachmentOperator.getAttachments(country.id).orFail()
         assertThat(emptyList, equalTo(emptyList()))
 
-        makeSureObjectWithNameDoesNotExist(Country.id, "NoAttachment")
+        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "NoAttachment")
         println("### Integration Test End: testDownloadNonExistingAttachment")
     }
 
     @Test
     fun attachmentTestDownloadZip() = runBlocking {
         println("### Integration Test Start: testDownloadZip")
-        makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
+        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
 
         val disclaimer = "'Zipistan' created by Test and should only exist during test run."
         val country = insightObjectOperator.createObject(Country.id) {
@@ -167,7 +160,7 @@ interface InsightAttachmentOperatorTest {
         assertThat(String(zip.readBytes()), equalTo(files[secondZipEntryName]))
         Assert.assertNull(zip.nextEntry)
 
-        makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
+        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
         println("### Integration Test End: testDownloadZip")
     }
 
@@ -175,7 +168,7 @@ interface InsightAttachmentOperatorTest {
     fun attachmentTestDownloadZipForNotExistingObject() = runBlocking {
         println("### Integration Test Start: testDownloadZipForNotExistingObject")
 
-        val responseError = insightAttachmentOperator.downloadAttachmentZip(-1).asError()
+        val responseError = insightAttachmentOperator.downloadAttachmentZip(InsightObjectId.notPersistedObjectId).asError()
         assertThat(responseError.message, containsString("-1"))
 
         println("### Integration Test End: testDownloadZipForNotExistingObject")

@@ -22,6 +22,7 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
 
 /**
@@ -56,7 +57,7 @@ interface InsightObjectOperator {
      * @param id The id of the Insight object to retrieve
      * @return Either an [InsightClientError] or the retrieved [InsightObject] object
      */
-    suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?>
+    suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?>
 
     /**
      * Retrieves the Insight object with the specified key.
@@ -137,7 +138,7 @@ interface InsightObjectOperator {
      * @param id The ID of the object to delete.
      * @return An [Either] that contains either an [InsightClientError] or [Unit] if the object was successfully deleted.
      */
-    suspend fun deleteObject(id: Int): Either<InsightClientError, Unit>
+    suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit>
 
     /**
      * Creates a new Insight object with the specified type and properties.

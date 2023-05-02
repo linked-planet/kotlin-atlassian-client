@@ -51,7 +51,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         getObjectsByIQL(iql, pageFrom, perPage).bind()
     }
 
-    override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
+    override suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?> =
         getObjectByPlainIQL("objectId=$id")
 
     override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
@@ -109,19 +109,19 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
         context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "PUT",
-            "rest/insight/1.0/object/${obj.id}",
+            "rest/insight/1.0/object/${obj.id.value}",
             emptyMap(),
             GSON.toJson(obj.toEditObjectItem()),
             "application/json",
             ObjectUpdateApiResponse::class.java
         )
-            .map { updateResponse -> getObjectById(updateResponse.body!!.id).map { it!! } }
+            .map { updateResponse -> getObjectById(InsightObjectId(updateResponse.body!!.id)).map { it!! } }
             .mapLeft { it.toInsightClientError() }
             .flatten()
             .bind()
     }
 
-    override suspend fun deleteObject(id: Int): Either<InsightClientError, Unit> =
+    override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
             "DELETE",
             "/rest/insight/1.0/object/$id",
@@ -151,8 +151,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             "application/json",
             ObjectUpdateApiResponse::class.java
         )
-        obj.id = response.mapLeft { it.toInsightClientError() }.bind().body!!.id
-        getObjectById(obj.id).bind()!!
+        val objectId = InsightObjectId(response.mapLeft { it.toInsightClientError() }.bind().body!!.id)
+        getObjectById(objectId).bind()!!
     }
 
 
@@ -228,7 +228,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 it.objectTypeAttribute?.maximumCardinality,
                 it.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
                     ObjectAttributeValue(av.value, av.displayValue, av.referencedObject?.let { ro ->
-                        ReferencedObject(ro.id, ro.label, ro.objectKey, ro.objectType?.let { ot ->
+                        ReferencedObject(InsightObjectId(ro.id), ro.label, ro.objectKey, ro.objectType?.let { ot ->
                             ReferencedObjectType(ot.id, ot.name)
                         })
                     })
@@ -238,7 +238,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         val objectSelf = "${context.baseUrl}/secure/insight/assets/${this.objectKey}"
         return InsightObject(
             this.objectType.id,
-            this.id,
+            InsightObjectId(this.id),
             this.objectType.name,
             this.objectKey,
             this.label,
@@ -258,7 +258,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     private fun createEmptyObject(objectTypeId: Int): InsightObject {
         return InsightObject(
             objectTypeId,
-            -1,
+            InsightObjectId.notPersistedObjectId,
             "",
             "",
             "",

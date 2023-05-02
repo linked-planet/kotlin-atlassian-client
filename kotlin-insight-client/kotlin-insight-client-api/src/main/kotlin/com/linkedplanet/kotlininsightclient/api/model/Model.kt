@@ -21,6 +21,15 @@ package com.linkedplanet.kotlininsightclient.api.model
 
 import java.util.Collections.emptyList
 
+@JvmInline
+value class InsightObjectId(val value: Int) {
+    companion object {
+        val notPersistedObjectId = InsightObjectId(-1)
+    }
+
+    override fun toString() = value.toString()
+}
+
 data class InsightObjects(
     val totalFilterCount: Int = -1,
     val objects: List<InsightObject> = emptyList()
@@ -34,7 +43,7 @@ fun InsightObjects.plus(insightObjects: InsightObjects): InsightObjects =
 
 data class InsightObject(
     val objectTypeId: Int,
-    var id: Int,
+    var id: InsightObjectId,
     val objectTypeName: String,
     var objectKey: String,
     var label: String,
@@ -66,7 +75,7 @@ enum class InsightObjectAttributeType(val attributeTypeId: Int) {
 data class InsightReference(
     val objectTypeId: Int,
     val objectTypeName: String,
-    val objectId: Int,
+    val objectId: InsightObjectId,
     val objectKey: String,
     val objectName: String
 )
@@ -166,7 +175,7 @@ data class ObjectAttributeValue(
 )
 
 data class ReferencedObject(
-    var id: Int,
+    var id: InsightObjectId,
     var label: String,
     var objectKey: String,
     var objectType: ReferencedObjectType?
@@ -179,7 +188,7 @@ data class ReferencedObjectType(
 
 // region InsightHistoryOperator
 data class InsightHistory(
-    val objectId: Int,
+    val objectId: InsightObjectId,
     val historyItems: List<InsightHistoryItem>
 )
 
@@ -191,7 +200,7 @@ data class InsightHistoryItem(
     val actor: Actor,
     val type: Int,
     val created: String, // updated is neither available through sdk nor ktor
-    val objectId: Int
+    val objectId: InsightObjectId
 )
 
 data class Actor(

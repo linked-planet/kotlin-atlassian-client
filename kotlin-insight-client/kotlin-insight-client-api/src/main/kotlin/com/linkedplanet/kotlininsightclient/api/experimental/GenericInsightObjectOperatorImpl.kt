@@ -29,6 +29,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addReference
@@ -63,7 +64,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
     // having InsightObject as return type will prevent us to change the internal implementation later on
     private val insightObjectForDomainObject: suspend (objectTypeId: Int, domainObject: DomainType) -> Either<InsightClientError, InsightObject?>,
     private val referenceAttributeToValue: suspend (attribute: InsightAttribute) -> Any? = { null },
-    private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<Int> = { _, _ -> emptyList() },
+    private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<InsightObjectId> = { _, _ -> emptyList() },
 ) : GenericInsightObjectOperator<DomainType> {
     private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
     var objectTypeSchema: ObjectTypeSchema
@@ -89,18 +90,18 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         insightObjectOperator.deleteObject(insightObject.id).bind()
     }
 
-    override suspend fun create(domainObject: DomainType): Either<InsightClientError, Int> = either {
+    override suspend fun create(domainObject: DomainType): Either<InsightClientError, InsightObjectId> = either {
         val insightObject = insightObjectOperator.createObject(objectTypeSchema.id) { io ->
             setAttributesFromDomainObject(io, domainObject)
         }.bind()
         insightObject.id
     }
 
-    override suspend fun update(domainObject: DomainType): Either<InsightClientError, Int> = either {
+    override suspend fun update(domainObject: DomainType): Either<InsightClientError, InsightObjectId> = either {
         val insightObject = insightObjectForDomainObject(objectTypeSchema.id, domainObject).bind()!!
         setAttributesFromDomainObject(insightObject, domainObject)
         insightObjectOperator.updateObject(insightObject).bind()
-        insightObject.objectTypeId
+        insightObject.id
     }
 
     private suspend fun setAttributesFromDomainObject(insightObject: InsightObject, domainObject: DomainType) {
@@ -162,7 +163,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         }
     }
 
-    override suspend fun getById(objectId: Int): Either<InsightClientError, DomainType?> = either {
+    override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
         val insightObject = insightObjectOperator.getObjectById(objectId).bind()
             ?: return@either null
         domainObjectByInsightObject(insightObject).bind()

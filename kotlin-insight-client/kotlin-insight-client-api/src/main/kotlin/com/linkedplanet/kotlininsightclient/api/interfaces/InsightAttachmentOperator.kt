@@ -22,6 +22,7 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 
 /**
  * The InsightAttachmentOperator interface provides methods to interact with attachments belonging to an InsightObject.
@@ -34,7 +35,7 @@ interface InsightAttachmentOperator {
      * @param objectId The id of the insight object the attachment belongs to
      * @return Either an [InsightClientError] or a list of [InsightAttachment] objects
      */
-    suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>>
+    suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>>
 
     /**
      * Downloads the attachment content from the specified URL.
@@ -50,7 +51,7 @@ interface InsightAttachmentOperator {
      * @param objectId The id of the insight object to download attachments for
      * @return Either an [InsightClientError] or a [ByteArray] containing the zip file data
      */
-    suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray>
+    suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray>
 
     /**
      * Uploads an attachment to the specified insight object.
@@ -61,7 +62,7 @@ interface InsightAttachmentOperator {
      * @return Either an [InsightClientError] or a list of [InsightAttachment] objects
      */
     suspend fun uploadAttachment(
-        objectId: Int,
+        objectId: InsightObjectId,
         filename: String,
         byteArray: ByteArray
     ): Either<InsightClientError, List<InsightAttachment>>

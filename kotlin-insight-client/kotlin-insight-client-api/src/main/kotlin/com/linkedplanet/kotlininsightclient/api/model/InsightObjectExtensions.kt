@@ -172,7 +172,7 @@ fun InsightObject.getMultiReferenceValue(id: Int): List<InsightReference> =
         ?: Collections.emptyList()
 
 
-fun InsightObject.removeReference(attributeId: Int, referencedObjectId: Int) {
+fun InsightObject.removeReference(attributeId: Int, referencedObjectId: InsightObjectId) {
     getAttribute(attributeId)
         ?.let {
             it.value = it.value.filter { cur -> cur.referencedObject?.id != referencedObjectId }
@@ -184,10 +184,10 @@ fun InsightObject.clearReferenceValue(id: Int) {
         ?.value = Collections.emptyList()
 }
 
-fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) =
+fun InsightObject.addReference(attributeId: Int, referencedObjectId: InsightObjectId) =
     addReference(attributeId, null, referencedObjectId)
 
-fun InsightObject.addReference(attributeId: Int, name: String?, referencedObjectId: Int) {
+fun InsightObject.addReference(attributeId: Int, name: String?, referencedObjectId: InsightObjectId) {
     if (!exists(attributeId)) {
         this.createAttribute(attributeId, name, InsightObjectAttributeType.REFERENCE)
     }
@@ -207,10 +207,10 @@ fun InsightObject.addReference(attributeId: Int, name: String?, referencedObject
         }
 }
 
-fun InsightObject.setSingleReference(id: Int, referencedObjectId: Int) =
+fun InsightObject.setSingleReference(id: Int, referencedObjectId: InsightObjectId) =
     setSingleReference(id, null, referencedObjectId)
 
-fun InsightObject.setSingleReference(id: Int, name: String?, referencedObjectId: Int) {
+fun InsightObject.setSingleReference(id: Int, name: String?, referencedObjectId: InsightObjectId) {
     this.clearReferenceValue(id)
     this.addReference(id, name, referencedObjectId)
 }

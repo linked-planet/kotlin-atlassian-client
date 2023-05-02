@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 
@@ -41,4 +42,12 @@ fun <T> Either<InsightClientError, T>.asError(): InsightClientError {
         is Either.Right -> assertThat(this, equalTo(InsightClientError("","")))
     }
     return InsightClientError("error is neither left nor right", "$this")
+}
+
+suspend fun InsightObjectOperator.makeSureObjectWithNameDoesNotExist(objectTypeId: Int, name: String) {
+    getObjectsByIQL(objectTypeId, "Name = \"$name\"").orFail().objects.forEach {
+        deleteObject(it.id)
+    }
+    assertThat(getObjectByName(objectTypeId, name).orFail(), equalTo(null))
+    //if the former assertion failed that means deleteObject is not working, so this attachment test fails too
 }

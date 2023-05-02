@@ -25,6 +25,7 @@ import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOf
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredAttachmentUrlResolver
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredFileManager
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
@@ -48,10 +49,10 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
     private val fileManager by lazy { ReverseEngineeredFileManager() }
     private val attachmentUrlResolver by lazy { ReverseEngineeredAttachmentUrlResolver() }
 
-    override suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>> =
+    override suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>> =
         catchAsInsightClientError {
             objectFacade
-                .findAttachmentBeans(objectId)
+                .findAttachmentBeans(objectId.value)
                 .map(::beanToInsightAttachment)
         }
 
@@ -64,7 +65,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             inputStream.readBytes()
         }
 
-    override suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray> =
+    override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray> =
         either {
             val attachments = getAttachments(objectId).bind()
             val fileMap: List<Pair<String, ByteArray>> = attachments.map { attachment ->
@@ -87,7 +88,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         }
 
     override suspend fun uploadAttachment(
-        objectId: Int,
+        objectId: InsightObjectId,
         filename: String,
         byteArray: ByteArray
     ): Either<InsightClientError, List<InsightAttachment>> =
@@ -96,7 +97,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             val tempFile = tempFilePath.toFile()
             tempFile.writeBytes(byteArray)
             val mimeType = URLConnection.guessContentTypeFromName(filename)
-            val bean = objectFacade.addAttachmentBean(objectId, tempFile, filename, mimeType, null)
+            val bean = objectFacade.addAttachmentBean(objectId.value, tempFile, filename, mimeType, null)
             val insightAttachment = beanToInsightAttachment(bean)
             listOf(insightAttachment)
         }

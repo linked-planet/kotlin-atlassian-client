@@ -25,6 +25,7 @@ import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 import java.io.ByteArrayOutputStream
 import java.net.URLConnection
@@ -33,7 +34,7 @@ import java.util.zip.ZipOutputStream
 
 class HttpInsightAttachmentOperator(private val context: HttpInsightClientContext) : InsightAttachmentOperator {
 
-    override suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>> =
+    override suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>> =
         context.httpClient.executeRestList<InsightAttachment>(
             "GET",
             "rest/insight/1.0/attachments/object/${objectId}",
@@ -57,7 +58,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .mapLeft { it.toInsightClientError() }
 
     override suspend fun uploadAttachment(
-        objectId: Int,
+        objectId: InsightObjectId,
         filename: String,
         byteArray: ByteArray
     ): Either<InsightClientError, List<InsightAttachment>> = either {
@@ -87,7 +88,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .map { }
             .mapLeft { it.toInsightClientError() }
 
-    override suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray> = either {
+    override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray> = either {
         val attachments = getAttachments(objectId).bind()
         val fileMap = attachments.map { attachment ->
             val attachmentContent = downloadAttachment(attachment.url).bind()

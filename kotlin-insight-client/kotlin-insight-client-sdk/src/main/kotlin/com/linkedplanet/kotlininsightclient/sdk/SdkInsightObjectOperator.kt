@@ -31,6 +31,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
@@ -61,8 +62,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
 
-    override suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?> =
-        catchAsInsightClientError { objectFacade.loadObjectBean(id) }
+    override suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?> =
+        catchAsInsightClientError { objectFacade.loadObjectBean(id.value) }
             .flatMap { it.toNullableInsightObject() }
 
     override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
@@ -122,7 +123,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     @Suppress("DEPRECATION") // fix it with the newest insight version
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
-            val objectBean = objectFacade.loadObjectBean(obj.id).createMutable()
+            val objectBean = objectFacade.loadObjectBean(obj.id.value).createMutable()
             setAttributesForObjectBean(obj, objectBean)
             objectBean.objectTypeId = obj.objectTypeId
             objectBean.objectKey = obj.objectKey
@@ -146,9 +147,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         objectBean.setObjectAttributeBeans(attributeBeans)
     }
 
-    override suspend fun deleteObject(id: Int): Either<InsightClientError, Unit> =
+    override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         catchAsInsightClientError {
-            objectFacade.deleteObjectBean(id)
+            objectFacade.deleteObjectBean(id.value)
         }
 
     override suspend fun createObject(
@@ -168,7 +169,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
         return InsightObject(
             objectTypeId = objectTypeId,
-            id = -1,
+            id = InsightObjectId.notPersistedObjectId,
             objectTypeName = objectTypeBean.name,
             objectKey = "",
             label = "",
@@ -216,7 +217,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
         InsightObject(
             objectBean.objectTypeId,
-            objectBean.id,
+            InsightObjectId(objectBean.id),
             objectTypeBean.name,
             objectBean.objectKey,
             objectBean.label,
@@ -244,11 +245,11 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             options = objectTypeAttributeBean.options,
             minimumCardinality = objectTypeAttributeBean.maximumCardinality,
             maximumCardinality = objectTypeAttributeBean.minimumCardinality,
-            objectAttributeBean.objectAttributeValueBeans.map {
+            objectAttributeBean.objectAttributeValueBeans.map { bean ->
                 if (objectTypeAttributeBean.isObjectReference) {
-                    val refObj = getObjectById(it.referencedObjectBeanId).bind()
+                    val refObj = getObjectById(InsightObjectId(bean.referencedObjectBeanId)).bind()
                     ObjectAttributeValue(
-                        it.value,
+                        bean.value,
                         "${refObj?.label} (${refObj?.objectKey})",
                         refObj?.let {
                             ReferencedObject(
@@ -263,7 +264,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                         }
                     )
                 } else {
-                    ObjectAttributeValue(it.value, it.textValue, null)
+                    ObjectAttributeValue(bean.value, bean.textValue, null)
                 }
             }
         )

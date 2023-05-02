@@ -21,18 +21,19 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 
 interface GenericInsightObjectOperator<DomainType> {
 
-    suspend fun create(domainObject: DomainType): Either<InsightClientError, Int>
+    suspend fun create(domainObject: DomainType): Either<InsightClientError, InsightObjectId>
 
-    suspend fun update(domainObject: DomainType): Either<InsightClientError, Int>
+    suspend fun update(domainObject: DomainType): Either<InsightClientError, InsightObjectId>
 
     suspend fun delete(domainObject: DomainType): Either<InsightClientError, Unit>
 
     suspend fun getByName(name: String): Either<InsightClientError, DomainType?>
 
-    suspend fun getById(objectId: Int): Either<InsightClientError, DomainType?>
+    suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?>
 
     suspend fun getByIQL(
         iql: String,

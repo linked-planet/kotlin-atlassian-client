@@ -39,7 +39,7 @@ internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
         val values = insightAttr.value.map {
             if (insightAttr.attributeType == InsightObjectAttributeType.REFERENCE) {
                 ObjectEditItemAttributeValue(
-                    it.referencedObject!!.id
+                    it.referencedObject!!.id.value
                 )
             } else {
                 ObjectEditItemAttributeValue(
