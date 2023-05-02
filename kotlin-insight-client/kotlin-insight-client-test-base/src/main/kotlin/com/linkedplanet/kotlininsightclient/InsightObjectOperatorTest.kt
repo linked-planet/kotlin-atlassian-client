@@ -213,7 +213,7 @@ interface InsightObjectOperatorTest {
             insightObjectOperator.getObjects(InsightObject.Company.id).orNull()?.objects
         }
         assertNotNull(companies)
-        assertTrue(companies!!.size == 2)
+        assertThat(companies!!.size, equalTo(2))
 
         val company = companies.firstOrNull { it.id == InsightObjectId(1) }
         assertNotNull(company)
@@ -223,8 +223,8 @@ interface InsightObjectOperatorTest {
                 company!!.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectId
             ).orNull()!!
         }
-        assertTrue(country.getStringValue(InsightAttribute.CountryName.attributeId) == "Germany")
-        assertTrue(country.getStringValue(InsightAttribute.CountryShortName.attributeId) == "DE")
+        assertThat(country.getStringValue(InsightAttribute.CountryName.attributeId), equalTo("Germany"))
+        assertThat(country.getStringValue(InsightAttribute.CountryShortName.attributeId), equalTo("DE"))
         println("### END object_testObjectListWithResolvedReference")
     }
 

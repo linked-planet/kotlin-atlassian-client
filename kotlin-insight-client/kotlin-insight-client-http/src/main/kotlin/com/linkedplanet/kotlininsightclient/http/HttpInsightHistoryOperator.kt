@@ -33,7 +33,7 @@ class HttpInsightHistoryOperator(private val context: HttpInsightClientContext) 
     override suspend fun getHistory(objectId: InsightObjectId): Either<InsightClientError, InsightHistory> {
         val historyItems = context.httpClient.executeRestList<InsightHistoryItem>(
             "GET",
-            "rest/insight/1.0/object/${objectId}/history",
+            "rest/insight/1.0/object/${objectId.value}/history",
             emptyMap(),
             null,
             "application/json",

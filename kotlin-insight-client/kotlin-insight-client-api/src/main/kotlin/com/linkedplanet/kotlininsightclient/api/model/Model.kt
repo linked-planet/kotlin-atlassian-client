@@ -26,8 +26,6 @@ value class InsightObjectId(val value: Int) {
     companion object {
         val notPersistedObjectId = InsightObjectId(-1)
     }
-
-    override fun toString() = value.toString()
 }
 
 data class InsightObjects(

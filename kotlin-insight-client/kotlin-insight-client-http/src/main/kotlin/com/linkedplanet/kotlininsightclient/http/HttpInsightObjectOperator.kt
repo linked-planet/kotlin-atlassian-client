@@ -52,7 +52,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     override suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?> =
-        getObjectByPlainIQL("objectId=$id")
+        getObjectByPlainIQL("objectId=${id.value}")
 
     override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
         getObjectByPlainIQL("Key=\"$key\"")
@@ -124,7 +124,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
             "DELETE",
-            "/rest/insight/1.0/object/$id",
+            "/rest/insight/1.0/object/${id.value}",
             emptyMap(),
             null,
             "application/json"
