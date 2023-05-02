@@ -42,7 +42,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     override var RESULTS_PER_PAGE: Int = 25
 
     override suspend fun getObjects(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
@@ -57,8 +57,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
         getObjectByPlainIQL("Key=\"$key\"")
 
-    override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> =
-        getObjectByPlainIQL("objectTypeId=$objectTypeId AND Name=\"$name\"")
+    override suspend fun getObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, InsightObject?> =
+        getObjectByPlainIQL("objectTypeId=${objectTypeId.raw} AND Name=\"$name\"")
 
     override suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>> {
         val iql = "objectType=$objectTypeName"
@@ -66,7 +66,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     override suspend fun getObjectsByIQL(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean,
         pageFrom: Int,
@@ -133,13 +133,13 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .map { /*to Unit*/ }
 
     override suspend fun createObject(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         func: suspend (InsightObject) -> Unit
     ): Either<InsightClientError, InsightObject> = either {
         val obj = createEmptyObject(objectTypeId)
         func(obj)
         val editItem = ObjectEditItem(
-            obj.objectTypeId,
+            obj.objectTypeId.raw,
             obj.getEditAttributes()
         )
         // TODO: ensure object type has the specified attributes
@@ -229,7 +229,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 it.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
                     ObjectAttributeValue(av.value, av.displayValue, av.referencedObject?.let { ro ->
                         ReferencedObject(InsightObjectId(ro.id), ro.label, ro.objectKey, ro.objectType?.let { ot ->
-                            ReferencedObjectType(ot.id, ot.name)
+                            ReferencedObjectType(InsightObjectTypeId(ot.id), ot.name)
                         })
                     })
                 }
@@ -237,7 +237,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         }
         val objectSelf = "${context.baseUrl}/secure/insight/assets/${this.objectKey}"
         return InsightObject(
-            this.objectType.id,
+            InsightObjectTypeId(this.objectType.id),
             InsightObjectId(this.id),
             this.objectType.name,
             this.objectKey,
@@ -248,14 +248,14 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         )
     }
 
-    private fun getIQLWithChildren(objTypeId: Int, withChildren: Boolean): String =
+    private fun getIQLWithChildren(objTypeId: InsightObjectTypeId, withChildren: Boolean): String =
         if (withChildren) {
-            "objectType = objectTypeAndChildren(\"$objTypeId\")"
+            "objectType = objectTypeAndChildren(\"${objTypeId.raw}\")"
         } else {
-            "objectTypeId=$objTypeId"
+            "objectTypeId=${objTypeId.raw}"
         }
 
-    private fun createEmptyObject(objectTypeId: Int): InsightObject {
+    private fun createEmptyObject(objectTypeId: InsightObjectTypeId): InsightObject {
         return InsightObject(
             objectTypeId,
             InsightObjectId.notPersistedObjectId,

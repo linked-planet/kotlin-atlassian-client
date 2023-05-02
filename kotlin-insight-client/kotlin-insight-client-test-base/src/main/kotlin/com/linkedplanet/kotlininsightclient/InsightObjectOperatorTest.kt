@@ -24,6 +24,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeByName
@@ -51,13 +52,13 @@ interface InsightObjectOperatorTest {
     fun testGenericInsightObjectOperatorCrud() = runBlocking {
         val countryOperator =
             GenericInsightObjectOperatorImpl(Country::class,
-                insightObjectForDomainObject = { objectTypeId: Int, domainObject: Country ->
+                insightObjectForDomainObject = { objectTypeId, domainObject: Country ->
                     insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
                 }
             )
         val companyOperator =
             GenericInsightObjectOperatorImpl(Company::class,
-                insightObjectForDomainObject = { objectTypeId: Int, domainObject: Company ->
+                insightObjectForDomainObject = { objectTypeId, domainObject: Company ->
                     insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
                 },
                 referenceAttributeToValue = { insightAttribute ->
@@ -103,12 +104,12 @@ interface InsightObjectOperatorTest {
         println("### START object_testGenericInsightObjectOperatorCrudWithListAttribute")
 
         val simpleObjectOperator = GenericInsightObjectOperatorImpl(SimpleObject::class,
-            insightObjectForDomainObject = { objectTypeId: Int, domainObject: SimpleObject ->
+            insightObjectForDomainObject = { objectTypeId, domainObject: SimpleObject ->
                 insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
             }
         )
         val testWithListsOperator = GenericInsightObjectOperatorImpl(TestWithLists::class,
-            insightObjectForDomainObject = { objectTypeId: Int, domainObject: TestWithLists ->
+            insightObjectForDomainObject = { objectTypeId, domainObject: TestWithLists ->
                 insightObjectOperator.getObjectByName(objectTypeId, domainObject.name)
             },
             referenceAttributeToValue = { insightAttribute ->
@@ -243,7 +244,7 @@ interface InsightObjectOperatorTest {
             equalTo("Germany")
         )
         assertThat(company.objectTypeName, equalTo("Company"))
-        assertThat(company.objectTypeId, equalTo(1))
+        assertThat(company.objectTypeId, equalTo(InsightObjectTypeId(1)))
 
         assertFalse(company.attachmentsExist)
         println("### END object_testObjectById")

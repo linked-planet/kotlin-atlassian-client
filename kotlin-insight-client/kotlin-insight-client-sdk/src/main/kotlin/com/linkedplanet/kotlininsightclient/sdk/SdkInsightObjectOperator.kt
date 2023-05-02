@@ -32,6 +32,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
@@ -70,9 +71,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         catchAsInsightClientError { objectFacade.loadObjectBean(key) }
             .flatMap { it.toNullableInsightObject() }
 
-    override suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?> =
+    override suspend fun getObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, InsightObject?> =
         catchAsInsightClientError {
-            val iql = "objectTypeId=$objectTypeId AND Name=\"$name\""
+            val iql = "objectTypeId=${objectTypeId.raw} AND Name=\"$name\""
             val objs = iqlFacade.findObjects(iql)
             objs.firstOrNull()
         }.flatMap { it.toNullableInsightObject() }
@@ -83,7 +84,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     }
 
     override suspend fun getObjects(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
@@ -94,7 +95,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         }.flatMap { it.toInsightObjects() }
 
     override suspend fun getObjectsByIQL(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean,
         pageFrom: Int,
@@ -125,7 +126,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         catchAsInsightClientError {
             val objectBean = objectFacade.loadObjectBean(obj.id.value).createMutable()
             setAttributesForObjectBean(obj, objectBean)
-            objectBean.objectTypeId = obj.objectTypeId
+            objectBean.objectTypeId = obj.objectTypeId.raw
             objectBean.objectKey = obj.objectKey
             objectFacade.storeObjectBean(objectBean)
         }.flatMap { it.toInsightObject() }
@@ -153,20 +154,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         }
 
     override suspend fun createObject(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         func: suspend (InsightObject) -> Unit // to configure the model
     ): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
             val freshInsightObject = createEmptyDomainObject(objectTypeId)
             func(freshInsightObject)
-            val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
+            val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
             val freshObjectBean = objectTypeBean.createMutableObjectBean()
             setAttributesForObjectBean(freshInsightObject, freshObjectBean)
             objectFacade.storeObjectBean(freshObjectBean)
         }.flatMap { it.toInsightObject() }
 
-    private fun createEmptyDomainObject(objectTypeId: Int): InsightObject {
-        val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
+    private fun createEmptyDomainObject(objectTypeId: InsightObjectTypeId): InsightObject {
+        val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
         return InsightObject(
             objectTypeId = objectTypeId,
             id = InsightObjectId.notPersistedObjectId,
@@ -216,7 +217,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         }
 
         InsightObject(
-            objectBean.objectTypeId,
+            InsightObjectTypeId(objectBean.objectTypeId),
             InsightObjectId(objectBean.id),
             objectTypeBean.name,
             objectBean.objectKey,
@@ -270,10 +271,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         )
     }
 
-    private fun getIQLWithChildren(objTypeId: Int, withChildren: Boolean): String =
+    private fun getIQLWithChildren(objTypeId: InsightObjectTypeId, withChildren: Boolean): String =
         if (withChildren) {
-            "objectType = objectTypeAndChildren(\"$objTypeId\")"
+            "objectType = objectTypeAndChildren(\"${objTypeId.raw}\")"
         } else {
-            "objectTypeId=$objTypeId"
+            "objectTypeId=${objTypeId.raw}"
         }
 }

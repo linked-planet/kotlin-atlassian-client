@@ -30,6 +30,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addReference
@@ -62,7 +63,7 @@ import kotlin.reflect.typeOf
 class GenericInsightObjectOperatorImpl<DomainType : Any>(
     private val klass: KClass<DomainType>,
     // having InsightObject as return type will prevent us to change the internal implementation later on
-    private val insightObjectForDomainObject: suspend (objectTypeId: Int, domainObject: DomainType) -> Either<InsightClientError, InsightObject?>,
+    private val insightObjectForDomainObject: suspend (objectTypeId: InsightObjectTypeId, domainObject: DomainType) -> Either<InsightClientError, InsightObject?>,
     private val referenceAttributeToValue: suspend (attribute: InsightAttribute) -> Any? = { null },
     private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<InsightObjectId> = { _, _ -> emptyList() },
 ) : GenericInsightObjectOperator<DomainType> {

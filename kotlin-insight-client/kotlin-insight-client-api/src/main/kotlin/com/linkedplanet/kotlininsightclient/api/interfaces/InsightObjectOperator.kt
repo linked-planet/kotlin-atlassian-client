@@ -23,6 +23,7 @@ import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
 
 /**
@@ -45,7 +46,7 @@ interface InsightObjectOperator {
      * @return Either an [InsightClientError] or an [InsightObjects] object containing the list of Insight objects
      */
     suspend fun getObjects(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         withChildren: Boolean = false,
         pageFrom: Int = 1,
         perPage: Int = RESULTS_PER_PAGE
@@ -74,7 +75,7 @@ interface InsightObjectOperator {
      * @param name The name of the Insight object to retrieve
      * @return Either an [InsightClientError] or the retrieved [InsightObject] object
      */
-    suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?>
+    suspend fun getObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, InsightObject?>
 
     /**
      * Retrieves a list of Insight objects of the specified type name.
@@ -95,7 +96,7 @@ interface InsightObjectOperator {
      * @return Either an [InsightClientError] or an [InsightObjects] object containing the filtered list of Insight objects
      */
     suspend fun getObjectsByIQL(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean = false,
         pageFrom: Int = 1,
@@ -148,7 +149,7 @@ interface InsightObjectOperator {
      * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the newly created object.
      */
     suspend fun createObject(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         func: suspend (InsightObject) -> Unit
     ): Either<InsightClientError, InsightObject>
 }

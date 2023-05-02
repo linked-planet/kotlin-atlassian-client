@@ -30,7 +30,7 @@ internal data class ObjectEditItem(
 
 internal fun InsightObject.toEditObjectItem() =
     ObjectEditItem(
-        objectTypeId,
+        objectTypeId.raw,
         getEditAttributes()
     )
 

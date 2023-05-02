@@ -25,6 +25,7 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
@@ -39,9 +40,9 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
     private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
     private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
 
-    override suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema> =
+    override suspend fun getObjectType(objectTypeId: InsightObjectTypeId): Either<InsightClientError, ObjectTypeSchema> =
         catchAsInsightClientError {
-            val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId)
+            val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
             objectTypeSchemaForBean(objectTypeBean)
         }
 
@@ -53,20 +54,20 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
 
     override suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,
-        rootObjectTypeId: Int
+        rootObjectTypeId: InsightObjectTypeId
     ): Either<InsightClientError, List<ObjectTypeSchema>> =
         catchAsInsightClientError {
-            objectTypeFacade.findObjectTypeBeanChildrens(rootObjectTypeId)
+            objectTypeFacade.findObjectTypeBeanChildrens(rootObjectTypeId.raw)
                 .map(::objectTypeSchemaForBean)
         }
 
     private fun objectTypeSchemaForBean(objectTypeBean: ObjectTypeBean): ObjectTypeSchema {
         val attributes = attributesForObjectType(objectTypeBean.id)
         return ObjectTypeSchema(
-            objectTypeBean.id,
+            InsightObjectTypeId(objectTypeBean.id),
             objectTypeBean.name,
             attributes,
-            objectTypeBean.parentObjectTypeId
+            InsightObjectTypeId(objectTypeBean.parentObjectTypeId)
         )
     }
 
@@ -82,7 +83,7 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
                     maximumCardinality,
                     referenceTypeBean?.run { ReferenceKind.parse(id) },
                     isIncludeChildObjectTypes,
-                    referenceObjectTypeId,
+                    InsightObjectTypeId(referenceObjectTypeId),
                     mapAttributeType(type)
                 )
             }

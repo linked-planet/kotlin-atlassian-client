@@ -22,6 +22,7 @@ package com.linkedplanet.kotlininsightclient
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 
@@ -44,7 +45,7 @@ fun <T> Either<InsightClientError, T>.asError(): InsightClientError {
     return InsightClientError("error is neither left nor right", "$this")
 }
 
-suspend fun InsightObjectOperator.makeSureObjectWithNameDoesNotExist(objectTypeId: Int, name: String) {
+suspend fun InsightObjectOperator.makeSureObjectWithNameDoesNotExist(objectTypeId: InsightObjectTypeId, name: String) {
     getObjectsByIQL(objectTypeId, "Name = \"$name\"").orFail().objects.forEach {
         deleteObject(it.id)
     }

@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 
 /**
@@ -35,7 +36,7 @@ interface InsightObjectTypeOperator {
      * @param objectTypeId The ID of the Insight object type.
      * @return either an [InsightClientError] or an [ObjectTypeSchema] representing the schema of the object type.
      */
-    suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema>
+    suspend fun getObjectType(objectTypeId: InsightObjectTypeId): Either<InsightClientError, ObjectTypeSchema>
 
     /**
      * Retrieves a list of Insight object types that belong to the schema with the specified ID.
@@ -55,6 +56,6 @@ interface InsightObjectTypeOperator {
      */
     suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,
-        rootObjectTypeId: Int
+        rootObjectTypeId: InsightObjectTypeId
     ): Either<InsightClientError, List<ObjectTypeSchema>>
 }

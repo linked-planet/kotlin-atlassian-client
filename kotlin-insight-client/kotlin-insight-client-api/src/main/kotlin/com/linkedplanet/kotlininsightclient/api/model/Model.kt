@@ -28,6 +28,9 @@ value class InsightObjectId(val value: Int) {
     }
 }
 
+@JvmInline
+value class InsightObjectTypeId(val raw: Int)
+
 data class InsightObjects(
     val totalFilterCount: Int = -1,
     val objects: List<InsightObject> = emptyList()
@@ -40,7 +43,7 @@ fun InsightObjects.plus(insightObjects: InsightObjects): InsightObjects =
     )
 
 data class InsightObject(
-    val objectTypeId: Int,
+    val objectTypeId: InsightObjectTypeId,
     var id: InsightObjectId,
     val objectTypeName: String,
     var objectKey: String,
@@ -71,7 +74,7 @@ enum class InsightObjectAttributeType(val attributeTypeId: Int) {
 }
 
 data class InsightReference(
-    val objectTypeId: Int,
+    val objectTypeId: InsightObjectTypeId,
     val objectTypeName: String,
     val objectId: InsightObjectId,
     val objectKey: String,
@@ -94,10 +97,10 @@ data class InsightAttribute(
 
 // region InsightObjectTypeOperator
 data class ObjectTypeSchema(
-    val id: Int,
+    val id: InsightObjectTypeId,
     val name: String,
     val attributes: List<ObjectTypeSchemaAttribute>,
-    val parentObjectTypeId: Int?
+    val parentObjectTypeId: InsightObjectTypeId?
 )
 
 data class ObjectTypeSchemaAttribute(
@@ -109,7 +112,7 @@ data class ObjectTypeSchemaAttribute(
     val maximumCardinality: Int,
     val referenceKind: ReferenceKind?,
     val includeChildObjectTypes: Boolean,
-    val referenceObjectTypeId: Int?, // objectTypeId of the referenced object
+    val referenceObjectTypeId: InsightObjectTypeId?, // objectTypeId of the referenced object
     val type: InsightObjectAttributeType
 )
 
@@ -180,7 +183,7 @@ data class ReferencedObject(
 )
 
 data class ReferencedObjectType(
-    val id: Int,
+    val id: InsightObjectTypeId,
     val name: String
 )
 

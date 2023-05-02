@@ -28,6 +28,7 @@ import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
@@ -37,10 +38,10 @@ import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
 class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContext) : InsightObjectTypeOperator {
 
-    override suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema> = either {
+    override suspend fun getObjectType(objectTypeId: InsightObjectTypeId): Either<InsightClientError, ObjectTypeSchema> = either {
         context.httpClient.executeRest<ObjectTypeSchemaApiResponse>(
             "GET",
-            "/rest/insight/1.0/objecttype/$objectTypeId",
+            "/rest/insight/1.0/objecttype/${objectTypeId.raw}",
             emptyMap(),
             null,
             "application/json",
@@ -57,7 +58,7 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
 
     override suspend fun getObjectTypesBySchemaAndRootObjectType(
         schemaId: Int,
-        rootObjectTypeId: Int
+        rootObjectTypeId: InsightObjectTypeId
     ): Either<InsightClientError, List<ObjectTypeSchema>> = either {
         val allObjectTypes = getObjectTypesBySchema(schemaId).bind()
         allObjectTypes
@@ -90,7 +91,7 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
 
     private fun mapToPublicApiModel(apiResponse: ObjectTypeSchemaApiResponse): ObjectTypeSchema =
         ObjectTypeSchema(
-            apiResponse.id,
+            InsightObjectTypeId(apiResponse.id),
             apiResponse.name,
             apiResponse.attributes.map { attributeApiResponse: ObjectTypeSchemaAttributeApiResponse ->
                 ObjectTypeSchemaAttribute(
@@ -104,12 +105,12 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
                         ReferenceKind.parse(it.id)
                     },
                     includeChildObjectTypes = attributeApiResponse.includeChildObjectTypes,
-                    referenceObjectTypeId = attributeApiResponse.referenceObjectTypeId,
+                    referenceObjectTypeId = attributeApiResponse.referenceObjectTypeId?.let { InsightObjectTypeId(it) },
                     type = InsightObjectAttributeType.parse(attributeApiResponse.type),
                 )
 
             },
-            apiResponse.parentObjectTypeId,
+            apiResponse.parentObjectTypeId?.let { InsightObjectTypeId(it) },
         )
 
     private suspend fun populateObjectTypeSchemaAttributes(objectTypeSchema: ObjectTypeSchemaApiResponse): Either<InsightClientError, ObjectTypeSchemaApiResponse> =
@@ -131,7 +132,7 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
 
     private fun findObjectTypeChildren(
         objectTypes: List<ObjectTypeSchema>,
-        rootObjectTypeId: Int
+        rootObjectTypeId: InsightObjectTypeId
     ): List<ObjectTypeSchema> {
         val directChildren = objectTypes.filter { it.parentObjectTypeId == rootObjectTypeId }
         val transitiveChildren = directChildren.flatMap { child -> findObjectTypeChildren(objectTypes, child.id) }
