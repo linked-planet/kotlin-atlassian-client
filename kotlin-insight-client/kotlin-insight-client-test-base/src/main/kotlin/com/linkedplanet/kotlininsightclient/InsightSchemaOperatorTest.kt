@@ -33,12 +33,12 @@ interface InsightSchemaOperatorTest {
     fun testSchemaLoad() {
         println("### START schema_testSchemaLoad")
         val schemas = runBlocking { insightSchemaOperator.getSchemas() }.orFail()
-        val retrievedSchema = schemas.firstOrNull { it.id == 1 }!!
+        val retrievedSchema = schemas.firstOrNull { it.id == SchemaObject.ITest.id }!!
         assertThat(retrievedSchema.name, equalTo("ITest"))
         assertThat(retrievedSchema.objectTypeCount,  greaterThanOrEqualTo (7)) // 7 when test was written
         assertThat(retrievedSchema.objectCount,  greaterThanOrEqualTo (64)) // 64 when test was written
 
-        val retrievedSchemaDirectly = runBlocking { insightSchemaOperator.getSchema(1) }.orFail()
+        val retrievedSchemaDirectly = runBlocking { insightSchemaOperator.getSchema(SchemaObject.ITest.id) }.orFail()
         assertThat(retrievedSchemaDirectly, equalTo(retrievedSchema))
 
         println("### END schema_testSchemaLoad")

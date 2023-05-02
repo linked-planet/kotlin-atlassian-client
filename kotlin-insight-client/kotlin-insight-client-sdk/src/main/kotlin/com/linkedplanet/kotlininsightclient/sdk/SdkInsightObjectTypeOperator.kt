@@ -26,6 +26,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOper
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
@@ -46,14 +47,14 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
             objectTypeSchemaForBean(objectTypeBean)
         }
 
-    override suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>> =
+    override suspend fun getObjectTypesBySchema(schemaId: InsightSchemaId): Either<InsightClientError, List<ObjectTypeSchema>> =
         catchAsInsightClientError {
-            objectTypeFacade.findObjectTypeBeansFlat(schemaId)
+            objectTypeFacade.findObjectTypeBeansFlat(schemaId.raw)
                 .map(::objectTypeSchemaForBean)
         }
 
     override suspend fun getObjectTypesBySchemaAndRootObjectType(
-        schemaId: Int,
+        schemaId: InsightSchemaId,
         rootObjectTypeId: InsightObjectTypeId
     ): Either<InsightClientError, List<ObjectTypeSchema>> =
         catchAsInsightClientError {

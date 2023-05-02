@@ -20,9 +20,10 @@
 package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
 
-enum class SchemaObject(val id: Int) {
-    ITest(1)
+enum class SchemaObject(val id: InsightSchemaId) {
+    ITest(InsightSchemaId(1))
 }
 
 enum class InsightObject(val id: InsightObjectTypeId) {

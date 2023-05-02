@@ -36,6 +36,9 @@ value class InsightObjectTypeId(val raw: Int)
 @JvmInline
 value class AttachmentId(val raw: Int)
 
+@JvmInline
+value class InsightSchemaId(val raw: Int)
+
 // endregion ID wrapper
 
 data class InsightObjects(
@@ -169,7 +172,7 @@ data class ObjectTypeAttributeDefaultType(
 
 // region InsightSchemaOperator
 data class InsightSchema(
-    val id: Int,
+    val id: InsightSchemaId,
     val name: String,
     val objectCount: Int,
     val objectTypeCount: Int

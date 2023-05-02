@@ -24,6 +24,7 @@ import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
+import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
 import com.linkedplanet.kotlininsightclient.http.model.HttpInsightSchemaListApiResponse
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 
@@ -44,10 +45,10 @@ open class HttpInsightSchemaOperator(
             .map { it.body!!.objectschemas }
             .mapLeft { it.toInsightClientError() }
 
-    override suspend fun getSchema(id: Int): Either<InsightClientError, InsightSchema> =
+    override suspend fun getSchema(id: InsightSchemaId): Either<InsightClientError, InsightSchema> =
         context.httpClient.executeRest<InsightSchema>(
             "GET",
-            "/rest/insight/1.0/objectschema/$id",
+            "/rest/insight/1.0/objectschema/${id.raw}",
             emptyMap(),
             null,
             "application/json",
