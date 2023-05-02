@@ -138,8 +138,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         val attributeBeans = obj.attributes.map { insightAttr ->
             val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId).createMutable()
             if (obj.isReferenceAttribute(insightAttr.attributeId)) {
-                val values = insightAttr.value.map { it.referencedObject!!.id.toString() }.toTypedArray()
-                objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id.toString()) }
+                val values = insightAttr.value.map { it.referencedObject!!.id.value }.toTypedArray()
+                objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id) }
             } else {
                 val values = insightAttr.value.map { it.value.toString() }.toTypedArray()
                 objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, ota, *values)
