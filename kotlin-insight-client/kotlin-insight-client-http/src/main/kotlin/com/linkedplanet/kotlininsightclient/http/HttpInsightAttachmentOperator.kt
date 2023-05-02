@@ -24,6 +24,7 @@ import arrow.core.computations.either
 import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
+import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
@@ -77,10 +78,10 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
         getAttachments(objectId).bind()
     }
 
-    override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit> =
+    override suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
             "DELETE",
-            "/rest/insight/1.0/attachments/${attachmentId}",
+            "/rest/insight/1.0/attachments/${attachmentId.raw}",
             emptyMap(),
             null,
             "application/json"

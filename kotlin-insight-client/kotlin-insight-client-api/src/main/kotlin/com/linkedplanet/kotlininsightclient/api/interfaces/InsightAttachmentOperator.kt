@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 
@@ -73,5 +74,5 @@ interface InsightAttachmentOperator {
      * @param attachmentId The id of the attachment to delete
      * @return Either an [InsightClientError] or Unit if the deletion was successful
      */
-    suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit>
+    suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit>
 }

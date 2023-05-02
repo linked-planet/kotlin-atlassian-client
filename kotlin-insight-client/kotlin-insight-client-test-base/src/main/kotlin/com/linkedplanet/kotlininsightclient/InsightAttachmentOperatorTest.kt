@@ -24,6 +24,7 @@ import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryShortName
 import com.linkedplanet.kotlininsightclient.InsightObject.Country
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
@@ -49,7 +50,7 @@ interface InsightAttachmentOperatorTest {
         val attachments = insightAttachmentOperator.getAttachments(country.id).orFail()
         val firstAttachment = attachments.first()
         assertThat(attachments.size, equalTo(1))
-        assertThat(firstAttachment.id, equalTo(1))
+        assertThat(firstAttachment.id, equalTo(AttachmentId(1)))
         assertThat(firstAttachment.mimeType, equalTo("application/pdf"))
         assertThat(firstAttachment.author, equalTo("admin"))
         assertThat(firstAttachment.comment, equalTo(""))

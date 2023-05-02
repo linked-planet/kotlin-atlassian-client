@@ -21,6 +21,8 @@ package com.linkedplanet.kotlininsightclient.api.model
 
 import java.util.Collections.emptyList
 
+// region ID wrapper
+
 @JvmInline
 value class InsightObjectId(val value: Int) {
     companion object {
@@ -30,6 +32,11 @@ value class InsightObjectId(val value: Int) {
 
 @JvmInline
 value class InsightObjectTypeId(val raw: Int)
+
+@JvmInline
+value class AttachmentId(val raw: Int)
+
+// endregion ID wrapper
 
 data class InsightObjects(
     val totalFilterCount: Int = -1,
@@ -211,7 +218,7 @@ data class Actor(
 
 // region InsightAttachmentOperator
 data class InsightAttachment(
-    val id: Int,
+    val id: AttachmentId,
     val author: String,
     val mimeType: String,
     val filename: String,

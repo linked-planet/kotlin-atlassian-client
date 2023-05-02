@@ -24,6 +24,7 @@ import arrow.core.computations.either
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
+import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredAttachmentUrlResolver
@@ -102,16 +103,16 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             listOf(insightAttachment)
         }
 
-    override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, Unit> =
+    override suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit> =
         catchAsInsightClientError {
-            objectFacade.deleteAttachmentBean(attachmentId).toString()
+            objectFacade.deleteAttachmentBean(attachmentId.raw).toString()
         }
 
     private fun beanToInsightAttachment(bean: AttachmentBean): InsightAttachment = bean.run {
         val url = attachmentUrlResolver.buildUrlForAttachment(bean)
         val humanReadableFileSize = humanReadableByteCountSI(fileSize)
         InsightAttachment(
-            id!!, // we assume that when getting existing attachments, the id is always set
+            AttachmentId(id!!), // we assume that when getting existing attachments, the id is always set
             author,
             mimeType,
             filename,
