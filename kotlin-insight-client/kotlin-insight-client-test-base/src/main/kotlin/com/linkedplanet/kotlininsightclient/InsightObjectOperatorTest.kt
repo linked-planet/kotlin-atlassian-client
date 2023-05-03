@@ -38,6 +38,7 @@ import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
 import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.junit.Assert.*
@@ -153,13 +154,13 @@ interface InsightObjectOperatorTest {
         assertTrue(companies.size == 2)
 
         val firstCompany = companies.firstOrNull { it.id == InsightObjectId(1) }
-        assertNotNull(firstCompany)
+        assertThat(firstCompany, notNullValue())
         assertThat(firstCompany!!.id, equalTo(InsightObjectId(1)))
         assertThat(firstCompany.objectKey, equalTo("IT-1"))
         assertThat(firstCompany.label, equalTo("Test GmbH"))
 
         // Name
-        assertNotNull(firstCompany.getAttributeByName(InsightAttribute.CompanyName.attributeName))
+        assertThat(firstCompany.getAttributeByName(InsightAttribute.CompanyName.attributeName), notNullValue())
         assertThat(
             firstCompany.getAttributeIdByName(InsightAttribute.CompanyName.attributeName),
             equalTo(InsightAttribute.CompanyName.attributeId)
@@ -167,7 +168,7 @@ interface InsightObjectOperatorTest {
         assertThat(firstCompany.getStringValue(InsightAttribute.CompanyName.attributeId), equalTo("Test GmbH"))
 
         // Country
-        assertNotNull(firstCompany.getAttributeByName(InsightAttribute.CompanyCountry.attributeName))
+        assertThat(firstCompany.getAttributeByName(InsightAttribute.CompanyCountry.attributeName), notNullValue())
         assertThat(
             firstCompany.getAttributeIdByName(InsightAttribute.CompanyCountry.attributeName),
             equalTo(InsightAttribute.CompanyCountry.attributeId)
@@ -179,13 +180,13 @@ interface InsightObjectOperatorTest {
         assertFalse(firstCompany.attachmentsExist)
 
         val secondCompany = companies.firstOrNull { it.id == InsightObjectId(2) }
-        assertNotNull(secondCompany)
+        assertThat(secondCompany, notNullValue())
         assertThat(secondCompany!!.id, equalTo(InsightObjectId(2)))
         assertThat(secondCompany.objectKey, equalTo("IT-2"))
         assertThat(secondCompany.label, equalTo("Test AG"))
 
         // Name
-        assertNotNull(secondCompany.getAttributeByName(InsightAttribute.CompanyName.attributeName))
+        assertThat(secondCompany.getAttributeByName(InsightAttribute.CompanyName.attributeName), notNullValue())
         assertThat(
             secondCompany.getAttributeIdByName(InsightAttribute.CompanyName.attributeName),
             equalTo(InsightAttribute.CompanyName.attributeId)
@@ -193,7 +194,7 @@ interface InsightObjectOperatorTest {
         assertThat(secondCompany.getStringValue(InsightAttribute.CompanyName.attributeId), equalTo("Test AG"))
 
         // Country
-        assertNotNull(secondCompany.getAttributeByName(InsightAttribute.CompanyCountry.attributeName))
+        assertThat(secondCompany.getAttributeByName(InsightAttribute.CompanyCountry.attributeName), notNullValue())
         assertThat(
             secondCompany.getAttributeIdByName(InsightAttribute.CompanyCountry.attributeName),
             equalTo(InsightAttribute.CompanyCountry.attributeId)
@@ -213,11 +214,11 @@ interface InsightObjectOperatorTest {
         val companies = runBlocking {
             insightObjectOperator.getObjects(InsightObject.Company.id).orNull()?.objects
         }
-        assertNotNull(companies)
+        assertThat(companies, notNullValue())
         assertThat(companies!!.size, equalTo(2))
 
         val company = companies.firstOrNull { it.id == InsightObjectId(1) }
-        assertNotNull(company)
+        assertThat(company, notNullValue())
 
         val country = runBlocking {
             insightObjectOperator.getObjectById(

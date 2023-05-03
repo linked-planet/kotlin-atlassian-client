@@ -23,7 +23,8 @@ import arrow.core.Either
 import com.google.gson.JsonArray
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertNotNull
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.MatcherAssert.assertThat
 
 class JiraIssueLinkTestHelper<JiraFieldType>(
     private val issueOperator: JiraIssueOperator<JiraFieldType>
@@ -35,7 +36,7 @@ class JiraIssueLinkTestHelper<JiraFieldType>(
                 Either.Right(json)
             }.orNull()
         }
-        assertNotNull(jsonResponse)
+        assertThat(jsonResponse, notNullValue())
 
         val fields = jsonResponse!!.getAsJsonObject("fields")
         return fields.getAsJsonArray("issuelinks")!!

@@ -22,8 +22,8 @@ package com.linkedplanet.kotlinjiraclient
 import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
@@ -51,7 +51,7 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
             commentOperator.getComments(issue.key)
         }.rightAssertedJiraClientError()
 
-        assertNotNull(comments)
+        assertThat(comments, notNullValue())
         assertThat(comments.size, equalTo(0))
 
         println("### END comments_02GetCommentsEmpty")
@@ -68,7 +68,7 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
             commentOperator.getComments(issue.key)
         }.rightAssertedJiraClientError()
 
-        assertNotNull(comments)
+        assertThat(comments, notNullValue())
         assertThat(comments.size, equalTo(1))
 
         val comment = comments.first()

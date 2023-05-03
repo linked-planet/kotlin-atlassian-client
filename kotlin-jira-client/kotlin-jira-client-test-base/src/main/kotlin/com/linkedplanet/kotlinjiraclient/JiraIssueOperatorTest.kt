@@ -27,8 +27,8 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -78,7 +78,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val keys = 1..10
         keys.forEach { searchedKeyIndex ->
             val issue = issues.firstOrNull { "Test-$searchedKeyIndex" == it.summary }
-            assertNotNull(issue)
+            assertThat(issue, notNullValue())
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
@@ -115,7 +115,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     parser = ::issueParser
                 ).orNull()
             }
-            assertNotNull(page)
+            assertThat(page, notNullValue())
             assertThat(page!!.totalItems, equalTo(10))
             assertThat(page.totalPages, equalTo(10))
             assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
@@ -126,7 +126,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
         pageNumbers.forEach { issueKey ->
             val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
-            assertNotNull(issue)
+            assertThat(issue, notNullValue())
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
@@ -147,7 +147,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     parser = ::issueParser
                 ).orNull()
             }
-            assertNotNull(page)
+            assertThat(page, notNullValue())
             assertThat(page!!.totalItems, equalTo(10))
             assertThat(page.totalPages, equalTo(5))
             assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
@@ -159,7 +159,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val issueKeys = (1..10)
         issueKeys.forEach { issueKey ->
             val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
-            assertNotNull(issue)
+            assertThat(issue, notNullValue())
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
@@ -180,7 +180,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     3,
                     parser = ::issueParser
                 ).orNull()
-                assertNotNull(page)
+                assertThat(page, notNullValue())
                 assertThat(page!!.totalItems, equalTo(10))
                 assertThat(page.totalPages, equalTo(4))
                 assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
@@ -193,7 +193,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val issueKeys = (1..10)
         issueKeys.forEach { issueKey ->
             val issue = pages.flatMap { it.items }.singleOrNull { it.summary == "Test-$issueKey" }
-            assertNotNull(issue)
+            assertThat(issue, notNullValue())
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
@@ -397,7 +397,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             issueOperator.getIssuesByJQL("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
         }
 
-        assertNotNull(issues)
+        assertThat(issues, notNullValue())
         assertTrue(issues!!.isEmpty())
 
         println("### END issues_12GetIssuesByJQLEmpty")
@@ -410,7 +410,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             issueOperator.getIssuesByJQLPaginated("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
         }
 
-        assertNotNull(page)
+        assertThat(page, notNullValue())
         assertThat(page!!.totalItems, equalTo(0))
         assertThat(page.totalPages, equalTo(0))
         assertThat(page.currentPageIndex, equalTo(0))

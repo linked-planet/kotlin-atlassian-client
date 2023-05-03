@@ -23,9 +23,8 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOper
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -37,26 +36,26 @@ interface InsightObjectTypeOperatorTest {
         println("### START testGetObjectType")
 
         val objectType = runBlocking {
-            insightObjectTypeOperator.getObjectType(InsightObject.Company.id).orNull()
+            insightObjectTypeOperator.getObjectType(InsightObject.Company.id).orFail()
         }
-        assertNotNull(objectType)
-        assertTrue(objectType!!.name == "Company")
+        assertThat(objectType, notNullValue())
+        assertTrue(objectType.name == "Company")
         assertThat(objectType.parentObjectTypeId, equalTo(null))
 
         assertThat(objectType.attributes.size, equalTo(5))
 
         val nameAttribute = objectType.attributes.singleOrNull { it.name == "Name" }
-        assertNotNull(nameAttribute)
+        assertThat(nameAttribute, notNullValue())
         assertThat(nameAttribute?.referenceKind, equalTo(null))
         assertThat(nameAttribute?.defaultType, equalTo(DefaultType.TEXT))
 
         val createdAttribute = objectType.attributes.singleOrNull { it.name == "Created" }
-        assertNotNull(createdAttribute)
+        assertThat(createdAttribute, notNullValue())
         assertThat(createdAttribute?.referenceKind, equalTo(null))
         assertThat(createdAttribute?.defaultType, equalTo(DefaultType.DATE_TIME))
 
         val countryAttribute = objectType.attributes.singleOrNull { it.name == "Country" }
-        assertNotNull(countryAttribute)
+        assertThat(countryAttribute, notNullValue())
         assertThat(countryAttribute?.defaultType, equalTo(null))
         assertThat(countryAttribute?.referenceKind, equalTo(ReferenceKind.REFERENCE))
         assertThat(countryAttribute?.minimumCardinality, equalTo(0))
