@@ -68,7 +68,7 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
             InsightObjectTypeId(objectTypeBean.id),
             objectTypeBean.name,
             attributes,
-            InsightObjectTypeId(objectTypeBean.parentObjectTypeId)
+            objectTypeBean.parentObjectTypeId?.let { InsightObjectTypeId(it) }
         )
     }
 
@@ -84,7 +84,7 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
                     maximumCardinality,
                     referenceTypeBean?.run { ReferenceKind.parse(id) },
                     isIncludeChildObjectTypes,
-                    InsightObjectTypeId(referenceObjectTypeId),
+                    referenceObjectTypeId?.let { InsightObjectTypeId(it) },
                     mapAttributeType(type)
                 )
             }
