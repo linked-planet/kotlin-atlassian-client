@@ -25,7 +25,6 @@ import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 interface InsightObjectTypeOperatorTest {
@@ -39,7 +38,7 @@ interface InsightObjectTypeOperatorTest {
             insightObjectTypeOperator.getObjectType(InsightObject.Company.id).orFail()
         }
         assertThat(objectType, notNullValue())
-        assertTrue(objectType.name == "Company")
+        assertThat(objectType.name, equalTo("Company"))
         assertThat(objectType.parentObjectTypeId, equalTo(null))
 
         assertThat(objectType.attributes.size, equalTo(5))

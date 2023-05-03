@@ -151,7 +151,7 @@ interface InsightObjectOperatorTest {
         val companies = runBlocking {
             insightObjectOperator.getObjects(InsightObject.Company.id).orNull()!!.objects
         }
-        assertTrue(companies.size == 2)
+        assertThat(companies.size, equalTo(2))
 
         val firstCompany = companies.firstOrNull { it.id == InsightObjectId(1) }
         assertThat(firstCompany, notNullValue())
@@ -351,7 +351,7 @@ interface InsightObjectOperatorTest {
                 insightObjectOperator.getObjectByName(InsightObject.Country.id, "England").orNull()!!
             val companyAfterCreate =
                 insightObjectOperator.getObjectByName(InsightObject.Company.id, "MyTestCompany GmbH").orNull()!!
-            assertTrue(countryAfterCreate.id == countryReference.objectId)
+            assertThat(countryAfterCreate.id, equalTo(countryReference.objectId))
             assertThat(
                 countryAfterCreate.getStringValue(InsightAttribute.CountryKey.attributeId),
                 equalTo(countryReference.objectKey)
@@ -380,7 +380,7 @@ interface InsightObjectOperatorTest {
             val countries =
                 insightObjectOperator.getObjectsByIQL(InsightObject.Country.id, """"ShortName"="DE"""")
                     .orNull()!!.objects
-            assertTrue(countries.size == 1)
+            assertThat(countries.size, equalTo(1))
             assertThat(countries.first().getStringValue(InsightAttribute.CountryShortName.attributeId), equalTo("DE"))
             assertThat(countries.first().getStringValue(InsightAttribute.CountryName.attributeId), equalTo("Germany"))
         }
@@ -469,7 +469,7 @@ interface InsightObjectOperatorTest {
                 perPage = 2
             ).orNull()!!
         }
-        assertTrue(allINSIGHTOBJECTList.totalFilterCount == 2)
+        assertThat(allINSIGHTOBJECTList.totalFilterCount, equalTo(2))
         val allObjects = allINSIGHTOBJECTList.objects
         assertThat(allObjects.size, equalTo(2))
         assertThat(allObjects[0].id, equalTo(InsightObjectId(94)))
@@ -484,7 +484,7 @@ interface InsightObjectOperatorTest {
                 perPage = 5
             ).orNull()!!
         }
-        assertTrue(allExplINSIGHTOBJECTList.totalFilterCount == 2)
+        assertThat(allExplINSIGHTOBJECTList.totalFilterCount, equalTo(2))
         val allExplObjects = allExplINSIGHTOBJECTList.objects
         assertThat(allExplObjects.size, equalTo(2))
         assertThat(allExplObjects[0].id, equalTo(InsightObjectId(94)))
@@ -499,7 +499,7 @@ interface InsightObjectOperatorTest {
                 perPage = 1
             ).orNull()!!
         }
-        assertTrue(firstINSIGHTOBJECTList.totalFilterCount == 2)
+        assertThat(firstINSIGHTOBJECTList.totalFilterCount, equalTo(2))
         val firstObjects = firstINSIGHTOBJECTList.objects
         assertThat(firstObjects.size, equalTo(1))
         assertThat(firstObjects[0].id, equalTo(InsightObjectId(94)))
@@ -513,7 +513,7 @@ interface InsightObjectOperatorTest {
                 perPage = 1
             ).orNull()!!
         }
-        assertTrue(secondINSIGHTOBJECTList.totalFilterCount == 2)
+        assertThat(secondINSIGHTOBJECTList.totalFilterCount, equalTo(2))
         val secondObjects = secondINSIGHTOBJECTList.objects
         assertThat(secondObjects.size, equalTo(1))
         assertThat(secondObjects[0].id, equalTo(InsightObjectId(95)))
@@ -527,7 +527,7 @@ interface InsightObjectOperatorTest {
                 perPage = 2
             ).orNull()!!
         }
-        assertTrue(firstINSIGHTOBJECTList.totalFilterCount == 2)
+        assertThat(firstINSIGHTOBJECTList.totalFilterCount, equalTo(2))
         val emptyObjects = emptyINSIGHTOBJECTList.objects
         assertTrue(emptyObjects.isEmpty())
 
