@@ -465,8 +465,8 @@ interface InsightObjectOperatorTest {
             insightObjectOperator.getObjects(
                 InsightObject.Abstract.id,
                 withChildren = true,
-                pageFrom = 1,
-                perPage = 2
+                pageIndex = 0,
+                pageSize = 2
             ).orNull()!!
         }
         assertThat(allINSIGHTOBJECTList.totalFilterCount, equalTo(2))
@@ -480,8 +480,8 @@ interface InsightObjectOperatorTest {
             insightObjectOperator.getObjects(
                 InsightObject.Abstract.id,
                 withChildren = true,
-                pageFrom = 1,
-                perPage = 5
+                pageIndex = 0,
+                pageSize = 5
             ).orNull()!!
         }
         assertThat(allExplINSIGHTOBJECTList.totalFilterCount, equalTo(2))
@@ -495,8 +495,8 @@ interface InsightObjectOperatorTest {
             insightObjectOperator.getObjects(
                 InsightObject.Abstract.id,
                 withChildren = true,
-                pageFrom = 1,
-                perPage = 1
+                pageIndex = 0,
+                pageSize = 1
             ).orNull()!!
         }
         assertThat(firstINSIGHTOBJECTList.totalFilterCount, equalTo(2))
@@ -509,8 +509,8 @@ interface InsightObjectOperatorTest {
             insightObjectOperator.getObjects(
                 InsightObject.Abstract.id,
                 withChildren = true,
-                pageFrom = 2,
-                perPage = 1
+                pageIndex = 1,
+                pageSize = 1
             ).orNull()!!
         }
         assertThat(secondINSIGHTOBJECTList.totalFilterCount, equalTo(2))
@@ -523,8 +523,8 @@ interface InsightObjectOperatorTest {
             insightObjectOperator.getObjects(
                 InsightObject.Abstract.id,
                 withChildren = true,
-                pageFrom = 3,
-                perPage = 2
+                pageIndex = 2,
+                pageSize = 2
             ).orNull()!!
         }
         assertThat(firstINSIGHTOBJECTList.totalFilterCount, equalTo(2))

@@ -86,33 +86,33 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     override suspend fun getObjects(
         objectTypeId: InsightObjectTypeId,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, InsightObjectPage> =
         catchAsInsightClientError {
             val iql = getIQLWithChildren(objectTypeId, withChildren)
-            iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
+            iqlFacade.findObjects(iql, pageIndex * pageSize, pageSize)
         }.flatMap { it.toInsightObjectPage() }
 
     override suspend fun getObjectsByIQL(
         objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, InsightObjectPage> =
         catchAsInsightClientError {
             val compositeIql = getIQLWithChildren(objectTypeId, withChildren) + " AND " + iql
-            iqlFacade.findObjects(compositeIql, (pageFrom - 1) * perPage, perPage)
+            iqlFacade.findObjects(compositeIql, pageIndex * pageSize, pageSize)
         }.flatMap { it.toInsightObjectPage() }
 
     override suspend fun getObjectsByIQL(
         iql: String,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, InsightObjectPage> =
         catchAsInsightClientError {
-            iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
+            iqlFacade.findObjects(iql, pageIndex * pageSize, pageSize)
         }.flatMap { it.toInsightObjectPage() }
 
     override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> =

@@ -44,11 +44,11 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     override suspend fun getObjects(
         objectTypeId: InsightObjectTypeId,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, InsightObjectPage> = either {
         val iql = getIQLWithChildren(objectTypeId, withChildren)
-        getObjectsByIQL(iql, pageFrom, perPage).bind()
+        getObjectsByIQL(iql, pageIndex, pageSize).bind()
     }
 
     override suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?> =
@@ -62,28 +62,24 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     override suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>> {
         val iql = "objectType=$objectTypeName"
-        return getObjectsByIQL(iql, 1, Int.MAX_VALUE).map { it.objects }
+        return getObjectsByIQL(iql, pageIndex = 0, pageSize = Int.MAX_VALUE).map { it.objects }
     }
 
     override suspend fun getObjectsByIQL(
         objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, InsightObjectPage> = either {
         val fullIql = "${getIQLWithChildren(objectTypeId, withChildren)} AND $iql"
-        getObjectsByIQL(
-            fullIql,
-            pageFrom,
-            perPage
-        ).bind()
+        getObjectsByIQL(fullIql, pageIndex, pageSize).bind()
     }
 
     override suspend fun getObjectsByIQL(
         iql: String,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, InsightObjectPage> = either {
         val objects = context.httpClient.executeRest<InsightObjectEntriesApiResponse>(
             "GET",
@@ -92,8 +88,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 "iql" to iql,
                 "includeTypeAttributes" to "true",
                 "includeExtendedInfo" to "true",
-                "page" to "$pageFrom",
-                "resultPerPage" to perPage.toString()
+                "page" to "${pageIndex + 1}",
+                "resultPerPage" to pageSize.toString()
             ),
             null,
             "application/json",
