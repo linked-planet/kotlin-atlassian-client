@@ -80,7 +80,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>> {
         val iql = "objectType=$objectTypeName"
-        return getObjectsByIQL(iql, 1, Int.MAX_VALUE).map { it.objects }
+        return getObjectsByIQL(iql, 0, Int.MAX_VALUE).map { it.objects }
     }
 
     override suspend fun getObjects(
