@@ -246,6 +246,8 @@ interface InsightObjectOperatorTest {
         )
         assertThat(company.objectTypeName, equalTo("Company"))
         assertThat(company.objectTypeId, equalTo(InsightObjectTypeId(1)))
+        assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
+        assertThat(company.objectSelf, startsWith("http"))
 
         assertThat(company.attachmentsExist, equalTo(false))
         println("### END object_testObjectById")

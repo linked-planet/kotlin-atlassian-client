@@ -25,6 +25,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
+import com.atlassian.jira.config.properties.ApplicationProperties
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
@@ -62,6 +63,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
     private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
+    private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
 
     override suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?> =
         catchAsInsightClientError { objectFacade.loadObjectBean(id.value) }
@@ -215,7 +217,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             val objTypeAttributeBean = objectTypeAttributeBeans.typeForBean(objAttributeBean).bind()
             createInsightAttribute(objAttributeBean, objTypeAttributeBean).bind()
         }
-
+        val objectSelf = "${baseUrl}/secure/insight/assets/${objectBean.objectKey}"
         InsightObject(
             InsightObjectTypeId(objectBean.objectTypeId),
             InsightObjectId(objectBean.id),
@@ -224,7 +226,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectBean.label,
             attributes,
             hasAttachments,
-            attributes.singleOrNull { it.attributeName == "Link" }?.toDisplayValue() as? String ?: "NO SELF!!!"
+            attributes.singleOrNull { it.attributeName == "Link" }?.toDisplayValue() as? String ?: objectSelf
         )
     }
 
