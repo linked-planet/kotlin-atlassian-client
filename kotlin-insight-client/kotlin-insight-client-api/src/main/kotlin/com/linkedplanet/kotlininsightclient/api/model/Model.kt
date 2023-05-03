@@ -54,12 +54,12 @@ fun InsightObjectPage.plus(insightObjectPage: InsightObjectPage): InsightObjectP
 
 data class InsightObject(
     val objectTypeId: InsightObjectTypeId,
-    var id: InsightObjectId,
+    val id: InsightObjectId,
     val objectTypeName: String,
-    var objectKey: String,
-    var label: String,
+    val objectKey: String,
+    val label: String,
     var attributes: List<InsightAttribute>,
-    var attachmentsExist: Boolean,
+    val attachmentsExist: Boolean,
     val objectSelf: String
 )
 
