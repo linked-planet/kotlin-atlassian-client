@@ -21,7 +21,7 @@ package com.linkedplanet.kotlininsightclient.http.model
 
 // This file contains objects that are received from Insights REST API
 
-internal data class InsightObjectEntries(
+internal data class InsightObjectEntriesApiResponse(
     val totalFilterCount: Int,
     val objectEntries: List<InsightObjectApiResponse>
 )

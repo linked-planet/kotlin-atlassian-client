@@ -28,7 +28,7 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
-import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntries
+import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectAttributeValueApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectEditItem
 import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeAttributeDefaultTypeApiResponse
@@ -85,7 +85,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         pageFrom: Int,
         perPage: Int
     ): Either<InsightClientError, InsightObjects> = either {
-        val objects = context.httpClient.executeRest<InsightObjectEntries>(
+        val objects = context.httpClient.executeRest<InsightObjectEntriesApiResponse>(
             "GET",
             "rest/insight/1.0/iql/objects",
             mapOf(
@@ -97,7 +97,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             ),
             null,
             "application/json",
-            InsightObjectEntries::class.java
+            InsightObjectEntriesApiResponse::class.java
         )
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
@@ -157,7 +157,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
 
     // PRIVATE DOWN HERE
-    private fun InsightObjectEntries.toValues(): InsightObjects =
+    private fun InsightObjectEntriesApiResponse.toValues(): InsightObjects =
         InsightObjects(
             this.totalFilterCount,
             this.objectEntries.map {
@@ -171,7 +171,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     private suspend fun getObjectByPlainIQL(
         iql: String
     ): Either<InsightClientError, InsightObject?> = either {
-        context.httpClient.executeRest<InsightObjectEntries>(
+        context.httpClient.executeRest<InsightObjectEntriesApiResponse>(
             "GET",
             "rest/insight/1.0/iql/objects",
             mapOf(
@@ -181,7 +181,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             ),
             null,
             "application/json",
-            InsightObjectEntries::class.java
+            InsightObjectEntriesApiResponse::class.java
         )
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
