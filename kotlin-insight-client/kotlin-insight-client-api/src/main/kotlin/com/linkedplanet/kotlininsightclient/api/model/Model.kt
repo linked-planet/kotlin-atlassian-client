@@ -41,15 +41,15 @@ value class InsightSchemaId(val raw: Int)
 
 // endregion ID wrapper
 
-data class InsightObjects(
+data class InsightObjectPage(
     val totalFilterCount: Int = -1,
     val objects: List<InsightObject> = emptyList()
 )
 
-fun InsightObjects.plus(insightObjects: InsightObjects): InsightObjects =
-    InsightObjects(
-        this.totalFilterCount + insightObjects.totalFilterCount,
-        this.objects.plus(insightObjects.objects)
+fun InsightObjectPage.plus(insightObjectPage: InsightObjectPage): InsightObjectPage =
+    InsightObjectPage(
+        this.totalFilterCount + insightObjectPage.totalFilterCount,
+        this.objects.plus(insightObjectPage.objects)
     )
 
 data class InsightObject(

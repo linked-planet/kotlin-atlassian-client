@@ -46,7 +46,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> = either {
+    ): Either<InsightClientError, InsightObjectPage> = either {
         val iql = getIQLWithChildren(objectTypeId, withChildren)
         getObjectsByIQL(iql, pageFrom, perPage).bind()
     }
@@ -71,7 +71,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> = either {
+    ): Either<InsightClientError, InsightObjectPage> = either {
         val fullIql = "${getIQLWithChildren(objectTypeId, withChildren)} AND $iql"
         getObjectsByIQL(
             fullIql,
@@ -84,7 +84,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         iql: String,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> = either {
+    ): Either<InsightClientError, InsightObjectPage> = either {
         val objects = context.httpClient.executeRest<InsightObjectEntriesApiResponse>(
             "GET",
             "rest/insight/1.0/iql/objects",
@@ -103,7 +103,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .mapLeft { it.toInsightClientError() }
             .bind()
             ?.toValues()
-        objects ?: InsightObjects(getObjectCount(iql).bind(), emptyList())
+        objects ?: InsightObjectPage(getObjectCount(iql).bind(), emptyList())
     }
 
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
@@ -157,8 +157,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
 
     // PRIVATE DOWN HERE
-    private fun InsightObjectEntriesApiResponse.toValues(): InsightObjects =
-        InsightObjects(
+    private fun InsightObjectEntriesApiResponse.toValues(): InsightObjectPage =
+        InsightObjectPage(
             this.totalFilterCount,
             this.objectEntries.map {
                 it.toValue()

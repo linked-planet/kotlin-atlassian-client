@@ -24,7 +24,7 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 
 /**
  * The InsightObjectOperator interface provides methods to interact with Insight objects.
@@ -43,14 +43,14 @@ interface InsightObjectOperator {
      * @param withChildren Determines whether to retrieve child objects (think java inheritance) as well
      * @param pageFrom The starting page of the paginated list. Starting at 1.
      * @param perPage The number of results to be returned per page
-     * @return Either an [InsightClientError] or an [InsightObjects] object containing the list of Insight objects
+     * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the list of Insight objects
      */
     suspend fun getObjects(
         objectTypeId: InsightObjectTypeId,
         withChildren: Boolean = false,
         pageFrom: Int = 1,
         perPage: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, InsightObjects>
+    ): Either<InsightClientError, InsightObjectPage>
 
     /**
      * Retrieves the Insight object with the specified id.
@@ -93,7 +93,7 @@ interface InsightObjectOperator {
      * @param withChildren Determines whether or not to retrieve child objects as well
      * @param pageFrom The starting page of the paginated list. Starting at 1.
      * @param perPage The number of results to be returned per page
-     * @return Either an [InsightClientError] or an [InsightObjects] object containing the filtered list of Insight objects
+     * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the filtered list of Insight objects
      */
     suspend fun getObjectsByIQL(
         objectTypeId: InsightObjectTypeId,
@@ -101,7 +101,7 @@ interface InsightObjectOperator {
         withChildren: Boolean = false,
         pageFrom: Int = 1,
         perPage: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, InsightObjects>
+    ): Either<InsightClientError, InsightObjectPage>
 
     /**
      * Retrieves a paginated list of Insight objects that match the given IQL query.
@@ -109,13 +109,13 @@ interface InsightObjectOperator {
      * @param iql The IQL query to use for filtering
      * @param pageFrom The starting page of the paginated list. Starting at 1.
      * @param perPage The number of results to be returned per page
-     * @return Either an [InsightClientError] or an [InsightObjects] object containing the filtered list of Insight objects
+     * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the filtered list of Insight objects
      */
     suspend fun getObjectsByIQL(
         iql: String,
         pageFrom: Int = 1,
         perPage: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, InsightObjects>
+    ): Either<InsightClientError, InsightObjectPage>
 
     /**
      * Returns the number of Insight objects that match the specified IQL (Insight Query Language) statement.

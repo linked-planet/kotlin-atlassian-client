@@ -33,7 +33,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
@@ -88,11 +88,11 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> =
+    ): Either<InsightClientError, InsightObjectPage> =
         catchAsInsightClientError {
             val iql = getIQLWithChildren(objectTypeId, withChildren)
             iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
-        }.flatMap { it.toInsightObjects() }
+        }.flatMap { it.toInsightObjectPage() }
 
     override suspend fun getObjectsByIQL(
         objectTypeId: InsightObjectTypeId,
@@ -100,20 +100,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> =
+    ): Either<InsightClientError, InsightObjectPage> =
         catchAsInsightClientError {
             val compositeIql = getIQLWithChildren(objectTypeId, withChildren) + " AND " + iql
             iqlFacade.findObjects(compositeIql, (pageFrom - 1) * perPage, perPage)
-        }.flatMap { it.toInsightObjects() }
+        }.flatMap { it.toInsightObjectPage() }
 
     override suspend fun getObjectsByIQL(
         iql: String,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, InsightObjects> =
+    ): Either<InsightClientError, InsightObjectPage> =
         catchAsInsightClientError {
             iqlFacade.findObjects(iql, (pageFrom - 1) * perPage, perPage)
-        }.flatMap { it.toInsightObjects() }
+        }.flatMap { it.toInsightObjectPage() }
 
     override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> =
         catchAsInsightClientError {
@@ -180,8 +180,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         )
     }
 
-    private suspend fun ObjectResultBean.toInsightObjects(): Either<InsightClientError, InsightObjects> = either {
-        InsightObjects(
+    private suspend fun ObjectResultBean.toInsightObjectPage(): Either<InsightClientError, InsightObjectPage> = either {
+        InsightObjectPage(
             totalFilterSize,
             objects.map { it.toInsightObject().bind() })
     }
