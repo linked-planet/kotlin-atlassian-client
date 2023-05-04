@@ -21,7 +21,7 @@ package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryName
 import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryShortName
-import com.linkedplanet.kotlininsightclient.InsightObject.Country
+import com.linkedplanet.kotlininsightclient.InsightObjectType.Country
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId

@@ -35,7 +35,7 @@ interface InsightObjectTypeOperatorTest {
         println("### START testGetObjectType")
 
         val objectType = runBlocking {
-            insightObjectTypeOperator.getObjectType(InsightObject.Company.id).orFail()
+            insightObjectTypeOperator.getObjectType(InsightObjectType.Company.id).orFail()
         }
         assertThat(objectType, notNullValue())
         assertThat(objectType.name, equalTo("Company"))

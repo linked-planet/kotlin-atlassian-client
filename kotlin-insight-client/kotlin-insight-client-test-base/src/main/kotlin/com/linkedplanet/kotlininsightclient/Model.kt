@@ -26,7 +26,7 @@ enum class SchemaObject(val id: InsightSchemaId) {
     ITest(InsightSchemaId(1))
 }
 
-enum class InsightObject(val id: InsightObjectTypeId) {
+enum class InsightObjectType(val id: InsightObjectTypeId) {
     Company(InsightObjectTypeId(1)),
     Country(InsightObjectTypeId(2)),
     TestWithLists(InsightObjectTypeId(4)),
