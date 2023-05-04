@@ -32,6 +32,7 @@ import com.linkedplanet.kotlininsightclient.api.model.getAttributeIdByName
 import com.linkedplanet.kotlininsightclient.api.model.getMultiReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
+import com.linkedplanet.kotlininsightclient.api.model.getUserList
 import com.linkedplanet.kotlininsightclient.api.model.getValueList
 import com.linkedplanet.kotlininsightclient.api.model.removeValue
 import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
@@ -234,7 +235,7 @@ interface InsightObjectOperatorTest {
     fun testObjectById() {
         println("### START object_testObjectById")
         val company = runBlocking {
-            insightObjectOperator.getObjectById(InsightObjectId(1)).orNull()!!
+            insightObjectOperator.getObjectById(InsightObjectId(1)).orFail()!!
         }
         assertThat(company.id, equalTo(InsightObjectId(1)))
         assertThat(company.objectKey, equalTo("IT-1"))
@@ -308,7 +309,7 @@ interface InsightObjectOperatorTest {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id).orNull()
         }!!.objects.first()
         val results3 = obj3.getValueList(InsightAttribute.TestWithListsStringList.attributeId)
-        assertThat(results3, equalTo("A"))
+        assertThat(results3, equalTo(listOf("A")))
         obj3.removeValue(InsightAttribute.TestWithListsStringList.attributeId, "A")
         runBlocking { insightObjectOperator.updateObject(obj3).orNull() }
 
@@ -341,8 +342,14 @@ interface InsightObjectOperatorTest {
 
             assertThat(country1.id.value, greaterThan(0))
             assertThat(country1.getStringValue(InsightAttribute.CountryKey.attributeId)!!.isNotBlank(), equalTo(true))
-            assertThat(company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectId.value, greaterThan(0))
-            assertThat(company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectKey.isNotBlank(), equalTo(true))
+            assertThat(
+                company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectId.value,
+                greaterThan(0)
+            )
+            assertThat(
+                company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!.objectKey.isNotBlank(),
+                equalTo(true)
+            )
 
             // Check England does exist
             val countryReference = company1.getSingleReferenceValue(InsightAttribute.CompanyCountry.attributeId)!!
@@ -538,16 +545,15 @@ interface InsightObjectOperatorTest {
         println("### START object_testUserAttribute")
 
         val obj = runBlocking {
-            insightObjectOperator.getObjects(InsightObjectType.User.id).map { it.objects.firstOrNull() }.orNull()
+            insightObjectOperator.getObjects(InsightObjectType.User.id).map { it.objects.firstOrNull() }.orFail()
         }
-        assertNotNull(obj)
+        assertThat(obj, notNullValue())
         val userAttr = obj!!.getUserList(InsightAttribute.UserTestUser.attributeId)
-        assertEquals(1, userAttr.size)
-        assertEquals("admin", userAttr.first().name)
+        assertThat(userAttr.size, equalTo(1))
+        assertThat(userAttr.first().name, equalTo("admin"))
         val usersAttr = obj.getUserList(InsightAttribute.UserTestUsers.attributeId)
-        assertEquals(2, usersAttr.size)
-        assertNotNull(usersAttr.firstOrNull { it.name == "admin" })
-        assertNotNull(usersAttr.firstOrNull { it.name == "test1" })
+        assertThat(usersAttr.size, equalTo(2))
+        assertThat(usersAttr.map { it.name }, hasItems("admin", "test1"))
 
         println("### END object_testUserAttribute")
     }

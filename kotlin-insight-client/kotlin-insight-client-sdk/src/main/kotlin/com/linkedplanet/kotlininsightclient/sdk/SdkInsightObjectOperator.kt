@@ -26,6 +26,7 @@ import arrow.core.left
 import arrow.core.right
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
+import com.atlassian.jira.user.util.UserManager
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
@@ -33,8 +34,9 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.InsightUser
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
@@ -47,9 +49,11 @@ import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectType
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
 import com.riadalabs.jira.plugins.insight.services.model.MutableObjectBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectAttributeBean
+import com.riadalabs.jira.plugins.insight.services.model.ObjectAttributeValueBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectResultBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
+import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.Type
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
 import com.riadalabs.jira.plugins.insight.services.model.factory.ObjectAttributeBeanFactory
 import io.riada.core.collector.model.toDisplayValue
@@ -59,6 +63,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     override var RESULTS_PER_PAGE: Int = 25
 
     private val objectFacade by lazy { getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
+    private val userManager by lazy { getOSGiComponentInstanceOfType(UserManager::class.java) }
     private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
     private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
     private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
@@ -73,7 +78,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         catchAsInsightClientError { objectFacade.loadObjectBean(key) }
             .flatMap { it.toNullableInsightObject() }
 
-    override suspend fun getObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, InsightObject?> =
+    override suspend fun getObjectByName(
+        objectTypeId: InsightObjectTypeId,
+        name: String
+    ): Either<InsightClientError, InsightObject?> =
         catchAsInsightClientError {
             val iql = "objectTypeId=${objectTypeId.raw} AND Name=\"$name\""
             val objs = iqlFacade.findObjects(iql)
@@ -244,34 +252,54 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectTypeAttributeBean.id,
             objectTypeAttributeBean.name,
             InsightObjectAttributeType.parse(objectTypeAttributeBean.type.typeId),
-            defaultType = ObjectTypeAttributeDefaultType(objectTypeAttributeBean.defaultType.defaultTypeId, objectTypeAttributeBean.defaultType.name),
+            defaultType = ObjectTypeAttributeDefaultType(
+                objectTypeAttributeBean.defaultType.defaultTypeId,
+                objectTypeAttributeBean.defaultType.name
+            ),
             options = objectTypeAttributeBean.options,
             minimumCardinality = objectTypeAttributeBean.maximumCardinality,
             maximumCardinality = objectTypeAttributeBean.minimumCardinality,
-            objectAttributeBean.objectAttributeValueBeans.map { bean ->
-                if (objectTypeAttributeBean.isObjectReference) {
-                    val refObj = getObjectById(InsightObjectId(bean.referencedObjectBeanId)).bind()
-                    ObjectAttributeValue(
-                        bean.value,
-                        "${refObj?.label} (${refObj?.objectKey})",
-                        refObj?.let {
-                            ReferencedObject(
-                                refObj.id,
-                                refObj.label,
-                                refObj.objectKey,
-                                ReferencedObjectType(
-                                    refObj.objectTypeId,
-                                    refObj.objectTypeName
-                                )
-                            )
-                        }
-                    )
-                } else {
-                    ObjectAttributeValue(bean.value, bean.textValue, null)
+            value = objectAttributeBean.objectAttributeValueBeans.map { attribute ->
+                when (objectTypeAttributeBean.type) {
+                    Type.REFERENCED_OBJECT -> {
+                        val referencedObject = loadReferencedObject(attribute, objectTypeAttributeBean).bind()
+                        val displayValue = "${referencedObject?.label} (${referencedObject?.objectKey})"
+                        ObjectAttributeValue(null, displayValue, referencedObject, null)
+                    }
+                    Type.USER -> {
+                        val user = loadInsightUserByKey(attribute.textValue).bind()
+                        ObjectAttributeValue(null, null, null, user)
+                    }
+                    else -> ObjectAttributeValue(attribute.value, attribute.textValue, null, null)
                 }
             }
         )
     }
+
+    private fun loadReferencedObject(
+        bean: ObjectAttributeValueBean,
+        objectTypeAttributeBean: ObjectTypeAttributeBean
+    ): Either<InsightClientError, ReferencedObject?> =
+        catchAsInsightClientError { // TODO: loading the full obj bean worth it?
+            objectFacade.loadObjectBean(bean.referencedObjectBeanId)?.let { refObjBean ->
+                ReferencedObject(
+                    InsightObjectId(bean.referencedObjectBeanId),
+                    refObjBean.label,
+                    refObjBean.objectKey,
+                    ReferencedObjectType(
+                        InsightObjectTypeId(objectTypeAttributeBean.referenceObjectTypeId),
+                        objectTypeAttributeBean.name
+                    )
+                )
+            }
+        }
+
+    private fun loadInsightUserByKey(userKey: String): Either<InsightClientError, InsightUser?> =
+        catchAsInsightClientError {
+            userManager.getUserByKey(userKey)?.run {
+                InsightUser(displayName, name, emailAddress, key)
+            }
+        }
 
     private fun getIQLWithChildren(objTypeId: InsightObjectTypeId, withChildren: Boolean): String =
         if (withChildren) {

@@ -71,29 +71,29 @@ interface InsightAttachmentOperatorTest {
     @Test
     fun attachmentTestAttachmentCRUD() = runBlocking {
         println("### START attachment_testDownloadAttachment")
-
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
-        val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
-        val country = insightObjectOperator.createObject(Country.id) {
-            it.setValue(CountryName.attributeId, "Attachistan")
-            it.setValue(CountryShortName.attributeId, disclaimer)
-        }.orFail()
+        try {
+            val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
+            val country = insightObjectOperator.createObject(Country.id) {
+                it.setValue(CountryName.attributeId, "Attachistan")
+                it.setValue(CountryShortName.attributeId, disclaimer)
+            }.orFail()
 
-        val attachment = insightAttachmentOperator.uploadAttachment(
-            country.id, "attachistan.txt", "content".toByteArray()
-        ).orFail().first()
+            val attachment = insightAttachmentOperator.uploadAttachment(
+                country.id, "attachistan.txt", "content".toByteArray()
+            ).orFail().first()
 
-        assertThat(attachment.filename, equalTo("attachistan.txt"))
+            assertThat(attachment.filename, equalTo("attachistan.txt"))
 
-        val downloadContent = insightAttachmentOperator.downloadAttachment(attachment.url).orFail()
-        val downloadContentString = String(downloadContent)
-        assertThat(downloadContentString, equalTo("content"))
+            val downloadContent = insightAttachmentOperator.downloadAttachment(attachment.url).orFail()
+            val downloadContentString = String(downloadContent)
+            assertThat(downloadContentString, equalTo("content"))
 
-        insightAttachmentOperator.deleteAttachment(attachment.id).orFail()
-        assertThat(insightAttachmentOperator.downloadAttachment(attachment.url).isLeft(), equalTo(true))
-
-        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
-
+            insightAttachmentOperator.deleteAttachment(attachment.id).orFail()
+            assertThat(insightAttachmentOperator.downloadAttachment(attachment.url).isLeft(), equalTo(true))
+        } finally {
+            insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
+        }
         println("### END attachment_testDownloadAttachment")
     }
 
@@ -130,38 +130,39 @@ interface InsightAttachmentOperatorTest {
     fun attachmentTestDownloadZip() = runBlocking {
         println("### Integration Test Start: testDownloadZip")
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
+        try {
+            val disclaimer = "'Zipistan' created by Test and should only exist during test run."
+            val country = insightObjectOperator.createObject(Country.id) {
+                it.setValue(CountryName.attributeId, "Zipistan")
+                it.setValue(CountryShortName.attributeId, disclaimer)
+            }.orFail()
 
-        val disclaimer = "'Zipistan' created by Test and should only exist during test run."
-        val country = insightObjectOperator.createObject(Country.id) {
-            it.setValue(CountryName.attributeId, "Zipistan")
-            it.setValue(CountryShortName.attributeId, disclaimer)
-        }.orFail()
+            val files = mapOf(
+                "firstFile.txt" to "firstFileContent",
+                "secondFile.txt" to "secondFileContent"
+            )
 
-        val files = mapOf(
-            "firstFile.txt" to "firstFileContent",
-            "secondFile.txt" to "secondFileContent"
-        )
+            // GIVEN an object with two attachment files
+            insightAttachmentOperator.uploadAttachment(
+                country.id, files.keys.first(), files.values.first().toByteArray(),
+            ).orFail().first()
+            insightAttachmentOperator.uploadAttachment(
+                country.id, files.keys.last(), files.values.last().toByteArray(),
+            ).orFail().first()
 
-        // GIVEN an object with two attachment files
-        insightAttachmentOperator.uploadAttachment(
-            country.id, files.keys.first(), files.values.first().toByteArray(),
-        ).orFail().first()
-        insightAttachmentOperator.uploadAttachment(
-            country.id, files.keys.last(), files.values.last().toByteArray(),
-        ).orFail().first()
+            // WHEN downloading attachment zip
+            val downloadAttachmentZip = insightAttachmentOperator.downloadAttachmentZip(country.id).orFail()
 
-        // WHEN downloading attachment zip
-        val downloadAttachmentZip = insightAttachmentOperator.downloadAttachmentZip(country.id).orFail()
-
-        // then both files are contained inside the zip archive
-        val zip = ZipInputStream(ByteArrayInputStream(downloadAttachmentZip))
-        val firstZipFileName = zip.nextEntry?.name
-        assertThat(String(zip.readBytes()), equalTo(files[firstZipFileName]))
-        val secondZipEntryName = zip.nextEntry?.name
-        assertThat(String(zip.readBytes()), equalTo(files[secondZipEntryName]))
-        Assert.assertNull(zip.nextEntry)
-
-        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
+            // then both files are contained inside the zip archive
+            val zip = ZipInputStream(ByteArrayInputStream(downloadAttachmentZip))
+            val firstZipFileName = zip.nextEntry?.name
+            assertThat(String(zip.readBytes()), equalTo(files[firstZipFileName]))
+            val secondZipEntryName = zip.nextEntry?.name
+            assertThat(String(zip.readBytes()), equalTo(files[secondZipEntryName]))
+            Assert.assertNull(zip.nextEntry)
+        } finally {
+            insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
+        }
         println("### Integration Test End: testDownloadZip")
     }
 

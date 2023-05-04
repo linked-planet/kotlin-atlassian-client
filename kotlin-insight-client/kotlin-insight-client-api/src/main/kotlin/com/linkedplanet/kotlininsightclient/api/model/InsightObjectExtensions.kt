@@ -17,6 +17,8 @@
  * limitations under the License.
  * #L%
  */
+@file:Suppress("unused")
+
 package com.linkedplanet.kotlininsightclient.api.model
 
 import java.time.ZonedDateTime
@@ -73,7 +75,12 @@ fun <T> InsightObject.setValueList(id: Int, name: String? = null, values: List<T
     }
     getAttribute(id)
         ?.value = values.map {
-        ObjectAttributeValue(it, "", null)
+        ObjectAttributeValue(
+            value = it,
+            displayValue = "",
+            referencedObject = null,
+            user = null
+        )
     }
 }
 
@@ -84,7 +91,12 @@ fun <T> InsightObject.setValue(id: Int, name: String? = null, value: T?) {
         this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
-        ?.value = listOf(ObjectAttributeValue(value, "", null))
+        ?.value = listOf(ObjectAttributeValue(
+        value = value,
+        displayValue = "",
+        referencedObject = null,
+        user = null)
+    )
 }
 
 fun <T> InsightObject.removeValue(id: Int, value: T?) {
@@ -100,7 +112,12 @@ fun InsightObject.addValue(id: Int, name: String? = null, value: Any?) {
     }
     getAttribute(id)
         ?.apply {
-            this.value = this.value + ObjectAttributeValue(value, "", null)
+            this.value = this.value + ObjectAttributeValue(
+                value = value,
+                displayValue = "",
+                referencedObject = null,
+                user = null
+            )
         }
 }
 
@@ -171,6 +188,12 @@ fun InsightObject.getMultiReferenceValue(id: Int): List<InsightReference> =
         }
         ?: Collections.emptyList()
 
+fun InsightObject.getUserList(id: Int): List<InsightUser> =
+    this.attributes
+        .firstOrNull { it.attributeId == id }
+        ?.value
+        ?.mapNotNull { it.user }
+        ?: Collections.emptyList()
 
 fun InsightObject.removeReference(attributeId: Int, referencedObjectId: InsightObjectId) {
     getAttribute(attributeId)
@@ -194,15 +217,15 @@ fun InsightObject.addReference(attributeId: Int, name: String?, referencedObject
     getAttribute(attributeId)
         ?.let {
             it.value = (it.value + ObjectAttributeValue(
-                null,
-                null,
-                ReferencedObject(
+                value = null,
+                displayValue = null,
+                referencedObject = ReferencedObject(
                     referencedObjectId,
                     "",
                     "",
                     null
-                )
-
+                ),
+                user = null
             ))
         }
 }

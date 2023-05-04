@@ -223,11 +223,16 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 it.objectTypeAttribute?.minimumCardinality,
                 it.objectTypeAttribute?.maximumCardinality,
                 it.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
-                    ObjectAttributeValue(av.value, av.displayValue, av.referencedObject?.let { ro ->
-                        ReferencedObject(InsightObjectId(ro.id), ro.label, ro.objectKey, ro.objectType?.let { ot ->
-                            ReferencedObjectType(InsightObjectTypeId(ot.id), ot.name)
-                        })
-                    })
+                    ObjectAttributeValue(
+                        value = av.value,
+                        displayValue = av.displayValue,
+                        referencedObject = av.referencedObject?.let { ro ->
+                            ReferencedObject(InsightObjectId(ro.id), ro.label, ro.objectKey, ro.objectType?.let { ot ->
+                                ReferencedObjectType(InsightObjectTypeId(ot.id), ot.name)
+                            })
+                        },
+                        user = av.user?.run { InsightUser(displayName, name, emailAddress?: "", key) }
+                    )
                 }
             )
         }

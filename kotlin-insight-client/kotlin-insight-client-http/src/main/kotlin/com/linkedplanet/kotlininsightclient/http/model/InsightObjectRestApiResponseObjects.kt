@@ -71,6 +71,14 @@ internal data class ObjectAttributeValueApiResponse(
     var value: Any?,
     var displayValue: Any?,
     var referencedObject: ReferencedObjectApiResponse?,
+    var user: InsightUserApiResponse?
+)
+
+internal data class InsightUserApiResponse(
+    val displayName: String,
+    val name: String,
+    val emailAddress: String?,
+    val key: String
 )
 
 internal data class ReferencedObjectApiResponse(
