@@ -530,7 +530,26 @@ interface InsightObjectOperatorTest {
         val emptyObjects = emptyINSIGHTOBJECTList.objects
         assertThat(emptyObjects, equalTo(emptyList()))
 
-        println("### END testGetObjectsWithChildrenPaginated")
+        println("### END object_testGetObjectsWithChildrenPaginated")
+    }
+
+    @Test
+    fun testUserAttribute() {
+        println("### START object_testUserAttribute")
+
+        val obj = runBlocking {
+            insightObjectOperator.getObjects(InsightObjectType.User.id).map { it.objects.firstOrNull() }.orNull()
+        }
+        assertNotNull(obj)
+        val userAttr = obj!!.getUserList(InsightAttribute.UserTestUser.attributeId)
+        assertEquals(1, userAttr.size)
+        assertEquals("admin", userAttr.first().name)
+        val usersAttr = obj.getUserList(InsightAttribute.UserTestUsers.attributeId)
+        assertEquals(2, usersAttr.size)
+        assertNotNull(usersAttr.firstOrNull { it.name == "admin" })
+        assertNotNull(usersAttr.firstOrNull { it.name == "test1" })
+
+        println("### END object_testUserAttribute")
     }
 
     @Test

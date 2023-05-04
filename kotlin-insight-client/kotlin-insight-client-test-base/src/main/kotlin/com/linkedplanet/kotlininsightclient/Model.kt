@@ -32,7 +32,8 @@ enum class InsightObjectType(val id: InsightObjectTypeId) {
     TestWithLists(InsightObjectTypeId(4)),
     SimpleObject(InsightObjectTypeId(3)),
     Many(InsightObjectTypeId(5)),
-    Abstract(InsightObjectTypeId(6))
+    Abstract(InsightObjectTypeId(6)),
+    User(InsightObjectTypeId(9))
 }
 
 enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
@@ -48,6 +49,9 @@ enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
 
     SimpleObjectFirstname(15, "Firstname"),
     SimpleObjectLastname(16, "Lastname"),
+
+    UserTestUser(43, "User"),
+    UserTestUsers(44, "Users"),
 }
 
 data class Company(

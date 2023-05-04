@@ -179,10 +179,18 @@ data class InsightSchema(
 )
 // endregion InsightSchemaOperator
 
+data class InsightUser(
+    val displayName: String,
+    val name: String,
+    val emailAddress: String,
+    val key: String
+)
+
 data class ObjectAttributeValue(
     var value: Any?,
     var displayValue: Any?,
     var referencedObject: ReferencedObject?,
+    var user: InsightUser?
 )
 
 data class ReferencedObject(
