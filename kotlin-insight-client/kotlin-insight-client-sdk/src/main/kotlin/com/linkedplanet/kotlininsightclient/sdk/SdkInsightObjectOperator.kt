@@ -203,7 +203,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
-
             val objectType = objectTypeFacade.loadObjectType(objectTypeId)
             val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
             val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
@@ -276,14 +275,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         )
     }
 
+    /**
+     * Loads the full object that is referenced to create the compact [ReferencedObject].
+     * This might be slower than expected by the caller, but Insights own code also loads
+     * the full object to resolve the label and objectKey for the reference.
+     * see ObjectResource.assembleObjectAttributeValueEntry
+     */
     private fun loadReferencedObject(
-        bean: ObjectAttributeValueBean,
+        attributeBean: ObjectAttributeValueBean,
         objectTypeAttributeBean: ObjectTypeAttributeBean
     ): Either<InsightClientError, ReferencedObject?> =
-        catchAsInsightClientError { // TODO: loading the full obj bean worth it?
-            objectFacade.loadObjectBean(bean.referencedObjectBeanId)?.let { refObjBean ->
+        catchAsInsightClientError {
+            objectFacade.loadObjectBean(attributeBean.referencedObjectBeanId)?.let { refObjBean ->
                 ReferencedObject(
-                    InsightObjectId(bean.referencedObjectBeanId),
+                    InsightObjectId(attributeBean.referencedObjectBeanId),
                     refObjBean.label,
                     refObjBean.objectKey,
                     ReferencedObjectType(
