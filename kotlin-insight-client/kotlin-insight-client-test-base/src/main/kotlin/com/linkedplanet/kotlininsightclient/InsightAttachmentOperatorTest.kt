@@ -20,8 +20,8 @@
 package com.linkedplanet.kotlininsightclient
 
 import arrow.core.identity
-import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryName
-import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryShortName
+import com.linkedplanet.kotlininsightclient.TestAttributes.CountryName
+import com.linkedplanet.kotlininsightclient.TestAttributes.CountryShortName
 import com.linkedplanet.kotlininsightclient.InsightObjectType.Country
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator

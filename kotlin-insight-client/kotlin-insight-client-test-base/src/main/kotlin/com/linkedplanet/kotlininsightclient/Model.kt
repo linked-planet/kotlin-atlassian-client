@@ -36,7 +36,7 @@ enum class InsightObjectType(val id: InsightObjectTypeId) {
     User(InsightObjectTypeId(9))
 }
 
-enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
+enum class TestAttributes(val attributeId: Int, val attributeName: String) {
     CompanyName(2, "Name"),
     CompanyCountry(10, "Country"),
 
