@@ -103,7 +103,75 @@ data class InsightAttribute(
     val minimumCardinality: Int?,
     val maximumCardinality: Int?,
     var value: List<ObjectAttributeValue>,
-)
+) {
+    companion object {
+        fun value(id: Int, value: Any?): InsightAttribute =
+            emptyAttribute(
+                id,
+                InsightObjectAttributeType.DEFAULT,
+                value = listOf(
+                    ObjectAttributeValue(
+                        value = value,
+                        displayValue = null,
+                        referencedObject = null,
+                        user = null
+                    )
+                )
+            )
+
+        fun values(id: Int, primitiveValueList: List<Any?>): InsightAttribute =
+            emptyAttribute(
+                id,
+                InsightObjectAttributeType.DEFAULT,
+                value = primitiveValueList.map {
+                    ObjectAttributeValue(
+                        value = it,
+                        displayValue = null,
+                        referencedObject = null,
+                        user = null
+                    )
+                }
+            )
+
+        fun reference(id: Int, referencedObjectId: InsightObjectId): InsightAttribute =
+            emptyAttribute(
+                id,
+                InsightObjectAttributeType.REFERENCE,
+                value = listOf(
+                    emptyReference(referencedObjectId)
+                )
+            )
+
+        fun references(id: Int, referencedObjectIds: List<InsightObjectId>): InsightAttribute =
+            emptyAttribute(
+                id,
+                InsightObjectAttributeType.REFERENCE,
+                value = referencedObjectIds.map {
+                    emptyReference(it)
+                }
+            )
+
+        private fun emptyReference(id: InsightObjectId) = ObjectAttributeValue(
+            value = null,
+            displayValue = null,
+            referencedObject = ReferencedObject(id, "", "", null),
+            user = null
+        )
+
+        private fun emptyAttribute(id: Int, type: InsightObjectAttributeType, value: List<ObjectAttributeValue>) =
+            InsightAttribute(
+                attributeId = id,
+                attributeName = null,
+                attributeType = type,
+                defaultType = null,
+                options = null,
+                minimumCardinality = null,
+                maximumCardinality = null,
+                value = value
+            )
+    }
+
+}
 
 // region InsightObjectTypeOperator
 data class ObjectTypeSchema(
@@ -128,7 +196,7 @@ data class ObjectTypeSchemaAttribute(
 
 // if attributeType is default, this determines which kind of default type the value is
 enum class DefaultType(var defaultTypeId: Int) {
-//    NONE(-1),  HTTP API models this with null, sdk with NONE
+    //    NONE(-1),  HTTP API models this with null, sdk with NONE
     TEXT(0),
     INTEGER(1),
     BOOLEAN(2),
@@ -158,6 +226,7 @@ enum class ReferenceKind(var referenceKindId: Int) {
     REFERENCE(3),
     FINANCIAL(4),
     TECHNICAL(5);
+
     companion object {
         fun parse(referenceKindId: Int): ReferenceKind =
             ReferenceKind.values().singleOrNull { it.referenceKindId == referenceKindId } ?: UNKNOWN

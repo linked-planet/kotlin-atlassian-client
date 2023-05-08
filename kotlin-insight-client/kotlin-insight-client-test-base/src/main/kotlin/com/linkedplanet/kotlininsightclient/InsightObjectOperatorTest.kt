@@ -25,7 +25,8 @@ import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjec
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.reference
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.value
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
@@ -38,7 +39,6 @@ import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 import com.linkedplanet.kotlininsightclient.api.model.getUserList
 import com.linkedplanet.kotlininsightclient.api.model.getValueList
 import com.linkedplanet.kotlininsightclient.api.model.removeValue
-import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
 import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
@@ -336,18 +336,16 @@ interface InsightObjectOperatorTest {
             // Create and check direct result
             val country1 = insightObjectOperator.createObject(
                 InsightObjectType.Country.id,
-                {
-                    it.setValue(TestAttributes.CountryName.attributeId, "England")
-                    it.setValue(TestAttributes.CountryShortName.attributeId, "GB")
-                }, ::identity
+                value(CountryName.attributeId, "England"),
+                value(CountryShortName.attributeId, "GB"),
+                toDomain = ::identity
             ).orFail()
 
             val company1 = insightObjectOperator.createObject(
                 InsightObjectType.Company.id,
-                {
-                    it.setValue(CompanyName.attributeId, "MyTestCompany GmbH")
-                    it.setSingleReference(CompanyCountry.attributeId, country1.id)
-                }, ::identity
+                value(CompanyName.attributeId, "MyTestCompany GmbH"),
+                reference(CompanyCountry.attributeId, country1.id),
+                toDomain = ::identity
             ).orFail()
 
             assertThat(country1.id.value, greaterThan(0))

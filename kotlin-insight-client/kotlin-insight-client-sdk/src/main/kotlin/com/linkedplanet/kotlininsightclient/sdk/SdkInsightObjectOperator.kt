@@ -24,6 +24,7 @@ import arrow.core.computations.either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import arrow.core.rightIfNotNull
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
 import com.atlassian.jira.user.util.UserManager
@@ -189,20 +190,33 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectFacade.deleteObjectBean(id.value)
         }
 
-    override suspend fun <T> createObject(
+    override suspend fun createObject(
         objectTypeId: InsightObjectTypeId,
-        func: suspend (InsightObject) -> Unit,
-        toDomain: MapToDomain<T>
-    ): Either<InsightClientError, T> =
+        vararg insightAttributes: InsightAttribute
+    ): Either<InsightClientError, InsightObjectId> =
         catchAsInsightClientError {
             val freshInsightObject = createEmptyDomainObject(objectTypeId)
-            func(freshInsightObject)
+            freshInsightObject.attributes = insightAttributes.toList()
             val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
             val freshObjectBean = objectTypeBean.createMutableObjectBean()
             setAttributesForObjectBean(freshInsightObject, freshObjectBean)
-            objectFacade.storeObjectBean(freshObjectBean)
-        }.flatMap { it.toInsightObject() }
-            .map(toDomain)
+            val bean = objectFacade.storeObjectBean(freshObjectBean)
+            InsightObjectId(bean.id)
+        }
+
+    override suspend fun <T> createObject(
+        objectTypeId: InsightObjectTypeId,
+        vararg insightAttributes: InsightAttribute,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T> = either {
+        val insightObjectId = createObject(objectTypeId, *insightAttributes).bind()
+        getObjectById(insightObjectId, toDomain).bind().rightIfNotNull {
+            InsightClientError(
+                "InsightObject create failed.",
+                "Could not retrieve the object after seemingly successful creation."
+            )
+        }.bind()
+    }
 
     private fun createEmptyDomainObject(objectTypeId: InsightObjectTypeId): InsightObject {
         val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)

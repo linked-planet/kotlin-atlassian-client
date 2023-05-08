@@ -23,6 +23,7 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
 import arrow.core.identity
+import arrow.core.rightIfNotNull
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
@@ -148,13 +149,12 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .mapLeft { it.toInsightClientError() }
             .map { /*to Unit*/ }
 
-    override suspend fun <T> createObject(
+    override suspend fun createObject(
         objectTypeId: InsightObjectTypeId,
-        func: suspend (InsightObject) -> Unit,
-        toDomain: MapToDomain<T>
-    ): Either<InsightClientError, T> = either {
+        vararg insightAttributes: InsightAttribute
+    ): Either<InsightClientError, InsightObjectId> = either {
         val obj = createEmptyObject(objectTypeId)
-        func(obj)
+        obj.attributes = insightAttributes.toList()
         val editItem = ObjectEditItem(
             obj.objectTypeId.raw,
             obj.getEditAttributes()
@@ -169,9 +169,22 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             ObjectUpdateApiResponse::class.java
         )
         val objectId = InsightObjectId(response.mapLeft { it.toInsightClientError() }.bind().body!!.id)
-        getObjectById(objectId, toDomain).bind()!!
+        objectId
     }
 
+    override suspend fun <T> createObject(
+        objectTypeId: InsightObjectTypeId,
+        vararg insightAttributes: InsightAttribute,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T> = either {
+        val insightObjectId = createObject(objectTypeId, *insightAttributes).bind()
+        getObjectById(insightObjectId, toDomain).bind().rightIfNotNull {
+            InsightClientError(
+                "InsightObject create failed.",
+                "Could not retrieve the object after seemingly successful creation."
+            )
+        }.bind()
+    }
 
     // PRIVATE DOWN HERE
     private fun <T>InsightObjectEntriesApiResponse.toValues(mapper: MapToDomain<T>): InsightObjectPage<T> =

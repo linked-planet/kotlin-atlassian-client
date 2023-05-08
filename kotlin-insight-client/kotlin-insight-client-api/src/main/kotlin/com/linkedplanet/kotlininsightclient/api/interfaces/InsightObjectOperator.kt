@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
@@ -172,12 +173,22 @@ interface InsightObjectOperator {
      * Creates a new Insight object with the specified type and properties.
      *
      * @param objectTypeId The ID of the Insight object type.
-     * @param func A suspend function that takes an [InsightObject] parameter and sets the properties of the new object.
      * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the newly created object.
      */
     suspend fun <T> createObject(
         objectTypeId: InsightObjectTypeId,
-        func: suspend (InsightObject) -> Unit,
+        vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T>
+
+    /**
+     * Creates a new Insight object with the specified type and properties.
+     *
+     * @param objectTypeId The ID of the Insight object type.
+     * @param insightAttributes
+     */
+    suspend fun createObject(
+        objectTypeId: InsightObjectTypeId,
+        vararg insightAttributes: InsightAttribute,
+    ): Either<InsightClientError, InsightObjectId>
 }

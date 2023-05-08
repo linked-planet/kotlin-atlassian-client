@@ -20,14 +20,14 @@
 package com.linkedplanet.kotlininsightclient
 
 import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.InsightObjectType.Country
 import com.linkedplanet.kotlininsightclient.TestAttributes.CountryName
 import com.linkedplanet.kotlininsightclient.TestAttributes.CountryShortName
-import com.linkedplanet.kotlininsightclient.InsightObjectType.Country
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.value
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
-import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -77,10 +77,9 @@ interface InsightAttachmentOperatorTest {
             val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
             val country = insightObjectOperator.createObject(
                 Country.id,
-                {
-                    it.setValue(CountryName.attributeId, "Attachistan")
-                    it.setValue(CountryShortName.attributeId, disclaimer)
-                }, ::identity
+                    value(CountryName.attributeId, "Attachistan"),
+                    value(CountryShortName.attributeId, disclaimer),
+                toDomain =  ::identity
             ).orFail()
 
             val attachment = insightAttachmentOperator.uploadAttachment(
@@ -120,10 +119,9 @@ interface InsightAttachmentOperatorTest {
         val disclaimer = "'NoAttachment' created by Test and should only exist during test run."
         val country = insightObjectOperator.createObject(
             Country.id,
-            {
-                it.setValue(CountryName.attributeId, "Attachistan")
-                it.setValue(CountryShortName.attributeId, disclaimer)
-            }, ::identity
+            value(CountryName.attributeId, "Attachistan"),
+            value(CountryShortName.attributeId, disclaimer),
+            toDomain = ::identity
         ).orFail()
 
         val emptyList = insightAttachmentOperator.getAttachments(country.id).orFail()
@@ -141,10 +139,9 @@ interface InsightAttachmentOperatorTest {
             val disclaimer = "'Zipistan' created by Test and should only exist during test run."
             val country = insightObjectOperator.createObject(
                 Country.id,
-                {
-                    it.setValue(CountryName.attributeId, "Zipistan")
-                    it.setValue(CountryShortName.attributeId, disclaimer)
-                }, ::identity
+                value(CountryName.attributeId, "Zipistan"),
+                value(CountryShortName.attributeId, disclaimer),
+                toDomain = ::identity
             ).orFail()
 
             val files = mapOf(
