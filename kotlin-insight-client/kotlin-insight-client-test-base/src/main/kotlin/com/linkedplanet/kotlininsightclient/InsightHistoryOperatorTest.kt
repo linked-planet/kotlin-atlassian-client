@@ -19,6 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient
 
+import arrow.core.identity
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import kotlinx.coroutines.runBlocking
@@ -37,7 +38,7 @@ interface InsightHistoryOperatorTest {
         println("### START history_testHistory")
 
         runBlocking {
-            val country = insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany").orNull()!!
+            val country = insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", ::identity).orNull()!!
             val history = insightHistoryOperator.getHistory(country.id).orNull()!!
             assertTrue(history.historyItems.isNotEmpty())
             assertThat(history.historyItems.last().actor.key, equalTo("admin"))

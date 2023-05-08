@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient.api.experimental
 
 import arrow.core.Either
 import arrow.core.computations.either
+import arrow.core.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
@@ -92,16 +93,20 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
     }
 
     override suspend fun create(domainObject: DomainType): Either<InsightClientError, InsightObjectId> = either {
-        val insightObject = insightObjectOperator.createObject(objectTypeSchema.id) { io ->
-            setAttributesFromDomainObject(io, domainObject)
-        }.bind()
+        val insightObject = insightObjectOperator.createObject(
+            objectTypeSchema.id,
+            { io ->
+                setAttributesFromDomainObject(io, domainObject)
+            }, ::identity
+        ).bind()
         insightObject.id
     }
+
 
     override suspend fun update(domainObject: DomainType): Either<InsightClientError, InsightObjectId> = either {
         val insightObject = insightObjectForDomainObject(objectTypeSchema.id, domainObject).bind()!!
         setAttributesFromDomainObject(insightObject, domainObject)
-        insightObjectOperator.updateObject(insightObject).bind()
+        insightObjectOperator.updateObject(insightObject, ::identity,::identity).bind()
         insightObject.id
     }
 
@@ -145,7 +150,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         }
 
     override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> = either {
-        val insightObject = insightObjectOperator.getObjectByName(objectTypeSchema.id, name).bind()
+        val insightObject = insightObjectOperator.getObjectByName(objectTypeSchema.id, name, ::identity).bind()
             ?: return@either null
         domainObjectByInsightObject(insightObject).bind()
     }
@@ -157,7 +162,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         perPage: Int
     ): Either<InsightClientError, List<DomainType>> = either {
         val insightObjects =
-            insightObjectOperator.getObjectsByIQL(objectTypeSchema.id, iql, withChildren, pageFrom, perPage)
+            insightObjectOperator.getObjectsByIQL(objectTypeSchema.id, iql, withChildren, pageFrom, perPage, ::identity)
                 .bind()
         insightObjects.objects.map {
             domainObjectByInsightObject(it).bind()
@@ -165,7 +170,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
     }
 
     override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
-        val insightObject = insightObjectOperator.getObjectById(objectId).bind()
+        val insightObject = insightObjectOperator.getObjectById(objectId, ::identity).bind()
             ?: return@either null
         domainObjectByInsightObject(insightObject).bind()
     }

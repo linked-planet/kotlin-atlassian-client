@@ -22,10 +22,13 @@ package com.linkedplanet.kotlininsightclient.http
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
+import arrow.core.identity
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
+import com.linkedplanet.kotlininsightclient.api.interfaces.MapToInsight
 import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
@@ -41,46 +44,58 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     override var RESULTS_PER_PAGE: Int = 25
 
-    override suspend fun getObjects(
+    override suspend fun <T> getObjects(
         objectTypeId: InsightObjectTypeId,
         withChildren: Boolean,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> = either {
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> = either {
         val iql = getIQLWithChildren(objectTypeId, withChildren)
-        getObjectsByIQL(iql, pageIndex, pageSize).bind()
+        getObjectsByIQL(iql, pageIndex, pageSize, toDomain).bind()
     }
 
-    override suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?> =
-        getObjectByPlainIQL("objectId=${id.value}")
+    override suspend fun <T> getObjectById(id: InsightObjectId, toDomain: MapToDomain<T>): Either<InsightClientError, T?> =
+        getObjectByPlainIQL("objectId=${id.value}", toDomain)
 
-    override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
-        getObjectByPlainIQL("Key=\"$key\"")
+    override suspend fun <T> getObjectByKey(
+        key: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?> =
+        getObjectByPlainIQL("Key=\"$key\"", toDomain)
 
-    override suspend fun getObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, InsightObject?> =
-        getObjectByPlainIQL("objectTypeId=${objectTypeId.raw} AND Name=\"$name\"")
+    override suspend fun <T> getObjectByName(
+        objectTypeId: InsightObjectTypeId, name: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?> =
+        getObjectByPlainIQL("objectTypeId=${objectTypeId.raw} AND Name=\"$name\"", toDomain)
 
-    override suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>> {
+    override suspend fun <T> getObjectsByObjectTypeName(
+        objectTypeName: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, List<T>> {
         val iql = "objectType=$objectTypeName"
-        return getObjectsByIQL(iql, pageIndex = 0, pageSize = Int.MAX_VALUE).map { it.objects }
+        return getObjectsByIQL(iql, pageIndex = 0, pageSize = Int.MAX_VALUE, toDomain).map { it.objects }
     }
 
-    override suspend fun getObjectsByIQL(
+    override suspend fun <T> getObjectsByIQL(
         objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> = either {
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> = either {
         val fullIql = "${getIQLWithChildren(objectTypeId, withChildren)} AND $iql"
-        getObjectsByIQL(fullIql, pageIndex, pageSize).bind()
+        getObjectsByIQL(fullIql, pageIndex, pageSize, toDomain).bind()
     }
 
-    override suspend fun getObjectsByIQL(
+    override suspend fun <T> getObjectsByIQL(
         iql: String,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> = either {
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> = either {
         val objects = context.httpClient.executeRest<InsightObjectEntriesApiResponse>(
             "GET",
             "rest/insight/1.0/iql/objects",
@@ -98,11 +113,16 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
             .bind()
-            ?.toValues()
+            ?.toValues(toDomain)
         objects ?: InsightObjectPage(getObjectCount(iql).bind(), emptyList())
     }
 
-    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
+    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>{
+        return updateObject(obj, ::identity, ::identity)
+    }
+
+    override suspend fun <T> updateObject(domainObject: T, toInsight: MapToInsight<T>, toDomain: MapToDomain<T>): Either<InsightClientError, T> = either {
+        val obj = toInsight(domainObject)
         context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "PUT",
             "rest/insight/1.0/object/${obj.id.value}",
@@ -111,7 +131,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             "application/json",
             ObjectUpdateApiResponse::class.java
         )
-            .map { updateResponse -> getObjectById(InsightObjectId(updateResponse.body!!.id)).map { it!! } }
+            .map { updateResponse -> getObjectById(InsightObjectId(updateResponse.body!!.id), toDomain).map { it!! } }
             .mapLeft { it.toInsightClientError() }
             .flatten()
             .bind()
@@ -128,10 +148,11 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .mapLeft { it.toInsightClientError() }
             .map { /*to Unit*/ }
 
-    override suspend fun createObject(
+    override suspend fun <T> createObject(
         objectTypeId: InsightObjectTypeId,
-        func: suspend (InsightObject) -> Unit
-    ): Either<InsightClientError, InsightObject> = either {
+        func: suspend (InsightObject) -> Unit,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T> = either {
         val obj = createEmptyObject(objectTypeId)
         func(obj)
         val editItem = ObjectEditItem(
@@ -148,25 +169,26 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             ObjectUpdateApiResponse::class.java
         )
         val objectId = InsightObjectId(response.mapLeft { it.toInsightClientError() }.bind().body!!.id)
-        getObjectById(objectId).bind()!!
+        getObjectById(objectId, toDomain).bind()!!
     }
 
 
     // PRIVATE DOWN HERE
-    private fun InsightObjectEntriesApiResponse.toValues(): InsightObjectPage =
+    private fun <T>InsightObjectEntriesApiResponse.toValues(mapper: MapToDomain<T>): InsightObjectPage<T> =
         InsightObjectPage(
             this.totalFilterCount,
-            this.objectEntries.map {
-                it.toValue()
-            }
+            this.objectEntries
+                .map { it.toValue() }
+                .map(mapper)
         )
 
     /**
      * ATTENTION: Method returns only the first page -> don't use for big result sets...
      */
-    private suspend fun getObjectByPlainIQL(
-        iql: String
-    ): Either<InsightClientError, InsightObject?> = either {
+    private suspend fun <T> getObjectByPlainIQL(
+        iql: String,
+        mapper: MapToDomain<T>
+    ): Either<InsightClientError, T?> = either {
         context.httpClient.executeRest<InsightObjectEntriesApiResponse>(
             "GET",
             "rest/insight/1.0/iql/objects",
@@ -182,7 +204,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
             .bind()
-            ?.toValues()
+            ?.toValues(mapper)
             ?.objects
             ?.firstOrNull()
     }

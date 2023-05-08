@@ -23,8 +23,11 @@ import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+
+typealias MapToDomain<T> = (InsightObject) -> T
+typealias MapToInsight<T> = (T) -> InsightObject
 
 /**
  * The InsightObjectOperator interface provides methods to interact with Insight objects.
@@ -45,12 +48,13 @@ interface InsightObjectOperator {
      * @param pageSize The number of results to be returned per page
      * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the list of Insight objects
      */
-    suspend fun getObjects(
+    suspend fun <T> getObjects(
         objectTypeId: InsightObjectTypeId,
         withChildren: Boolean = false,
         pageIndex: Int = 0,
-        pageSize: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, InsightObjectPage>
+        pageSize: Int = RESULTS_PER_PAGE,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>>
 
     /**
      * Retrieves the Insight object with the specified id.
@@ -58,7 +62,7 @@ interface InsightObjectOperator {
      * @param id The id of the Insight object to retrieve
      * @return Either an [InsightClientError] or the retrieved [InsightObject] object
      */
-    suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?>
+    suspend fun <T> getObjectById(id: InsightObjectId, toDomain: MapToDomain<T>): Either<InsightClientError, T?>
 
     /**
      * Retrieves the Insight object with the specified key.
@@ -66,7 +70,10 @@ interface InsightObjectOperator {
      * @param key The key of the Insight object to retrieve
      * @return Either an [InsightClientError] or the retrieved [InsightObject] object
      */
-    suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?>
+    suspend fun <T> getObjectByKey(
+        key: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?>
 
     /**
      * Retrieves the InsightObject with the specified name and type.
@@ -75,7 +82,10 @@ interface InsightObjectOperator {
      * @param name The name of the Insight object to retrieve
      * @return Either an [InsightClientError] or the retrieved [InsightObject] object
      */
-    suspend fun getObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, InsightObject?>
+    suspend fun <T> getObjectByName(
+        objectTypeId: InsightObjectTypeId, name: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?>
 
     /**
      * Retrieves a list of Insight objects of the specified type name.
@@ -83,7 +93,10 @@ interface InsightObjectOperator {
      * @param objectTypeName The name of the Insight object type to retrieve
      * @return Either an [InsightClientError] or a list of [InsightObject] objects
      */
-    suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>>
+    suspend fun <T> getObjectsByObjectTypeName(
+        objectTypeName: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, List<T>>
 
     /**
      * Retrieves a paginated list of Insight objects of the specified type that match the given IQL query.
@@ -95,13 +108,14 @@ interface InsightObjectOperator {
      * @param pageSize The number of results to be returned per page
      * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the filtered list of Insight objects
      */
-    suspend fun getObjectsByIQL(
+    suspend fun <T> getObjectsByIQL(
         objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean = false,
         pageIndex: Int = 0,
-        pageSize: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, InsightObjectPage>
+        pageSize: Int = RESULTS_PER_PAGE,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>>
 
     /**
      * Retrieves a paginated list of Insight objects that match the given IQL query.
@@ -111,11 +125,12 @@ interface InsightObjectOperator {
      * @param pageSize The number of results to be returned per page
      * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the filtered list of Insight objects
      */
-    suspend fun getObjectsByIQL(
+    suspend fun <T> getObjectsByIQL(
         iql: String,
         pageIndex: Int = 0,
-        pageSize: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, InsightObjectPage>
+        pageSize: Int = RESULTS_PER_PAGE,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>>
 
     /**
      * Returns the number of Insight objects that match the specified IQL (Insight Query Language) statement.
@@ -134,6 +149,18 @@ interface InsightObjectOperator {
     suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>
 
     /**
+     * Updates an existing Insight object in the system.
+     *
+     * @param domainObject The Insight object to update.
+     * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
+     */
+    suspend fun <T> updateObject(
+        domainObject: T,
+        toInsight: MapToInsight<T>,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T>
+
+    /**
      * Deletes the Insight object with the specified ID from the system.
      *
      * @param id The ID of the object to delete.
@@ -148,8 +175,9 @@ interface InsightObjectOperator {
      * @param func A suspend function that takes an [InsightObject] parameter and sets the properties of the new object.
      * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the newly created object.
      */
-    suspend fun createObject(
+    suspend fun <T> createObject(
         objectTypeId: InsightObjectTypeId,
-        func: suspend (InsightObject) -> Unit
-    ): Either<InsightClientError, InsightObject>
+        func: suspend (InsightObject) -> Unit,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T>
 }

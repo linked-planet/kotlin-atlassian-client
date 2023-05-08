@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
+import arrow.core.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
@@ -46,9 +47,9 @@ fun <T> Either<InsightClientError, T>.asError(): InsightClientError {
 }
 
 suspend fun InsightObjectOperator.makeSureObjectWithNameDoesNotExist(objectTypeId: InsightObjectTypeId, name: String) {
-    getObjectsByIQL(objectTypeId, "Name = \"$name\"").orFail().objects.forEach {
+    getObjectsByIQL(objectTypeId, "Name = \"$name\"", toDomain = ::identity).orFail().objects.forEach {
         deleteObject(it.id)
     }
-    assertThat(getObjectByName(objectTypeId, name).orFail(), equalTo(null))
+    assertThat(getObjectByName(objectTypeId, name, toDomain = ::identity).orFail(), equalTo(null))
     //if the former assertion failed that means deleteObject is not working, so this attachment test fails too
 }

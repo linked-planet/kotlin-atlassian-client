@@ -19,6 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient
 
+import arrow.core.identity
 import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryName
 import com.linkedplanet.kotlininsightclient.InsightAttribute.CountryShortName
 import com.linkedplanet.kotlininsightclient.InsightObjectType.Country
@@ -46,7 +47,7 @@ interface InsightAttachmentOperatorTest {
         println("### START attachment_testGetAndDownloadAttachments")
         println("### TimeZone.getDefault().displayName=${TimeZone.getDefault().displayName}")
 
-        val country = insightObjectOperator.getObjectByName(Country.id, "Germany").orFail()!!
+        val country = insightObjectOperator.getObjectByName(Country.id, "Germany", ::identity).orFail()!!
         val attachments = insightAttachmentOperator.getAttachments(country.id).orFail()
         val firstAttachment = attachments.first()
         assertThat(attachments.size, equalTo(1))
@@ -74,10 +75,13 @@ interface InsightAttachmentOperatorTest {
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
         try {
             val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
-            val country = insightObjectOperator.createObject(Country.id) {
-                it.setValue(CountryName.attributeId, "Attachistan")
-                it.setValue(CountryShortName.attributeId, disclaimer)
-            }.orFail()
+            val country = insightObjectOperator.createObject(
+                Country.id,
+                {
+                    it.setValue(CountryName.attributeId, "Attachistan")
+                    it.setValue(CountryShortName.attributeId, disclaimer)
+                }, ::identity
+            ).orFail()
 
             val attachment = insightAttachmentOperator.uploadAttachment(
                 country.id, "attachistan.txt", "content".toByteArray()
@@ -114,10 +118,13 @@ interface InsightAttachmentOperatorTest {
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "NoAttachment")
 
         val disclaimer = "'NoAttachment' created by Test and should only exist during test run."
-        val country = insightObjectOperator.createObject(Country.id) {
-            it.setValue(CountryName.attributeId, "Attachistan")
-            it.setValue(CountryShortName.attributeId, disclaimer)
-        }.orFail()
+        val country = insightObjectOperator.createObject(
+            Country.id,
+            {
+                it.setValue(CountryName.attributeId, "Attachistan")
+                it.setValue(CountryShortName.attributeId, disclaimer)
+            }, ::identity
+        ).orFail()
 
         val emptyList = insightAttachmentOperator.getAttachments(country.id).orFail()
         assertThat(emptyList, equalTo(emptyList()))
@@ -132,10 +139,13 @@ interface InsightAttachmentOperatorTest {
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
         try {
             val disclaimer = "'Zipistan' created by Test and should only exist during test run."
-            val country = insightObjectOperator.createObject(Country.id) {
-                it.setValue(CountryName.attributeId, "Zipistan")
-                it.setValue(CountryShortName.attributeId, disclaimer)
-            }.orFail()
+            val country = insightObjectOperator.createObject(
+                Country.id,
+                {
+                    it.setValue(CountryName.attributeId, "Zipistan")
+                    it.setValue(CountryShortName.attributeId, disclaimer)
+                }, ::identity
+            ).orFail()
 
             val files = mapOf(
                 "firstFile.txt" to "firstFileContent",
