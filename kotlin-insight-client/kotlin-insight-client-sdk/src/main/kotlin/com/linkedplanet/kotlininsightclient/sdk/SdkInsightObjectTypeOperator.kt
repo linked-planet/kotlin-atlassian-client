@@ -25,6 +25,7 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
@@ -81,7 +82,7 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
     internal fun typeAttributeBeanToSchema(bean: ObjectTypeAttributeBean) =
         bean.run {
             ObjectTypeSchemaAttribute(
-                id,
+                InsightAttributeId(id),
                 name,
                 defaultType?.let(::mapDefaultType),
                 options,

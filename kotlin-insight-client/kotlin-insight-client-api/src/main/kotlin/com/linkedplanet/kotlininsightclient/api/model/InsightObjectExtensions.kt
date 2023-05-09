@@ -24,7 +24,7 @@ package com.linkedplanet.kotlininsightclient.api.model
 import java.time.ZonedDateTime
 import java.util.*
 
-private fun InsightObject.createAttribute(id: Int, attributeType: InsightObjectAttributeType) {
+private fun InsightObject.createAttribute(id: InsightAttributeId, attributeType: InsightObjectAttributeType) {
     this.attributes = this.attributes + InsightAttribute(
         attributeId = id,
         attributeType = attributeType,
@@ -33,7 +33,7 @@ private fun InsightObject.createAttribute(id: Int, attributeType: InsightObjectA
     )
 }
 
-fun InsightObject.getAttribute(id: Int): InsightAttribute? =
+fun InsightObject.getAttribute(id: InsightAttributeId): InsightAttribute? =
     this.attributes.singleOrNull { it.attributeId == id }
 
 fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?.attributeId
@@ -41,29 +41,29 @@ fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?
 fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
     this.attributes.firstOrNull { it.schema?.name == name }
 
-fun InsightObject.isReferenceAttribute(id: Int): Boolean = getAttribute(id)?.isReference() ?: false
+fun InsightObject.isReferenceAttribute(id: InsightAttributeId): Boolean = getAttribute(id)?.isReference() ?: false
 
 fun InsightAttribute.isReference() : Boolean = attributeType == InsightObjectAttributeType.REFERENCE
 
-fun InsightObject.isValueAttribute(id: Int): Boolean =
+fun InsightObject.isValueAttribute(id: InsightAttributeId): Boolean =
     getAttribute(id)
         ?.attributeType == InsightObjectAttributeType.DEFAULT
 
-fun InsightObject.exists(id: Int): Boolean =
+fun InsightObject.exists(id: InsightAttributeId): Boolean =
     getAttribute(id) != null
 
-fun InsightObject.clearValueList(id: Int) {
+fun InsightObject.clearValueList(id: InsightAttributeId) {
     getAttribute(id)
         ?.value = Collections.emptyList()
 }
 
-fun InsightObject.getValueList(id: Int): List<Any> =
+fun InsightObject.getValueList(id: InsightAttributeId): List<Any> =
     getAttribute(id)
         ?.value
         ?.mapNotNull { it.value }
         ?: Collections.emptyList()
 
-fun <T> InsightObject.setValueList(id: Int, values: List<T?>) {
+fun <T> InsightObject.setValueList(id: InsightAttributeId, values: List<T?>) {
     if (!exists(id)) {
         this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
@@ -78,7 +78,7 @@ fun <T> InsightObject.setValueList(id: Int, values: List<T?>) {
     }
 }
 
-fun <T> InsightObject.setValue(id: Int, value: T?) {
+fun <T> InsightObject.setValue(id: InsightAttributeId, value: T?) {
     if (!exists(id)) {
         this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
@@ -91,12 +91,12 @@ fun <T> InsightObject.setValue(id: Int, value: T?) {
     )
 }
 
-fun <T> InsightObject.removeValue(id: Int, value: T?) {
+fun <T> InsightObject.removeValue(id: InsightAttributeId, value: T?) {
     getAttribute(id)
         ?.apply { this.value = this.value.filter { cur -> cur.value != value } }
 }
 
-fun InsightObject.addValue(id: Int, value: Any?) {
+fun InsightObject.addValue(id: InsightAttributeId, value: Any?) {
     if (!exists(id)) {
         this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
@@ -111,7 +111,7 @@ fun InsightObject.addValue(id: Int, value: Any?) {
         }
 }
 
-fun <T> InsightObject.getValue(id: Int, transform: (Any) -> T): T? =
+fun <T> InsightObject.getValue(id: InsightAttributeId, transform: (Any) -> T): T? =
     getAttribute(id)
         ?.value
         ?.firstOrNull()
@@ -122,7 +122,7 @@ fun <T> InsightObject.getValueByName(name: String, transform: (Any) -> T): T? =
     getAttributeIdByName(name)
         ?.let { getValue(it, transform) }
 
-fun <T> InsightObject.getValueList(id: Int, transform: (Any) -> T): List<T?> =
+fun <T> InsightObject.getValueList(id: InsightAttributeId, transform: (Any) -> T): List<T?> =
     getAttribute(id)
         ?.value
         ?.map { transform(it) }
@@ -133,22 +133,22 @@ fun <T> InsightObject.getValueListByName(name: String, transform: (Any) -> T): L
         ?.let { getValueList(it, transform) }
         ?: Collections.emptyList()
 
-fun InsightObject.getStringValue(id: Int): String? =
+fun InsightObject.getStringValue(id: InsightAttributeId): String? =
     this.getValue(id) { it.toString() }
 
-fun InsightObject.getIntValue(id: Int): Int? =
+fun InsightObject.getIntValue(id: InsightAttributeId): Int? =
     getStringValue(id)?.toInt()
 
-fun InsightObject.getFloatValue(id: Int): Float? =
+fun InsightObject.getFloatValue(id: InsightAttributeId): Float? =
     getStringValue(id)?.toFloat()
 
-fun InsightObject.getBooleanValue(id: Int): Boolean? =
+fun InsightObject.getBooleanValue(id: InsightAttributeId): Boolean? =
     getStringValue(id)?.toBoolean()
 
-fun InsightObject.getDateTimeValue(id: Int): ZonedDateTime? =
+fun InsightObject.getDateTimeValue(id: InsightAttributeId): ZonedDateTime? =
     getStringValue(id)?.let { ZonedDateTime.parse(it) }
 
-fun InsightObject.getSingleReferenceValue(id: Int): InsightReference? =
+fun InsightObject.getSingleReferenceValue(id: InsightAttributeId): InsightReference? =
     getAttribute(id)
         ?.value
         ?.firstOrNull()
@@ -163,7 +163,7 @@ fun InsightObject.getSingleReferenceValue(id: Int): InsightReference? =
             )
         }
 
-fun InsightObject.getMultiReferenceValue(id: Int): List<InsightReference> =
+fun InsightObject.getMultiReferenceValue(id: InsightAttributeId): List<InsightReference> =
     getAttribute(id)
         ?.value
         ?.mapNotNull { it.referencedObject }
@@ -178,26 +178,26 @@ fun InsightObject.getMultiReferenceValue(id: Int): List<InsightReference> =
         }
         ?: Collections.emptyList()
 
-fun InsightObject.getUserList(id: Int): List<InsightUser> =
+fun InsightObject.getUserList(id: InsightAttributeId): List<InsightUser> =
     this.attributes
         .firstOrNull { it.attributeId == id }
         ?.value
         ?.mapNotNull { it.user }
         ?: Collections.emptyList()
 
-fun InsightObject.removeReference(attributeId: Int, referencedObjectId: InsightObjectId) {
+fun InsightObject.removeReference(attributeId: InsightAttributeId, referencedObjectId: InsightObjectId) {
     getAttribute(attributeId)
         ?.let {
             it.value = it.value.filter { cur -> cur.referencedObject?.id != referencedObjectId }
         }
 }
 
-fun InsightObject.clearReferenceValue(id: Int) {
+fun InsightObject.clearReferenceValue(id: InsightAttributeId) {
     getAttribute(id)
         ?.value = Collections.emptyList()
 }
 
-fun InsightObject.addReference(attributeId: Int, referencedObjectId: InsightObjectId) {
+fun InsightObject.addReference(attributeId: InsightAttributeId, referencedObjectId: InsightObjectId) {
     if (!exists(attributeId)) {
         this.createAttribute(attributeId, InsightObjectAttributeType.REFERENCE)
     }
@@ -217,7 +217,7 @@ fun InsightObject.addReference(attributeId: Int, referencedObjectId: InsightObje
         }
 }
 
-fun InsightObject.setSingleReference(id: Int, referencedObjectId: InsightObjectId) {
+fun InsightObject.setSingleReference(id: InsightAttributeId, referencedObjectId: InsightObjectId) {
     this.clearReferenceValue(id)
     this.addReference(id, referencedObjectId)
 }

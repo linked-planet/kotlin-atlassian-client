@@ -248,7 +248,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                     ?.let { type -> InsightObjectAttributeType.parse(type) }
                     ?: InsightObjectAttributeType.DEFAULT
             InsightAttribute(
-                it.objectTypeAttributeId,
+                InsightAttributeId(it.objectTypeAttributeId),
                 attributeType,
                 it.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
                     ObjectAttributeValue(
@@ -282,7 +282,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     private fun objectTypeSchemaAttribute(type: ObjectTypeAttributeApiResponse) =
         ObjectTypeSchemaAttribute(
-            id = type.id,
+            id = InsightAttributeId(type.id),
             name = type.name,
             defaultType = type.defaultType?.id?.let { DefaultType.parse(it) },
             options = type.options,

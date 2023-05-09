@@ -39,6 +39,9 @@ value class AttachmentId(val raw: Int)
 @JvmInline
 value class InsightSchemaId(val raw: Int)
 
+@JvmInline
+value class InsightAttributeId(val raw: Int)
+
 // endregion ID wrapper
 
 data class InsightObjectPage<T>(
@@ -95,14 +98,14 @@ data class InsightReference(
  * Holds the actual data value(s)
  */
 data class InsightAttribute(
-    val attributeId: Int,
+    val attributeId: InsightAttributeId,
     val attributeType: InsightObjectAttributeType,
     var value: List<ObjectAttributeValue>,
     val schema: ObjectTypeSchemaAttribute?,
 ) {
     companion object {
 
-        infix fun Int.toValue(value: Any?): InsightAttribute =
+        infix fun InsightAttributeId.toValue(value: Any?): InsightAttribute =
             emptyAttribute(
                 this,
                 InsightObjectAttributeType.DEFAULT,
@@ -116,7 +119,7 @@ data class InsightAttribute(
                 )
             )
 
-        infix fun Int.toValues(primitiveValueList: List<Any?>): InsightAttribute =
+        infix fun InsightAttributeId.toValues(primitiveValueList: List<Any?>): InsightAttribute =
             emptyAttribute(
                 this,
                 InsightObjectAttributeType.DEFAULT,
@@ -130,7 +133,7 @@ data class InsightAttribute(
                 }
             )
 
-        infix fun Int.toReference(referencedObjectId: InsightObjectId): InsightAttribute =
+        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId): InsightAttribute =
             emptyAttribute(
                 this,
                 InsightObjectAttributeType.REFERENCE,
@@ -139,7 +142,7 @@ data class InsightAttribute(
                 )
             )
 
-        infix fun Int.toReferences(referencedObjectIds: List<InsightObjectId>): InsightAttribute =
+        infix fun InsightAttributeId.toReferences(referencedObjectIds: List<InsightObjectId>): InsightAttribute =
             emptyAttribute(
                 this,
                 InsightObjectAttributeType.REFERENCE,
@@ -155,7 +158,7 @@ data class InsightAttribute(
             user = null
         )
 
-        private fun emptyAttribute(id: Int, type: InsightObjectAttributeType, value: List<ObjectAttributeValue>) =
+        private fun emptyAttribute(id: InsightAttributeId, type: InsightObjectAttributeType, value: List<ObjectAttributeValue>) =
             InsightAttribute(
                 attributeId = id,
                 attributeType = type,
@@ -175,7 +178,7 @@ data class ObjectTypeSchema(
 )
 
 data class ObjectTypeSchemaAttribute(
-    val id: Int,
+    val id: InsightAttributeId,
     val name: String,
     val defaultType: DefaultType?,
     val options: String,

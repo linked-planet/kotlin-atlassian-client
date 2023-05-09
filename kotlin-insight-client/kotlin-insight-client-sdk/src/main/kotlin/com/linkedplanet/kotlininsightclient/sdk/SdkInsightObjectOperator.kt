@@ -34,6 +34,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToInsight
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
@@ -173,7 +174,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         objectBean: MutableObjectBean
     ) {
         val attributeBeans = obj.attributes.map { insightAttr ->
-            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId).createMutable()
+            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId.raw).createMutable()
             if (obj.isReferenceAttribute(insightAttr.attributeId)) {
                 val values = insightAttr.value.map { it.referencedObject!!.id.value }.toTypedArray()
                 objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id) }
@@ -294,7 +295,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         objectAttributeBean: ObjectAttributeBean, objectTypeAttributeBean: ObjectTypeAttributeBean
     ): Either<InsightClientError, InsightAttribute> = either {
         InsightAttribute(
-            objectTypeAttributeBean.id,
+            InsightAttributeId(objectTypeAttributeBean.id),
             InsightObjectAttributeType.parse(objectTypeAttributeBean.type.typeId),
             value = objectAttributeBean.objectAttributeValueBeans.map { attribute ->
                 when (objectTypeAttributeBean.type) {

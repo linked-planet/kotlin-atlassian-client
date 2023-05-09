@@ -48,7 +48,7 @@ internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
             }
         }
         ObjectEditItemAttribute(
-            insightAttr.attributeId,
+            insightAttr.attributeId.raw,
             values
         )
     }

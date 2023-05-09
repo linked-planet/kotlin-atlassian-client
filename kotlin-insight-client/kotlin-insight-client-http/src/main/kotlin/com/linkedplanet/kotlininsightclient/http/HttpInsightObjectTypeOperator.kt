@@ -28,6 +28,7 @@ import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
@@ -96,7 +97,7 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
             apiResponse.name,
             apiResponse.attributes.map { attributeApiResponse: ObjectTypeSchemaAttributeApiResponse ->
                 ObjectTypeSchemaAttribute(
-                    id = attributeApiResponse.id,
+                    id = InsightAttributeId(attributeApiResponse.id),
                     name = attributeApiResponse.name,
                     defaultType = attributeApiResponse.defaultType?.id?.let { DefaultType.parse(it) },
                     options = attributeApiResponse.options,
