@@ -26,7 +26,7 @@ import com.linkedplanet.kotlininsightclient.TestAttributes.CountryShortName
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.value
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
@@ -77,8 +77,8 @@ interface InsightAttachmentOperatorTest {
             val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
             val country = insightObjectOperator.createObject(
                 Country.id,
-                    value(CountryName.attributeId, "Attachistan"),
-                    value(CountryShortName.attributeId, disclaimer),
+                CountryName.attributeId toValue "Attachistan",
+                CountryShortName.attributeId toValue disclaimer,
                 toDomain =  ::identity
             ).orFail()
 
@@ -119,8 +119,8 @@ interface InsightAttachmentOperatorTest {
         val disclaimer = "'NoAttachment' created by Test and should only exist during test run."
         val country = insightObjectOperator.createObject(
             Country.id,
-            value(CountryName.attributeId, "Attachistan"),
-            value(CountryShortName.attributeId, disclaimer),
+            CountryName.attributeId toValue "Attachistan",
+            CountryShortName.attributeId toValue disclaimer,
             toDomain = ::identity
         ).orFail()
 
@@ -139,8 +139,8 @@ interface InsightAttachmentOperatorTest {
             val disclaimer = "'Zipistan' created by Test and should only exist during test run."
             val country = insightObjectOperator.createObject(
                 Country.id,
-                value(CountryName.attributeId, "Zipistan"),
-                value(CountryShortName.attributeId, disclaimer),
+                CountryName.attributeId toValue "Zipistan",
+                CountryShortName.attributeId toValue disclaimer,
                 toDomain = ::identity
             ).orFail()
 

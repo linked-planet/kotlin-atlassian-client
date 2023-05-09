@@ -101,9 +101,10 @@ data class InsightAttribute(
     val schema: ObjectTypeSchemaAttribute?,
 ) {
     companion object {
-        fun value(id: Int, value: Any?): InsightAttribute =
+
+        infix fun Int.toValue(value: Any?): InsightAttribute =
             emptyAttribute(
-                id,
+                this,
                 InsightObjectAttributeType.DEFAULT,
                 value = listOf(
                     ObjectAttributeValue(
@@ -115,9 +116,9 @@ data class InsightAttribute(
                 )
             )
 
-        fun values(id: Int, primitiveValueList: List<Any?>): InsightAttribute =
+        infix fun Int.toValues(primitiveValueList: List<Any?>): InsightAttribute =
             emptyAttribute(
-                id,
+                this,
                 InsightObjectAttributeType.DEFAULT,
                 value = primitiveValueList.map {
                     ObjectAttributeValue(
@@ -129,18 +130,18 @@ data class InsightAttribute(
                 }
             )
 
-        fun reference(id: Int, referencedObjectId: InsightObjectId): InsightAttribute =
+        infix fun Int.toReference(referencedObjectId: InsightObjectId): InsightAttribute =
             emptyAttribute(
-                id,
+                this,
                 InsightObjectAttributeType.REFERENCE,
                 value = listOf(
                     emptyReference(referencedObjectId)
                 )
             )
 
-        fun references(id: Int, referencedObjectIds: List<InsightObjectId>): InsightAttribute =
+        infix fun Int.toReferences(referencedObjectIds: List<InsightObjectId>): InsightAttribute =
             emptyAttribute(
-                id,
+                this,
                 InsightObjectAttributeType.REFERENCE,
                 value = referencedObjectIds.map {
                     emptyReference(it)

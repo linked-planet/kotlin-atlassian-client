@@ -25,8 +25,8 @@ import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjec
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.reference
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.value
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReference
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
@@ -336,15 +336,15 @@ interface InsightObjectOperatorTest {
             // Create and check direct result
             val country1 = insightObjectOperator.createObject(
                 InsightObjectType.Country.id,
-                value(CountryName.attributeId, "England"),
-                value(CountryShortName.attributeId, "GB"),
+                CountryName.attributeId toValue "England",
+                CountryShortName.attributeId toValue "GB",
                 toDomain = ::identity
             ).orFail()
 
             val company1 = insightObjectOperator.createObject(
                 InsightObjectType.Company.id,
-                value(CompanyName.attributeId, "MyTestCompany GmbH"),
-                reference(CompanyCountry.attributeId, country1.id),
+                CompanyName.attributeId toValue "MyTestCompany GmbH",
+                CompanyCountry.attributeId.toReference(country1.id),
                 toDomain = ::identity
             ).orFail()
 
