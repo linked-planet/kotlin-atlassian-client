@@ -225,10 +225,6 @@ enum class ReferenceKind(var referenceKindId: Int) {
     }
 }
 
-data class ObjectTypeAttributeDefaultType(
-    val id: Int,
-    val name: String
-)
 // endregion InsightObjectTypeOperator
 
 // region InsightSchemaOperator
