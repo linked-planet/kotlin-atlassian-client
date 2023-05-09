@@ -24,16 +24,12 @@ package com.linkedplanet.kotlininsightclient.api.model
 import java.time.ZonedDateTime
 import java.util.*
 
-private fun InsightObject.createAttribute(id: Int, name: String? = null, attributeType: InsightObjectAttributeType) {
+private fun InsightObject.createAttribute(id: Int, attributeType: InsightObjectAttributeType) {
     this.attributes = this.attributes + InsightAttribute(
         attributeId = id,
-        attributeName = name,
         attributeType = attributeType,
-        defaultType = null,
-        options = null,
-        minimumCardinality = null,
-        maximumCardinality = null,
-        value = Collections.emptyList()
+        value = Collections.emptyList(),
+        null
     )
 }
 
@@ -43,7 +39,7 @@ fun InsightObject.getAttribute(id: Int): InsightAttribute? =
 fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?.attributeId
 
 fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
-    this.attributes.firstOrNull { it.attributeName == name }
+    this.attributes.firstOrNull { it.schema?.name == name }
 
 fun InsightObject.isReferenceAttribute(id: Int): Boolean = getAttribute(id)?.isReference() ?: false
 
@@ -67,11 +63,9 @@ fun InsightObject.getValueList(id: Int): List<Any> =
         ?.mapNotNull { it.value }
         ?: Collections.emptyList()
 
-fun <T> InsightObject.setValueList(id: Int, values: List<T?>) = setValueList(id, null, values)
-
-fun <T> InsightObject.setValueList(id: Int, name: String? = null, values: List<T?>) {
+fun <T> InsightObject.setValueList(id: Int, values: List<T?>) {
     if (!exists(id)) {
-        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
+        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.value = values.map {
@@ -84,11 +78,9 @@ fun <T> InsightObject.setValueList(id: Int, name: String? = null, values: List<T
     }
 }
 
-fun <T> InsightObject.setValue(id: Int, value: T?) = setValue(id, null, value)
-
-fun <T> InsightObject.setValue(id: Int, name: String? = null, value: T?) {
+fun <T> InsightObject.setValue(id: Int, value: T?) {
     if (!exists(id)) {
-        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
+        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.value = listOf(ObjectAttributeValue(
@@ -104,11 +96,9 @@ fun <T> InsightObject.removeValue(id: Int, value: T?) {
         ?.apply { this.value = this.value.filter { cur -> cur.value != value } }
 }
 
-fun InsightObject.addValue(id: Int, value: Any?) = addValue(id, null, value)
-
-fun InsightObject.addValue(id: Int, name: String? = null, value: Any?) {
+fun InsightObject.addValue(id: Int, value: Any?) {
     if (!exists(id)) {
-        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
+        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
     }
     getAttribute(id)
         ?.apply {
@@ -207,12 +197,9 @@ fun InsightObject.clearReferenceValue(id: Int) {
         ?.value = Collections.emptyList()
 }
 
-fun InsightObject.addReference(attributeId: Int, referencedObjectId: InsightObjectId) =
-    addReference(attributeId, null, referencedObjectId)
-
-fun InsightObject.addReference(attributeId: Int, name: String?, referencedObjectId: InsightObjectId) {
+fun InsightObject.addReference(attributeId: Int, referencedObjectId: InsightObjectId) {
     if (!exists(attributeId)) {
-        this.createAttribute(attributeId, name, InsightObjectAttributeType.REFERENCE)
+        this.createAttribute(attributeId, InsightObjectAttributeType.REFERENCE)
     }
     getAttribute(attributeId)
         ?.let {
@@ -230,10 +217,7 @@ fun InsightObject.addReference(attributeId: Int, name: String?, referencedObject
         }
 }
 
-fun InsightObject.setSingleReference(id: Int, referencedObjectId: InsightObjectId) =
-    setSingleReference(id, null, referencedObjectId)
-
-fun InsightObject.setSingleReference(id: Int, name: String?, referencedObjectId: InsightObjectId) {
+fun InsightObject.setSingleReference(id: Int, referencedObjectId: InsightObjectId) {
     this.clearReferenceValue(id)
-    this.addReference(id, name, referencedObjectId)
+    this.addReference(id, referencedObjectId)
 }

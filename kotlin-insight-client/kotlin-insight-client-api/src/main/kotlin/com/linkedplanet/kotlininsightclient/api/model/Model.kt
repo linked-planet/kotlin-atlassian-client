@@ -96,13 +96,9 @@ data class InsightReference(
  */
 data class InsightAttribute(
     val attributeId: Int,
-    val attributeName: String?,
     val attributeType: InsightObjectAttributeType,
-    val defaultType: ObjectTypeAttributeDefaultType?,
-    val options: String?,
-    val minimumCardinality: Int?,
-    val maximumCardinality: Int?,
     var value: List<ObjectAttributeValue>,
+    val schema: ObjectTypeSchemaAttribute?,
 ) {
     companion object {
         fun value(id: Int, value: Any?): InsightAttribute =
@@ -161,13 +157,9 @@ data class InsightAttribute(
         private fun emptyAttribute(id: Int, type: InsightObjectAttributeType, value: List<ObjectAttributeValue>) =
             InsightAttribute(
                 attributeId = id,
-                attributeName = null,
                 attributeType = type,
-                defaultType = null,
-                options = null,
-                minimumCardinality = null,
-                maximumCardinality = null,
-                value = value
+                value = value,
+                schema = null
             )
     }
 

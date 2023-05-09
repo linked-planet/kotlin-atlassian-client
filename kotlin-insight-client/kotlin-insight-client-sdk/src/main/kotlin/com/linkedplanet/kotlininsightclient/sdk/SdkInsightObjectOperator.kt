@@ -41,7 +41,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightUser
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
+import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.api.model.isReferenceAttribute
@@ -279,7 +279,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectBean.label,
             attributes,
             hasAttachments,
-            attributes.singleOrNull { it.attributeName == "Link" }?.toDisplayValue() as? String ?: objectSelf
+            attributes.singleOrNull { it.schema?.name == "Link" }?.toDisplayValue() as? String ?: objectSelf
         )
     }
 
@@ -295,15 +295,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     ): Either<InsightClientError, InsightAttribute> = either {
         InsightAttribute(
             objectTypeAttributeBean.id,
-            objectTypeAttributeBean.name,
             InsightObjectAttributeType.parse(objectTypeAttributeBean.type.typeId),
-            defaultType = ObjectTypeAttributeDefaultType(
-                objectTypeAttributeBean.defaultType.defaultTypeId,
-                objectTypeAttributeBean.defaultType.name
-            ),
-            options = objectTypeAttributeBean.options,
-            minimumCardinality = objectTypeAttributeBean.maximumCardinality,
-            maximumCardinality = objectTypeAttributeBean.minimumCardinality,
             value = objectAttributeBean.objectAttributeValueBeans.map { attribute ->
                 when (objectTypeAttributeBean.type) {
                     Type.REFERENCED_OBJECT -> {
@@ -317,7 +309,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     }
                     else -> ObjectAttributeValue(attribute.value, attribute.textValue, null, null)
                 }
-            }
+            },
+            typeAttributeBeanToSchema(objectTypeAttributeBean)
         )
     }
 

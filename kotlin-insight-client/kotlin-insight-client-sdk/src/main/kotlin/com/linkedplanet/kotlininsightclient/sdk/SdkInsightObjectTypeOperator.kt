@@ -74,20 +74,24 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
 
     private fun attributesForObjectType(objectTypeId: Int): List<ObjectTypeSchemaAttribute> =
         objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectTypeId).map { bean: ObjectTypeAttributeBean ->
-            bean.run {
-                ObjectTypeSchemaAttribute(
-                    id,
-                    name,
-                    defaultType?.let(::mapDefaultType),
-                    options,
-                    minimumCardinality,
-                    maximumCardinality,
-                    referenceTypeBean?.run { ReferenceKind.parse(id) },
-                    isIncludeChildObjectTypes,
-                    referenceObjectTypeId?.let { InsightObjectTypeId(it) },
-                    mapAttributeType(type)
-                )
-            }
+            typeAttributeBeanToSchema(bean)
+        }
+
+
+    internal fun typeAttributeBeanToSchema(bean: ObjectTypeAttributeBean) =
+        bean.run {
+            ObjectTypeSchemaAttribute(
+                id,
+                name,
+                defaultType?.let(::mapDefaultType),
+                options,
+                minimumCardinality,
+                maximumCardinality,
+                referenceTypeBean?.run { ReferenceKind.parse(id) },
+                isIncludeChildObjectTypes,
+                referenceObjectTypeId?.let { InsightObjectTypeId(it) },
+                mapAttributeType(type)
+            )
         }
 
     private fun mapAttributeType(type: ObjectTypeAttributeBean.Type): InsightObjectAttributeType =

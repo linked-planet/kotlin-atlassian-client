@@ -35,7 +35,7 @@ import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectAttributeValueApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectEditItem
-import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeAttributeDefaultTypeApiResponse
+import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeAttributeApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectUpdateApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.getEditAttributes
 import com.linkedplanet.kotlininsightclient.http.model.toEditObjectItem
@@ -249,14 +249,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                     ?: InsightObjectAttributeType.DEFAULT
             InsightAttribute(
                 it.objectTypeAttributeId,
-                it.objectTypeAttribute?.name,
                 attributeType,
-                it.objectTypeAttribute?.defaultType?.let { dt: ObjectTypeAttributeDefaultTypeApiResponse ->
-                    ObjectTypeAttributeDefaultType(dt.id, dt.name)
-                },
-                it.objectTypeAttribute?.options,
-                it.objectTypeAttribute?.minimumCardinality,
-                it.objectTypeAttribute?.maximumCardinality,
                 it.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
                     ObjectAttributeValue(
                         value = av.value,
@@ -268,6 +261,9 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                         },
                         user = av.user?.run { InsightUser(displayName, name, emailAddress?: "", key) }
                     )
+                },
+                schema = it.objectTypeAttribute?.let { type: ObjectTypeAttributeApiResponse ->
+                    objectTypeSchemaAttribute(type)
                 }
             )
         }
@@ -283,6 +279,20 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             objectSelf
         )
     }
+
+    private fun objectTypeSchemaAttribute(type: ObjectTypeAttributeApiResponse) =
+        ObjectTypeSchemaAttribute(
+            id = type.id,
+            name = type.name,
+            defaultType = type.defaultType?.id?.let { DefaultType.parse(it) },
+            options = type.options,
+            minimumCardinality = type.minimumCardinality,
+            maximumCardinality = type.maximumCardinality,
+            referenceKind = ReferenceKind.parse(type.referenceObjectTypeId),
+            includeChildObjectTypes = type.includeChildObjectTypes,
+            referenceObjectTypeId = InsightObjectTypeId(type.referenceObjectTypeId),
+            type = InsightObjectAttributeType.parse(type.type),
+        )
 
     private fun getIQLWithChildren(objTypeId: InsightObjectTypeId, withChildren: Boolean): String =
         if (withChildren) {
