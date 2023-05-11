@@ -92,13 +92,15 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         insightObjectOperator.deleteObject(insightObject.id).bind()
     }
 
-    override suspend fun create(domainObject: DomainType): Either<InsightClientError, InsightObjectId> = either {
+    override suspend fun create(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
         val insightObject = createEmptyObject(objectTypeSchema.id)
         setAttributesFromDomainObject(insightObject, domainObject)
-        insightObjectOperator.createObject(
+        val createdObject = insightObjectOperator.createObject(
             objectTypeSchema.id,
-            *insightObject.attributes.toTypedArray()
+            *insightObject.attributes.toTypedArray(),
+            toDomain = ::identity
         ).bind()
+        domainObjectByInsightObject(createdObject).bind()
     }
 
     private fun createEmptyObject(objectTypeId: InsightObjectTypeId): InsightObject {
@@ -114,11 +116,11 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         )
     }
 
-    override suspend fun update(domainObject: DomainType): Either<InsightClientError, InsightObjectId> = either {
+    override suspend fun update(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
         val insightObject = insightObjectForDomainObject(objectTypeSchema.id, domainObject).bind()!!
         setAttributesFromDomainObject(insightObject, domainObject)
-        insightObjectOperator.updateObject(insightObject, ::identity,::identity).bind()
-        insightObject.id
+        insightObjectOperator.updateObject(insightObject).bind()
+        domainObjectByInsightObject(insightObject).bind()
     }
 
     private suspend fun setAttributesFromDomainObject(insightObject: InsightObject, domainObject: DomainType) {

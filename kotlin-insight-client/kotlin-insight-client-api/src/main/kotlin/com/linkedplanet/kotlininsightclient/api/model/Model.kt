@@ -106,9 +106,9 @@ data class InsightAttribute(
     companion object {
 
         infix fun InsightAttributeId.toValue(value: Any?): InsightAttribute =
-            emptyAttribute(
-                this,
-                InsightObjectAttributeType.DEFAULT,
+            createAttr(
+                id = this,
+                type = InsightObjectAttributeType.DEFAULT,
                 value = listOf(
                     ObjectAttributeValue(
                         value = value,
@@ -120,9 +120,9 @@ data class InsightAttribute(
             )
 
         infix fun InsightAttributeId.toValues(primitiveValueList: List<Any?>): InsightAttribute =
-            emptyAttribute(
-                this,
-                InsightObjectAttributeType.DEFAULT,
+            createAttr(
+                id = this,
+                type = InsightObjectAttributeType.DEFAULT,
                 value = primitiveValueList.map {
                     ObjectAttributeValue(
                         value = it,
@@ -133,32 +133,32 @@ data class InsightAttribute(
                 }
             )
 
-        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId): InsightAttribute =
-            emptyAttribute(
-                this,
-                InsightObjectAttributeType.REFERENCE,
-                value = listOf(
-                    emptyReference(referencedObjectId)
+        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?): InsightAttribute =
+            createAttr(
+                id = this,
+                type = InsightObjectAttributeType.REFERENCE,
+                value = listOfNotNull(
+                    referencedObjectId?.let { createRef(it) }
                 )
             )
 
         infix fun InsightAttributeId.toReferences(referencedObjectIds: List<InsightObjectId>): InsightAttribute =
-            emptyAttribute(
-                this,
-                InsightObjectAttributeType.REFERENCE,
+            createAttr(
+                id = this,
+                type = InsightObjectAttributeType.REFERENCE,
                 value = referencedObjectIds.map {
-                    emptyReference(it)
+                    createRef(it)
                 }
             )
 
-        private fun emptyReference(id: InsightObjectId) = ObjectAttributeValue(
+        private fun createRef(id: InsightObjectId) = ObjectAttributeValue(
             value = null,
             displayValue = null,
             referencedObject = ReferencedObject(id, "", "", null),
             user = null
         )
 
-        private fun emptyAttribute(id: InsightAttributeId, type: InsightObjectAttributeType, value: List<ObjectAttributeValue>) =
+        private fun createAttr(id: InsightAttributeId, type: InsightObjectAttributeType, value: List<ObjectAttributeValue>) =
             InsightAttribute(
                 attributeId = id,
                 attributeType = type,

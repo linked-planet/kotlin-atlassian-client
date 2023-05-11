@@ -17,10 +17,11 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient.api.experimental
+package com.linkedplanet.kotlininsightclient.api.impl
 
 import arrow.core.Either
 import arrow.core.computations.either
+import arrow.core.rightIfNotNull
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
@@ -35,14 +36,20 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
     abstract val objectTypeId: InsightObjectTypeId
 
     abstract suspend fun loadExistingInsightObject(domainObject: DomainType): Either<InsightClientError, InsightObject?>
-    abstract fun toDomain(insightObject: InsightObject): DomainType
-    abstract fun attributesFromDomain(domainObject: DomainType): List<InsightAttribute>
 
-    override suspend fun create(domainObject: DomainType): Either<InsightClientError, InsightObjectId> = either {
-        val attributes = attributesFromDomain(domainObject)
+    /**
+     * Transforms an InsightObjects to its corresponding domain object.
+     * This is a suspend function with either return type, so clients can call insightObjectOperator functions easily.
+     */
+    abstract suspend fun toDomain(insightObject: InsightObject): Either<InsightClientError, DomainType>
+    abstract suspend fun attributesFromDomain(domainObject: DomainType): Either<InsightClientError, List<InsightAttribute>>
+
+    override suspend fun create(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
+        val attributes = attributesFromDomain(domainObject).bind()
         insightObjectOperator.createObject(
             objectTypeId,
-            *attributes.toTypedArray()
+            *attributes.toTypedArray(),
+            toDomain = { toDomain(it).bind() }
         ).bind()
     }
 
@@ -59,12 +66,17 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
         )
     }
 
-    override suspend fun update(domainObject: DomainType): Either<InsightClientError, InsightObjectId> = either {
-        val insightObject = loadExistingInsightObject(domainObject).bind() ?: createEmptyObject(objectTypeId)
-        val attributes: List<InsightAttribute> = attributesFromDomain(domainObject)
+    override suspend fun update(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
+        val insightObject = loadExistingInsightObject(domainObject).bind().rightIfNotNull {
+            InsightClientError(
+                "InsightObject update failed.",
+                "Could not retrieve the object."
+            )
+        }.bind()
+        val attributes: List<InsightAttribute> = attributesFromDomain(domainObject).bind()
         val insightObjectWithAttributes = insightObject.copy(attributes = attributes)
         val updatedObject = insightObjectOperator.updateObject(insightObjectWithAttributes).bind()
-        updatedObject.id
+        toDomain(updatedObject).bind()
     }
 
     override suspend fun delete(domainObject: DomainType): Either<InsightClientError, Unit> = either {
@@ -74,25 +86,29 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
         }
     }
 
-    override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> =
-        insightObjectOperator.getObjectByName(objectTypeId, name) { toDomain(it) }
+    override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> = either {
+        insightObjectOperator.getObjectByName(objectTypeId, name) { toDomain(it).bind() }.bind()
+    }
 
-    override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> =
-        insightObjectOperator.getObjectById(objectId) { toDomain(it) }
+
+    override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
+        insightObjectOperator.getObjectById(objectId) { toDomain(it).bind() }.bind()
+    }
 
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
         pageFrom: Int,
         perPage: Int
-    ): Either<InsightClientError, List<DomainType>> =
+    ): Either<InsightClientError, List<DomainType>> = either {
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
             withChildren,
             pageFrom,
             perPage
-        ) { toDomain(it) }
-            .map { it.objects }
+        ) { toDomain(it).bind() }
+            .map { it.objects }.bind()
+    }
 
 }

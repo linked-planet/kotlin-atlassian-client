@@ -27,8 +27,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 
-typealias MapToDomain<T> = (InsightObject) -> T
-typealias MapToInsight<T> = (T) -> InsightObject
+typealias MapToDomain<T> = suspend (InsightObject) -> T
 
 /**
  * The InsightObjectOperator interface provides methods to interact with Insight objects.
@@ -143,6 +142,7 @@ interface InsightObjectOperator {
 
     /**
      * Updates an existing Insight object in the system.
+     * This will overwrite the existing object, so missing attributes will get deleted.
      *
      * @param obj The Insight object to update.
      * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
@@ -151,13 +151,24 @@ interface InsightObjectOperator {
 
     /**
      * Updates an existing Insight object in the system.
+     * This allows you to only update some attributes while keeping the values for all other attributes.
      *
-     * @param domainObject The Insight object to update.
+     * @param obj The Insight object to update.
+     * @param insightAttributes: the attributes that will be updated
+     * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
+     */
+    suspend fun updateObject(obj: InsightObject, vararg insightAttributes: InsightAttribute): Either<InsightClientError, InsightObject>
+
+    /**
+     * Updates an existing Insight object in the system.
+     * This allows you to only update some attributes while keeping the values for all other attributes.
+     *
+     * @param insightAttributes: the attributes that will be updated
      * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
      */
     suspend fun <T> updateObject(
-        domainObject: T,
-        toInsight: MapToInsight<T>,
+        objectId: InsightObjectId,
+        vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T>
 

@@ -22,13 +22,12 @@
 package com.linkedplanet.kotlininsightclient.api.model
 
 import java.time.ZonedDateTime
-import java.util.*
 
 private fun InsightObject.createAttribute(id: InsightAttributeId, attributeType: InsightObjectAttributeType) {
     this.attributes = this.attributes + InsightAttribute(
         attributeId = id,
         attributeType = attributeType,
-        value = Collections.emptyList(),
+        value = emptyList(),
         null
     )
 }
@@ -54,14 +53,14 @@ fun InsightObject.exists(id: InsightAttributeId): Boolean =
 
 fun InsightObject.clearValueList(id: InsightAttributeId) {
     getAttribute(id)
-        ?.value = Collections.emptyList()
+        ?.value = emptyList()
 }
 
 fun InsightObject.getValueList(id: InsightAttributeId): List<Any> =
     getAttribute(id)
         ?.value
         ?.mapNotNull { it.value }
-        ?: Collections.emptyList()
+        ?: emptyList()
 
 fun <T> InsightObject.setValueList(id: InsightAttributeId, values: List<T?>) {
     if (!exists(id)) {
@@ -126,12 +125,12 @@ fun <T> InsightObject.getValueList(id: InsightAttributeId, transform: (Any) -> T
     getAttribute(id)
         ?.value
         ?.map { transform(it) }
-        ?: Collections.emptyList()
+        ?: emptyList()
 
 fun <T> InsightObject.getValueListByName(name: String, transform: (Any) -> T): List<T?> =
     getAttributeIdByName(name)
         ?.let { getValueList(it, transform) }
-        ?: Collections.emptyList()
+        ?: emptyList()
 
 fun InsightObject.getStringValue(id: InsightAttributeId): String? =
     this.getValue(id) { it.toString() }
@@ -176,14 +175,14 @@ fun InsightObject.getMultiReferenceValue(id: InsightAttributeId): List<InsightRe
                 it.label
             )
         }
-        ?: Collections.emptyList()
+        ?: emptyList()
 
 fun InsightObject.getUserList(id: InsightAttributeId): List<InsightUser> =
     this.attributes
         .firstOrNull { it.attributeId == id }
         ?.value
         ?.mapNotNull { it.user }
-        ?: Collections.emptyList()
+        ?: emptyList()
 
 fun InsightObject.removeReference(attributeId: InsightAttributeId, referencedObjectId: InsightObjectId) {
     getAttribute(attributeId)
@@ -194,7 +193,7 @@ fun InsightObject.removeReference(attributeId: InsightAttributeId, referencedObj
 
 fun InsightObject.clearReferenceValue(id: InsightAttributeId) {
     getAttribute(id)
-        ?.value = Collections.emptyList()
+        ?.value = emptyList()
 }
 
 fun InsightObject.addReference(attributeId: InsightAttributeId, referencedObjectId: InsightObjectId) {

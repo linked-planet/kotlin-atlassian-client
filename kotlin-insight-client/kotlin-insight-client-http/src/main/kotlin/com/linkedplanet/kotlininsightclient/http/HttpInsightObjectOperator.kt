@@ -29,7 +29,6 @@ import com.linkedplanet.kotlinhttpclient.api.http.GSON
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
-import com.linkedplanet.kotlininsightclient.api.interfaces.MapToInsight
 import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
@@ -119,11 +118,13 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>{
-        return updateObject(obj, ::identity, ::identity)
+        return updateObject(obj, *obj.attributes.toTypedArray())
     }
 
-    override suspend fun <T> updateObject(domainObject: T, toInsight: MapToInsight<T>, toDomain: MapToDomain<T>): Either<InsightClientError, T> = either {
-        val obj = toInsight(domainObject)
+    override suspend fun updateObject(
+        obj: InsightObject,
+        vararg insightAttributes: InsightAttribute
+    ): Either<InsightClientError, InsightObject> = either {
         context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "PUT",
             "rest/insight/1.0/object/${obj.id.value}",
@@ -132,11 +133,31 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             "application/json",
             ObjectUpdateApiResponse::class.java
         )
-            .map { updateResponse -> getObjectById(InsightObjectId(updateResponse.body!!.id), toDomain).map { it!! } }
+            .map { updateResponse -> getObjectById(InsightObjectId(updateResponse.body!!.id), ::identity).map { it!! } }
             .mapLeft { it.toInsightClientError() }
             .flatten()
             .bind()
     }
+
+    override suspend fun <T> updateObject(
+        objectId: InsightObjectId,
+        vararg insightAttributes: InsightAttribute,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T> = either {
+        val obj = getObjectById(objectId, ::identity).bind().rightIfNotNull {
+            InsightClientError(
+                "InsightObject update failed.",
+                "Could not retrieve the object."
+            )
+        }.bind()
+
+        val attributeMap = obj.attributes.associateBy { it.attributeId }.toMutableMap()
+        insightAttributes.forEach {
+            attributeMap[it.attributeId] = it
+        }
+        obj.attributes = attributeMap.values.toList()
+        updateObject(obj).bind()
+    }.map{ toDomain(it) }
 
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
@@ -187,12 +208,12 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     // PRIVATE DOWN HERE
-    private fun <T>InsightObjectEntriesApiResponse.toValues(mapper: MapToDomain<T>): InsightObjectPage<T> =
+    private suspend fun <T>InsightObjectEntriesApiResponse.toValues(mapper: MapToDomain<T>): InsightObjectPage<T> =
         InsightObjectPage(
             this.totalFilterCount,
             this.objectEntries
                 .map { it.toValue() }
-                .map(mapper)
+                .map { mapper(it) }
         )
 
     /**

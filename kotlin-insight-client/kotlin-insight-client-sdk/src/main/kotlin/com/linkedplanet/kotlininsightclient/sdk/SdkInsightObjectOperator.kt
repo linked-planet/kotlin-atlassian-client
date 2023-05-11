@@ -22,6 +22,7 @@ package com.linkedplanet.kotlininsightclient.sdk
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatMap
+import arrow.core.identity
 import arrow.core.left
 import arrow.core.right
 import arrow.core.rightIfNotNull
@@ -32,7 +33,6 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
-import com.linkedplanet.kotlininsightclient.api.interfaces.MapToInsight
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
@@ -42,10 +42,10 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightUser
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
-import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.api.model.isReferenceAttribute
+import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
@@ -158,17 +158,33 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectFacade.storeObjectBean(objectBean)
         }.flatMap { it.toInsightObject() }
 
+    override suspend fun updateObject(
+        obj: InsightObject,
+        vararg insightAttributes: InsightAttribute
+    ): Either<InsightClientError, InsightObject> = either {
+        val attributeMap = obj.attributes.associateBy { it.attributeId }.toMutableMap()
+        insightAttributes.forEach {
+            attributeMap[it.attributeId] = it
+        }
+        obj.attributes = attributeMap.values.toList()
+        updateObject(obj).bind()
+    }
+
     override suspend fun <T> updateObject(
-        domainObject: T,
-        toInsight: MapToInsight<T>,
+        objectId: InsightObjectId,
+        vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> =
-        catchAsInsightClientError {
-            toInsight(domainObject)
+        either {
+            val obj = getObjectById(objectId, ::identity).bind().rightIfNotNull {
+                InsightClientError(
+                    "InsightObject update failed.",
+                    "Could not retrieve the object."
+                )
+            }.bind()
+            updateObject(obj, *insightAttributes).bind()
         }
-            .flatMap { updateObject(it) }
-            .map(toDomain)
-
+            .map{ toDomain(it) }
     private fun setAttributesForObjectBean(
         obj: InsightObject,
         objectBean: MutableObjectBean
@@ -239,13 +255,13 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 totalFilterSize,
                 objects
                     .map { it.toInsightObject().bind() }
-                    .map(toDomain)
+                    .map{ toDomain(it) }
             )
         }
 
     private suspend fun <T> ObjectBean?.toNullableInsightObject(toDomain: MapToDomain<T>): Either<InsightClientError, T?> {
         if (this == null) return Either.Right(null)
-        return this.toInsightObject().map(toDomain)
+        return this.toInsightObject().map{ toDomain(it) }
     }
 
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> =

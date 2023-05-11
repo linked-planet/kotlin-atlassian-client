@@ -25,9 +25,11 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 
 interface GenericInsightObjectOperator<DomainType> {
 
-    suspend fun create(domainObject: DomainType): Either<InsightClientError, InsightObjectId>
+    // we have to return DomainType in case someone wants a DomainType with an InsightObjectId
+    // so the implementation can return a DomainObject having a non null ID
+    suspend fun create(domainObject: DomainType): Either<InsightClientError, DomainType>
 
-    suspend fun update(domainObject: DomainType): Either<InsightClientError, InsightObjectId>
+    suspend fun update(domainObject: DomainType): Either<InsightClientError, DomainType>
 
     suspend fun delete(domainObject: DomainType): Either<InsightClientError, Unit>
 

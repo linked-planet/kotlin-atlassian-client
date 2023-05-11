@@ -119,7 +119,7 @@ interface InsightAttachmentOperatorTest {
         val disclaimer = "'NoAttachment' created by Test and should only exist during test run."
         val country = insightObjectOperator.createObject(
             Country.id,
-            CountryName.attributeId toValue "Attachistan",
+            CountryName.attributeId toValue "NoAttachment",
             CountryShortName.attributeId toValue disclaimer,
             toDomain = ::identity
         ).orFail()
