@@ -24,6 +24,7 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import java.io.InputStream
 
 /**
  * The InsightAttachmentOperator interface provides methods to interact with attachments belonging to an InsightObject.
@@ -42,30 +43,30 @@ interface InsightAttachmentOperator {
      * Downloads the attachment content from the specified URL.
      *
      * @param url The URL of the attachment to download
-     * @return Either an [InsightClientError] or a [ByteArray] containing the attachment data
+     * @return Either an [InsightClientError] or a [InputStream] containing the attachment data
      */
-    suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray>
+    suspend fun downloadAttachment(url: String): Either<InsightClientError, InputStream>
 
     /**
      * Downloads a zip file containing all attachments for the specified insight object.
      *
      * @param objectId The id of the insight object to download attachments for
-     * @return Either an [InsightClientError] or a [ByteArray] containing the zip file data
+     * @return Either an [InsightClientError] or a [InputStream] containing the zip file data
      */
-    suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray>
+    suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream>
 
     /**
      * Uploads an attachment to the specified insight object.
      *
      * @param objectId The id of the insight object to upload the attachment to
      * @param filename The name of the attachment file (not the path to the file, so avoid "/")
-     * @param byteArray The byte array containing the attachment data
+     * @param inputStream The byte array containing the attachment data
      * @return Either an [InsightClientError] or a list of [InsightAttachment] objects
      */
     suspend fun uploadAttachment(
         objectId: InsightObjectId,
         filename: String,
-        byteArray: ByteArray
+        inputStream: InputStream
     ): Either<InsightClientError, List<InsightAttachment>>
 
     /**

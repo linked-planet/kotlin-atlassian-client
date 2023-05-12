@@ -27,8 +27,11 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOper
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.http.util.catchAsInsightClientError
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
-import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.net.URLConnection
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -47,7 +50,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
 
-    override suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray> =
+    override suspend fun downloadAttachment(url: String): Either<InsightClientError, InputStream> =
         context.httpClient.executeDownload(
             "GET",
             url,
@@ -61,7 +64,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
     override suspend fun uploadAttachment(
         objectId: InsightObjectId,
         filename: String,
-        byteArray: ByteArray
+        inputStream: InputStream
     ): Either<InsightClientError, List<InsightAttachment>> = either {
         val mimeType = URLConnection.guessContentTypeFromName(filename)
         context.httpClient.executeUpload(
@@ -70,7 +73,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             emptyMap(),
             mimeType,
             filename,
-            byteArray
+            inputStream
         )
             .mapLeft { it.toInsightClientError() }
             .bind()
@@ -89,24 +92,31 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .map { }
             .mapLeft { it.toInsightClientError() }
 
-    override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray> = either {
-        val attachments = getAttachments(objectId).bind()
-        val fileMap = attachments.map { attachment ->
-            val attachmentContent = downloadAttachment(attachment.url).bind()
-            attachment.filename to attachmentContent
+    override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =
+        either {
+            val attachments = getAttachments(objectId).bind()
+            val fileMap: List<Pair<String, InputStream>> = attachments.map { attachment ->
+                val attachmentContent = downloadAttachment(attachment.url).bind()
+                attachment.filename to attachmentContent
+            }
+            zipInputStreamForMultipleInputStreams(fileMap).bind()
         }
 
-        ByteArrayOutputStream().use { byteOutputStream ->
-            ZipOutputStream(byteOutputStream).use { zip ->
-                fileMap.forEach {
-                    val zipEntry1 = ZipEntry(it.first)
-                    zip.putNextEntry(zipEntry1)
-                    zip.write(it.second)
-                    zip.closeEntry()
+    private fun zipInputStreamForMultipleInputStreams(
+        fileMap: List<Pair<String, InputStream>>
+    ): Either<InsightClientError, InputStream> =
+        catchAsInsightClientError {
+            val pipeInputStream = PipedInputStream()
+            PipedOutputStream(pipeInputStream).use { outputStream ->
+                ZipOutputStream(outputStream).use { zipOutputStream ->
+                    fileMap.forEach { (filename, inputStream) ->
+                        val zipEntry = ZipEntry(filename)
+                        zipOutputStream.putNextEntry(zipEntry)
+                        inputStream.copyTo(zipOutputStream)
+                        zipOutputStream.closeEntry()
+                    }
                 }
             }
-
-            byteOutputStream.toByteArray()
+            pipeInputStream
         }
-    }
 }

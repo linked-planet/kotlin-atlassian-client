@@ -33,6 +33,9 @@ import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import org.apache.http.HttpHeaders
 import org.jetbrains.kotlin.library.impl.javaFile
 import java.io.File
+import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
 
@@ -74,7 +77,7 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         params: Map<String, String>,
         body: String?,
         contentType: String?
-    ): Either<HttpDomainError, HttpResponse<ByteArray>> =
+    ): Either<HttpDomainError, HttpResponse<InputStream>> =
         try {
             val request = applicationLinkRequest(method, params, path)
             if (body != null) {
@@ -82,15 +85,15 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
                     .setRequestBody(body)
                     .setHeader(HttpHeaders.CONTENT_TYPE, contentType)
             }
-            request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
+            request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<InputStream>>> {
                 override fun credentialsRequired(response: Response) = null
 
-                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>> =
+                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<InputStream>> =
                     when {
                         response.isSuccessful -> Either.Right(
                             HttpResponse(
                                 response.statusCode,
-                                response.responseBodyAsStream.readBytes()
+                                response.responseBodyAsStream
                             )
                         )
                         else -> httpDomainErrorFromResponse(path, response)
@@ -106,20 +109,20 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         params: Map<String, String>,
         mimeType: String,
         filename: String,
-        byteArray: ByteArray
-    ): Either<HttpDomainError, HttpResponse<ByteArray>> =
+        inputStream: InputStream
+    ): Either<HttpDomainError, HttpResponse<InputStream>> =
         try {
             val request: ApplicationLinkRequest = applicationLinkRequest(method, params, url)
-            val file = tempFileWithData(filename, byteArray)
+            val file = tempFileWithData(filename, inputStream)
             val filePart = RequestFilePart(mimeType, filename, file, "file")
             request.setFiles(listOf(filePart))
 
-            request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
+            request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<InputStream>>> {
                 override fun credentialsRequired(response: Response) = null
 
-                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>> =
+                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<InputStream>> =
                     when {
-                        response.isSuccessful -> Either.Right(HttpResponse(response.statusCode, byteArray))
+                        response.isSuccessful -> Either.Right(HttpResponse(response.statusCode, inputStream))
                         else -> httpDomainErrorFromResponse(url, response)
                     }
             })
@@ -127,9 +130,9 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
             wrapAsGenericHttpDomainError(e)
         }
 
-    private fun tempFileWithData(filename: String, byteArray: ByteArray): File {
+    private fun tempFileWithData(filename: String, inputStream: InputStream): File {
         val file: File = org.jetbrains.kotlin.konan.file.createTempFile(filename).javaFile()
-        file.writeBytes(byteArray)
+        Files.copy(inputStream, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
         return file
     }
 

@@ -33,9 +33,13 @@ import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.linkedplanet.kotlininsightclient.sdk.util.toISOString
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
-import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.net.URLConnection
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.text.CharacterIterator
 import java.text.StringCharacterIterator
 import java.util.zip.ZipEntry
@@ -57,48 +61,56 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
                 .map(::beanToInsightAttachment)
         }
 
-    override suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray> =
+    override suspend fun downloadAttachment(url: String): Either<InsightClientError, InputStream> =
         catchAsInsightClientError {
             val attachmentId = attachmentUrlResolver.parseAttachmentIdFromPathInformation(url)
             val attachmentBean = objectFacade.loadAttachmentBeanById(attachmentId)
-            val inputStream =
-                fileManager.getObjectAttachmentContent(attachmentBean.objectId, attachmentBean.nameInFileSystem)
-            inputStream.readBytes()
+            fileManager.getObjectAttachmentContent(attachmentBean.objectId, attachmentBean.nameInFileSystem)
         }
 
-    override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray> =
+    override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =
         either {
-            val attachments = getAttachments(objectId).bind()
-            val fileMap: List<Pair<String, ByteArray>> = attachments.map { attachment ->
-                val attachmentContent = downloadAttachment(attachment.url).bind()
-                attachment.filename to attachmentContent
+            val fileMap = allAttachmentStreamsForInsightObject(objectId).bind()
+            zipInputStreamForMultipleInputStreams(fileMap).bind()
+        }
+
+    private fun allAttachmentStreamsForInsightObject(objectId: InsightObjectId) =
+        catchAsInsightClientError {
+            val attachmentBeans = objectFacade.findAttachmentBeans(objectId.value)
+            attachmentBeans.map { bean ->
+                val attachmentContent = fileManager.getObjectAttachmentContent(bean.objectId, bean.nameInFileSystem)
+                bean.filename to attachmentContent
             }
-            ByteArrayOutputStream().use { byteOutputStream ->
-                ZipOutputStream(byteOutputStream).use { zip ->
-                    fileMap.forEach {
-                        val zipEntry1 = ZipEntry(it.first)
-                        zip.putNextEntry(zipEntry1)
-                        zip.write(it.second)
-                        zip.closeEntry()
+        }
+
+    private fun zipInputStreamForMultipleInputStreams(
+        fileMap: List<Pair<String, InputStream>>
+    ): Either<InsightClientError, InputStream> =
+        catchAsInsightClientError {
+            val pipeInputStream = PipedInputStream()
+            PipedOutputStream(pipeInputStream).use { outputStream ->
+                ZipOutputStream(outputStream).use { zipOutputStream ->
+                    fileMap.forEach { (filename, inputStream) ->
+                        val zipEntry = ZipEntry(filename)
+                        zipOutputStream.putNextEntry(zipEntry)
+                        inputStream.copyTo(zipOutputStream)
+                        zipOutputStream.closeEntry()
                     }
                 }
-
-                val toByteArray = byteOutputStream.toByteArray()
-                toByteArray
             }
+            pipeInputStream
         }
 
     override suspend fun uploadAttachment(
         objectId: InsightObjectId,
         filename: String,
-        byteArray: ByteArray
+        inputStream: InputStream
     ): Either<InsightClientError, List<InsightAttachment>> =
         catchAsInsightClientError {
             val tempFilePath: Path = createTempFile(filename)
-            val tempFile = tempFilePath.toFile()
-            tempFile.writeBytes(byteArray)
+            Files.copy(inputStream, tempFilePath, StandardCopyOption.REPLACE_EXISTING)
             val mimeType = URLConnection.guessContentTypeFromName(filename)
-            val bean = objectFacade.addAttachmentBean(objectId.value, tempFile, filename, mimeType, null)
+            val bean = objectFacade.addAttachmentBean(objectId.value, tempFilePath.toFile(), filename, mimeType, null)
             val insightAttachment = beanToInsightAttachment(bean)
             listOf(insightAttachment)
         }

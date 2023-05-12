@@ -33,7 +33,6 @@ import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert
 import org.junit.Test
-import java.io.ByteArrayInputStream
 import java.security.MessageDigest
 import java.util.*
 import java.util.zip.ZipInputStream
@@ -61,7 +60,7 @@ interface InsightAttachmentOperatorTest {
         assertThat(firstAttachment.created, startsWith("2023-02-21T0")) // but github pipeline insists on 8 o'clock
 
         val downloadContent = insightAttachmentOperator.downloadAttachment(attachments.first().url).orNull()!!
-        val sha256HashIS = calculateSha256(downloadContent)
+        val sha256HashIS = calculateSha256(downloadContent.readBytes())
         assertThat(sha256HashIS, equalTo("fd411837a51c43670e8d7367e64f72dbbcda5016f59988547c12d067505ef75b"))
         println("### END attachment_testGetAndDownloadAttachments")
     }
@@ -83,13 +82,13 @@ interface InsightAttachmentOperatorTest {
             ).orFail()
 
             val attachment = insightAttachmentOperator.uploadAttachment(
-                country.id, "attachistan.txt", "content".toByteArray()
+                country.id, "attachistan.txt", "content".byteInputStream()
             ).orFail().first()
 
             assertThat(attachment.filename, equalTo("attachistan.txt"))
 
             val downloadContent = insightAttachmentOperator.downloadAttachment(attachment.url).orFail()
-            val downloadContentString = String(downloadContent)
+            val downloadContentString = String(downloadContent.readBytes())
             assertThat(downloadContentString, equalTo("content"))
 
             insightAttachmentOperator.deleteAttachment(attachment.id).orFail()
@@ -151,17 +150,17 @@ interface InsightAttachmentOperatorTest {
 
             // GIVEN an object with two attachment files
             insightAttachmentOperator.uploadAttachment(
-                country.id, files.keys.first(), files.values.first().toByteArray(),
+                country.id, files.keys.first(), files.values.first().byteInputStream(),
             ).orFail().first()
             insightAttachmentOperator.uploadAttachment(
-                country.id, files.keys.last(), files.values.last().toByteArray(),
+                country.id, files.keys.last(), files.values.last().byteInputStream(),
             ).orFail().first()
 
             // WHEN downloading attachment zip
             val downloadAttachmentZip = insightAttachmentOperator.downloadAttachmentZip(country.id).orFail()
 
             // then both files are contained inside the zip archive
-            val zip = ZipInputStream(ByteArrayInputStream(downloadAttachmentZip))
+            val zip = ZipInputStream(downloadAttachmentZip)
             val firstZipFileName = zip.nextEntry?.name
             assertThat(String(zip.readBytes()), equalTo(files[firstZipFileName]))
             val secondZipEntryName = zip.nextEntry?.name
