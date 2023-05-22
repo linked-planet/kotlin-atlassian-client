@@ -26,17 +26,19 @@ import arrow.core.identity
 import arrow.core.left
 import arrow.core.right
 import arrow.core.rightIfNotNull
+import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
+import com.atlassian.jira.timezone.TimeZoneManager
 import com.atlassian.jira.user.util.UserManager
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
@@ -44,23 +46,26 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightUser
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
-import com.linkedplanet.kotlininsightclient.api.model.isReferenceAttribute
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
+import com.riadalabs.jira.plugins.insight.services.model.MutableObjectAttributeBean
 import com.riadalabs.jira.plugins.insight.services.model.MutableObjectBean
+import com.riadalabs.jira.plugins.insight.services.model.MutableObjectTypeAttributeBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectAttributeBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectAttributeValueBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectResultBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
+import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.DefaultType
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.Type
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
 import com.riadalabs.jira.plugins.insight.services.model.factory.ObjectAttributeBeanFactory
 import io.riada.core.collector.model.toDisplayValue
+import java.util.*
 
 object SdkInsightObjectOperator : InsightObjectOperator {
 
@@ -73,6 +78,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
     private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
+    private val timezoneManager by lazy { ComponentAccessor.getComponent(TimeZoneManager::class.java) }
 
     override suspend fun <T> getObjectById(
         id: InsightObjectId,
@@ -158,7 +164,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectFacade.storeObjectBean(objectBean)
         }.flatMap { it.toInsightObject() }
 
-    override suspend fun updateObject(
+    private suspend fun updateObject(
         obj: InsightObject,
         vararg insightAttributes: InsightAttribute
     ): Either<InsightClientError, InsightObject> = either {
@@ -184,23 +190,56 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             }.bind()
             updateObject(obj, *insightAttributes).bind()
         }
-            .map{ toDomain(it) }
+            .map { toDomain(it) }
+
     private fun setAttributesForObjectBean(
         obj: InsightObject,
-        objectBean: MutableObjectBean
+        bean: MutableObjectBean
     ) {
         val attributeBeans = obj.attributes.map { insightAttr ->
             val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId.raw).createMutable()
-            if (obj.isReferenceAttribute(insightAttr.attributeId)) {
-                val values = insightAttr.value.map { it.referencedObject!!.id.value }.toTypedArray()
-                objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id) }
-            } else {
-                val values = insightAttr.value.map { it.value.toString() }.toTypedArray()
-                objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, ota, *values)
+            when (val value = insightAttr.value) {
+                is ObjectAttributeValue.Bool -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Date -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.DateTime -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.DoubleNumber -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Email -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Integer -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Ipaddress -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Text -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Textarea -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Time -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Url -> beanFromString(bean, ota, value.value.toString())
+                is ObjectAttributeValue.Select -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(
+                    bean, ota, *value.values.toTypedArray()
+                )
+
+                is ObjectAttributeValue.Reference -> {
+                    val referenceIds = value.referencedObjects.map { it.id.value }.toTypedArray()
+                    objectAttributeBeanFactory.createReferenceAttributeValue(ota) { referenceIds.contains(it.id) }
+                }
+                is ObjectAttributeValue.User -> {
+                    val userKeys = value.users.map { it.key }
+                    objectAttributeBeanFactory.createUserAttributeValueByKey(ota, *userKeys.toTypedArray())
+                }
+
+                is ObjectAttributeValue.Group -> TODO()
+                is ObjectAttributeValue.Project -> TODO()
+                is ObjectAttributeValue.Status -> TODO()
+                is ObjectAttributeValue.Version -> TODO()
+                is ObjectAttributeValue.Confluence -> TODO()
+                is ObjectAttributeValue.Unknown -> TODO()
             }
         }
-        objectBean.setObjectAttributeBeans(attributeBeans)
+        bean.setObjectAttributeBeans(attributeBeans)
     }
+
+    private fun beanFromString(
+        bean: MutableObjectBean,
+        ota: MutableObjectTypeAttributeBean,
+        asString: String
+    ): MutableObjectAttributeBean =
+        objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota, asString)
 
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         catchAsInsightClientError {
@@ -255,13 +294,13 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 totalFilterSize,
                 objects
                     .map { it.toInsightObject().bind() }
-                    .map{ toDomain(it) }
+                    .map { toDomain(it) }
             )
         }
 
     private suspend fun <T> ObjectBean?.toNullableInsightObject(toDomain: MapToDomain<T>): Either<InsightClientError, T?> {
         if (this == null) return Either.Right(null)
-        return this.toInsightObject().map{ toDomain(it) }
+        return this.toInsightObject().map { toDomain(it) }
     }
 
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> =
@@ -308,28 +347,70 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             ?: ObjectTypeNotFoundError().left()
 
     private suspend fun createInsightAttribute(
-        objectAttributeBean: ObjectAttributeBean, objectTypeAttributeBean: ObjectTypeAttributeBean
+        objectAttributeBean: ObjectAttributeBean,
+        objectTypeAttributeBean: ObjectTypeAttributeBean
     ): Either<InsightClientError, InsightAttribute> = either {
+        val value: ObjectAttributeValue = when (objectTypeAttributeBean.type) {
+            Type.DEFAULT -> handleDefaultValue(objectAttributeBean, objectTypeAttributeBean).bind()
+            Type.REFERENCED_OBJECT -> {
+                val referencedObjects = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
+                    loadReferencedObject(attribute, objectTypeAttributeBean).bind()
+                }
+                ObjectAttributeValue.Reference(referencedObjects)
+            }
+            Type.USER -> {
+                val users = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
+                    loadInsightUserByKey(attribute.textValue).bind()
+                }
+                ObjectAttributeValue.User(users)
+            }
+            Type.CONFLUENCE -> TODO()
+            Type.GROUP -> TODO()
+            Type.VERSION -> TODO()
+            Type.PROJECT -> TODO()
+            Type.STATUS -> TODO()
+            else -> internalError("Unsupported objectTypeAttributeBean.type (${objectTypeAttributeBean.type})").bind()
+        }
         InsightAttribute(
             InsightAttributeId(objectTypeAttributeBean.id),
-            InsightObjectAttributeType.parse(objectTypeAttributeBean.type.typeId),
-            value = objectAttributeBean.objectAttributeValueBeans.map { attribute ->
-                when (objectTypeAttributeBean.type) {
-                    Type.REFERENCED_OBJECT -> {
-                        val referencedObject = loadReferencedObject(attribute, objectTypeAttributeBean).bind()
-                        val displayValue = "${referencedObject?.label} (${referencedObject?.objectKey})"
-                        ObjectAttributeValue(null, displayValue, referencedObject, null)
-                    }
-                    Type.USER -> {
-                        val user = loadInsightUserByKey(attribute.textValue).bind()
-                        ObjectAttributeValue(null, null, null, user)
-                    }
-                    else -> ObjectAttributeValue(attribute.value, attribute.textValue, null, null)
-                }
-            },
+            value = value,
             typeAttributeBeanToSchema(objectTypeAttributeBean)
         )
     }
+
+    private suspend fun handleDefaultValue(
+        objectAttributeBean: ObjectAttributeBean,
+        objectTypeAttributeBean: ObjectTypeAttributeBean
+    ): Either<InsightClientError, ObjectAttributeValue> = either {
+        val values = objectAttributeBean.objectAttributeValueBeans
+        when (objectTypeAttributeBean.defaultType) {
+            DefaultType.TEXT -> ObjectAttributeValue.Text(values.firstOrNull()?.textValue)
+            DefaultType.INTEGER -> ObjectAttributeValue.Integer(values.firstOrNull()?.integerValue)
+            DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(values.firstOrNull()?.booleanValue)
+            DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(values.firstOrNull()?.doubleValue)
+            DefaultType.DATE -> { // TODO: check if this is correct
+                val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
+                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+            }
+            DefaultType.TIME -> { // TODO: check if this is correct
+                val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
+                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+            }
+            DefaultType.DATE_TIME -> {
+                val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
+                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+            }
+            DefaultType.URL -> ObjectAttributeValue.Url(values.firstOrNull()?.textValue)
+            DefaultType.EMAIL -> ObjectAttributeValue.Email(values.firstOrNull()?.textValue)
+            DefaultType.TEXTAREA -> ObjectAttributeValue.Textarea(values.firstOrNull()?.textValue)
+            DefaultType.IPADDRESS -> ObjectAttributeValue.Ipaddress(values.firstOrNull()?.textValue)
+            DefaultType.SELECT -> ObjectAttributeValue.Select(values.map { it.textValue })
+            else -> internalError("Unsupported DefaultType (${objectTypeAttributeBean.defaultType})").bind()
+        }
+    }
+
+    private fun toZonedDateTime(it: Date) =
+        it.toInstant().atZone(timezoneManager.loggedInUserTimeZone.toZoneId())
 
     /**
      * Loads the full object that is referenced to create the compact [ReferencedObject].

@@ -55,9 +55,10 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
             create(domainObject).bind()
         } else {
             val udpatedObject = insightObjectOperator.updateObject(
-                objectByName,
+                objectByName.id,
                 name toValue domainObject.name,
                 shortName toValue domainObject.name,
+                toDomain = ::identity
             ).bind()
             toDomain(udpatedObject)
         }
@@ -79,15 +80,15 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, List<Country>> =
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
             withChildren,
-            pageFrom,
-            perPage,
+            pageIndex,
+            pageSize,
             ::toDomain
         ).map { it.objects }
 

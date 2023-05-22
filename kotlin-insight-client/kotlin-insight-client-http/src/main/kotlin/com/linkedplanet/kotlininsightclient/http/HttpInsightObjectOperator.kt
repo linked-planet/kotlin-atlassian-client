@@ -27,9 +27,11 @@ import arrow.core.rightIfNotNull
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
 import com.linkedplanet.kotlininsightclient.api.model.*
+import com.linkedplanet.kotlininsightclient.http.model.InsightAttributeApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectAttributeValueApiResponse
@@ -39,6 +41,8 @@ import com.linkedplanet.kotlininsightclient.http.model.ObjectUpdateApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.getEditAttributes
 import com.linkedplanet.kotlininsightclient.http.model.toEditObjectItem
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
+import java.time.ZonedDateTime
+import java.util.*
 
 class HttpInsightObjectOperator(private val context: HttpInsightClientContext) : InsightObjectOperator {
 
@@ -114,22 +118,19 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .mapLeft { it.toInsightClientError() }
             .bind()
             ?.toValues(toDomain)
+            ?.bind()
         objects ?: InsightObjectPage(getObjectCount(iql).bind(), emptyList())
-    }
-
-    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>{
-        return updateObject(obj, *obj.attributes.toTypedArray())
     }
 
     override suspend fun updateObject(
         obj: InsightObject,
-        vararg insightAttributes: InsightAttribute
     ): Either<InsightClientError, InsightObject> = either {
+        val body = GSON.toJson(obj.toEditObjectItem())
         context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "PUT",
             "rest/insight/1.0/object/${obj.id.value}",
             emptyMap(),
-            GSON.toJson(obj.toEditObjectItem()),
+            body,
             "application/json",
             ObjectUpdateApiResponse::class.java
         )
@@ -208,13 +209,15 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     // PRIVATE DOWN HERE
-    private suspend fun <T>InsightObjectEntriesApiResponse.toValues(mapper: MapToDomain<T>): InsightObjectPage<T> =
-        InsightObjectPage(
-            this.totalFilterCount,
-            this.objectEntries
-                .map { it.toValue() }
-                .map { mapper(it) }
-        )
+    private suspend fun <T> InsightObjectEntriesApiResponse.toValues(mapper: MapToDomain<T>): Either<InsightClientError, InsightObjectPage<T>> =
+        either {
+            InsightObjectPage(
+                this@toValues.totalFilterCount,
+                this@toValues.objectEntries
+                    .map { it.toValue().bind() }
+                    .map { mapper(it) }
+            )
+        }
 
     /**
      * ATTENTION: Method returns only the first page -> don't use for big result sets...
@@ -238,7 +241,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
             .bind()
-            ?.toValues(mapper)
+            ?.toValues(mapper)?.bind()
             ?.objects
             ?.firstOrNull()
     }
@@ -262,46 +265,103 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             }
     }
 
-    private fun InsightObjectApiResponse.toValue(): InsightObject {
-        val attributes = this.attributes.map {
-            val attributeType =
-                it.objectTypeAttribute?.type
-                    ?.let { type -> InsightObjectAttributeType.parse(type) }
-                    ?: InsightObjectAttributeType.DEFAULT
-            InsightAttribute(
-                InsightAttributeId(it.objectTypeAttributeId),
-                attributeType,
-                it.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
-                    ObjectAttributeValue(
-                        value = av.value,
-                        displayValue = av.displayValue,
-                        referencedObject = av.referencedObject?.let { ro ->
-                            ReferencedObject(InsightObjectId(ro.id), ro.label, ro.objectKey, ro.objectType?.let { ot ->
-                                ReferencedObjectType(InsightObjectTypeId(ot.id), ot.name)
-                            })
-                        },
-                        user = av.user?.run { InsightUser(displayName, name, emailAddress?: "", key) }
-                    )
-                },
-                schema = it.objectTypeAttribute?.let { type: ObjectTypeAttributeApiResponse ->
-                    objectTypeSchemaAttribute(type)
-                }
-            )
+    private suspend fun InsightObjectApiResponse.toValue(): Either<InsightClientError, InsightObject> = either {
+        val api = this@toValue
+        val attributes: List<InsightAttribute> = api.attributes.map {
+            insightAttribute(it).bind()
         }
-        val objectSelf = "${context.baseUrl}/secure/insight/assets/${this.objectKey}"
-        return InsightObject(
-            InsightObjectTypeId(this.objectType.id),
-            InsightObjectId(this.id),
-            this.objectType.name,
-            this.objectKey,
-            this.label,
+        val objectSelf = "${context.baseUrl}/secure/insight/assets/${api.objectKey}"
+        InsightObject(
+            InsightObjectTypeId(api.objectType.id),
+            InsightObjectId(api.id),
+            api.objectType.name,
+            api.objectKey,
+            api.label,
             attributes,
-            this.extendedInfo.attachmentsExists,
+            api.extendedInfo.attachmentsExists,
             objectSelf
         )
     }
 
-    private fun objectTypeSchemaAttribute(type: ObjectTypeAttributeApiResponse) =
+    private suspend fun insightAttribute(apiAttribute: InsightAttributeApiResponse): Either<InsightClientError, InsightAttribute> =
+        either {
+            val attributeType: InsightObjectAttributeType =
+                apiAttribute.objectTypeAttribute?.type
+                    ?.let { type -> InsightObjectAttributeType.parse(type) }
+                    ?: InsightObjectAttributeType.DEFAULT
+            val value: ObjectAttributeValue = when (attributeType) {
+                InsightObjectAttributeType.DEFAULT -> handleDefaultValue(apiAttribute).bind()
+                InsightObjectAttributeType.REFERENCE -> {
+                    val referencedObjects =
+                        apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
+                            av.referencedObject?.let { ro ->
+                                ReferencedObject(
+                                    InsightObjectId(ro.id),
+                                    ro.label,
+                                    ro.objectKey,
+                                    ro.objectType?.let { ot ->
+                                        ReferencedObjectType(InsightObjectTypeId(ot.id), ot.name)
+                                    })
+                            }
+                        }
+                    ObjectAttributeValue.Reference(referencedObjects)
+                }
+                InsightObjectAttributeType.USER -> {
+                    val users = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
+                        av.user?.run { InsightUser(displayName, name, emailAddress ?: "", key) }
+                    }
+                    ObjectAttributeValue.User(users)
+                }
+                InsightObjectAttributeType.CONFLUENCE -> TODO()
+                InsightObjectAttributeType.GROUP -> TODO()
+                InsightObjectAttributeType.VERSION -> TODO()
+                InsightObjectAttributeType.PROJECT -> TODO()
+                InsightObjectAttributeType.STATUS -> TODO()
+                else -> internalError("Unsupported objectTypeAttributeBean.type (${attributeType})").bind()
+            }
+            InsightAttribute(
+                attributeId = InsightAttributeId(apiAttribute.objectTypeAttributeId),
+                value = value,
+                schema = apiAttribute.objectTypeAttribute?.let(::mapToObjectTypeSchemaAttribute)
+            )
+        }
+
+    private suspend fun handleDefaultValue(
+        apiAttribute: InsightAttributeApiResponse,
+    ): Either<InsightClientError, ObjectAttributeValue> = either {
+        val defaultType: DefaultType? =
+            apiAttribute.objectTypeAttribute?.defaultType
+                ?.let { type -> DefaultType.parse(type.id) }
+
+        val values = apiAttribute.objectAttributeValues
+        fun singleValue() = values.firstOrNull()?.value
+        when (defaultType) {
+            DefaultType.TEXT -> ObjectAttributeValue.Text(singleValue() as String?)
+            DefaultType.INTEGER -> ObjectAttributeValue.Integer(singleValue() as Int?)
+            DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(singleValue() as Boolean?)
+            DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(singleValue() as Double?)
+            DefaultType.DATE -> { // TODO: test
+                val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
+                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+            }
+            DefaultType.TIME -> { // TODO: test
+                val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
+                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+            }
+            DefaultType.DATE_TIME -> { // TODO: test
+                val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
+                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+            }
+            DefaultType.URL -> ObjectAttributeValue.Url(singleValue() as String?)
+            DefaultType.EMAIL -> ObjectAttributeValue.Email(singleValue() as String?)
+            DefaultType.TEXTAREA -> ObjectAttributeValue.Textarea(singleValue() as String?)
+            DefaultType.IPADDRESS -> ObjectAttributeValue.Ipaddress(singleValue() as String?)
+            DefaultType.SELECT -> ObjectAttributeValue.Select(values.mapNotNull { it.value as String? })
+            else -> internalError("Unsupported DefaultType (${defaultType})").bind()
+        }
+    }
+
+    private fun mapToObjectTypeSchemaAttribute(type: ObjectTypeAttributeApiResponse): ObjectTypeSchemaAttribute =
         ObjectTypeSchemaAttribute(
             id = InsightAttributeId(type.id),
             name = type.name,

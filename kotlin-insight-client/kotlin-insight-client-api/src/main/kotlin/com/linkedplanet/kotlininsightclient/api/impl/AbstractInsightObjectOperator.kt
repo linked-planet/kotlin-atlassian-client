@@ -98,15 +98,15 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, List<DomainType>> = either {
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
             withChildren,
-            pageFrom,
-            perPage
+            pageIndex,
+            pageSize
         ) { toDomain(it).bind() }
             .map { it.objects }.bind()
     }

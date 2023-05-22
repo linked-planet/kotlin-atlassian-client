@@ -67,9 +67,10 @@ class CompanyTestOperatorManualImpl(
             create(domainObject).bind()
         } else {
             val udpatedObject = insightObjectOperator.updateObject(
-                objectByName,
+                objectByName.id,
                 name toValue domainObject.name,
                 countryRef toValue domainObject.name,
+                toDomain = ::identity
             ).bind()
             toDomain(udpatedObject)
         }
@@ -91,15 +92,15 @@ class CompanyTestOperatorManualImpl(
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, List<Company>> =
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
             withChildren,
-            pageFrom,
-            perPage,
+            pageIndex,
+            pageSize,
             ::toDomain
         ).map { it.objects }
 

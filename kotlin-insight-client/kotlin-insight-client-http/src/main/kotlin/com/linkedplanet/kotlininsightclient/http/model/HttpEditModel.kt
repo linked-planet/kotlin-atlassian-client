@@ -20,7 +20,8 @@
 package com.linkedplanet.kotlininsightclient.http.model
 
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
+import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import java.time.format.DateTimeFormatter
 
 // this is serialized and sent to insight, so it is not part of the model we control
 internal data class ObjectEditItem(
@@ -36,20 +37,35 @@ internal fun InsightObject.toEditObjectItem() =
 
 internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
     this.attributes.map { insightAttr ->
-        val values = insightAttr.value.map {
-            if (insightAttr.attributeType == InsightObjectAttributeType.REFERENCE) {
-                ObjectEditItemAttributeValue(
-                    it.referencedObject!!.id.value
-                )
-            } else {
-                ObjectEditItemAttributeValue(
-                    it.value
-                )
-            }
+        val values : List<Any?> = when (val attr = insightAttr.value) {
+            is ObjectAttributeValue.Text -> listOf(attr.value)
+            is ObjectAttributeValue.Integer -> listOf(attr.value)
+            is ObjectAttributeValue.Bool -> listOf(attr.value.toString())
+            is ObjectAttributeValue.Time -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_DATE_TIME))
+            is ObjectAttributeValue.Date -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_DATE_TIME))
+            is ObjectAttributeValue.DateTime -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_DATE_TIME))
+            is ObjectAttributeValue.DoubleNumber -> listOf(attr.value)
+            is ObjectAttributeValue.Email -> listOf(attr.value)
+            is ObjectAttributeValue.Ipaddress -> listOf(attr.value)
+            is ObjectAttributeValue.Textarea -> listOf(attr.value)
+            is ObjectAttributeValue.Url -> listOf(attr.value)
+
+            is ObjectAttributeValue.Select -> attr.values
+
+            is ObjectAttributeValue.Reference -> attr.referencedObjects.map { it.id.value }
+            is ObjectAttributeValue.User -> attr.users.map { it.key } //TODO: needs a test
+
+            is ObjectAttributeValue.Group -> TODO()
+            is ObjectAttributeValue.Project -> TODO()
+            is ObjectAttributeValue.Status -> TODO()
+            is ObjectAttributeValue.Version -> TODO()
+            is ObjectAttributeValue.Confluence -> TODO()
+            is ObjectAttributeValue.Unknown -> TODO()
         }
+
         ObjectEditItemAttribute(
             insightAttr.attributeId.raw,
-            values
+            values.map { ObjectEditItemAttributeValue(it) }
         )
     }
 

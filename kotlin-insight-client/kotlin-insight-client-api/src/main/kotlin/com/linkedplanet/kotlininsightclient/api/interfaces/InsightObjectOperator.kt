@@ -153,16 +153,6 @@ interface InsightObjectOperator {
      * Updates an existing Insight object in the system.
      * This allows you to only update some attributes while keeping the values for all other attributes.
      *
-     * @param obj The Insight object to update.
-     * @param insightAttributes: the attributes that will be updated
-     * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
-     */
-    suspend fun updateObject(obj: InsightObject, vararg insightAttributes: InsightAttribute): Either<InsightClientError, InsightObject>
-
-    /**
-     * Updates an existing Insight object in the system.
-     * This allows you to only update some attributes while keeping the values for all other attributes.
-     *
      * @param insightAttributes: the attributes that will be updated
      * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
      */

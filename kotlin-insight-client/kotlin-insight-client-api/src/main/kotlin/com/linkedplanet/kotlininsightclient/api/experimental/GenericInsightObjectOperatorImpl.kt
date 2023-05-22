@@ -32,25 +32,23 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addReference
+import com.linkedplanet.kotlininsightclient.api.model.clearReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttribute
-import com.linkedplanet.kotlininsightclient.api.model.isReference
 import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
 import com.linkedplanet.kotlininsightclient.api.model.setValue
-import com.linkedplanet.kotlininsightclient.api.model.setValueList
+import com.linkedplanet.kotlininsightclient.api.model.setSelectValues
 import jdk.jfr.Experimental
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
-import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
-import kotlin.reflect.typeOf
 
 /**
  * idea: check type safety when operator is initialized
@@ -129,14 +127,21 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
             val value = prop.get(domainObject)
             when (attribute.type) {
                 InsightObjectAttributeType.DEFAULT -> {
-                    if (value is List<Any?>) {
-                        insightObject.setValueList(attribute.id, value)
-                    } else {
-                        insightObject.setValue(attribute.id, value)
+                    when (value) {
+                        is String -> insightObject.setValue(attribute.id, value)
+                        is Int -> insightObject.setValue(attribute.id, value)
+                        is Boolean -> insightObject.setValue(attribute.id, value)
+                        is Double -> insightObject.setValue(attribute.id, value)
+                        is Float -> insightObject.setValue(attribute.id, value.toDouble())
+                        is ZonedDateTime -> insightObject.setValue(attribute.id, value, value.toString())
+                        is List<Any?> -> insightObject.setSelectValues(attribute.id,
+                            (value as? List<*>)?.map(Any?::toString) ?: emptyList())
+                        else -> TODO()
                     }
                 }
                 InsightObjectAttributeType.REFERENCE -> {
                     val referencedObjectIds = attributeToReferencedObjectId(attribute, value)
+                    insightObject.clearReferenceValue(attribute.id)
                     if (value is List<Any?>) {
                         referencedObjectIds.forEach {
                             insightObject.addReference(attribute.id, it)
@@ -171,11 +176,11 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
+        pageIndex: Int,
+        pageSize: Int
     ): Either<InsightClientError, List<DomainType>> = either {
         val insightObjects =
-            insightObjectOperator.getObjectsByIQL(objectTypeSchema.id, iql, withChildren, pageFrom, perPage, ::identity)
+            insightObjectOperator.getObjectsByIQL(objectTypeSchema.id, iql, withChildren, pageIndex, pageSize, ::identity)
                 .bind()
         insightObjects.objects.map {
             domainObjectByInsightObject(it).bind()
@@ -197,8 +202,8 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
             val attribute = insightObject.getAttribute(attributeId)
             val mappedValue = when {
                 attribute?.isReference() == true -> referenceAttributeToValue(attribute)
-                param.type.isSubtypeOf(typeOf<List<Any>>()) -> extractListValues(param, attribute).bind()
-                else -> defaultAttributeToValue(attribute?.value?.single()?.value?.toString(), param.type).bind()
+                attribute == null -> null
+                else -> defaultAttributeToValue(attribute.value, param.type).bind()
             }
             mappedValue
 
@@ -207,38 +212,26 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         domainObject
     }
 
-    private suspend fun extractListValues(
-        param: KParameter,
-        attribute: InsightAttribute?
-    ): Either<InsightClientError, List<Any?>> = either {
-        if (attribute == null) return@either emptyList()
-        val genericTypeParam: KType = param.type.arguments.first().type!!
-        attribute.value.map { objectAttributeValue ->
-            defaultAttributeToValue(objectAttributeValue.value.toString(), genericTypeParam).bind()
-        }
-    }
-
     private suspend fun defaultAttributeToValue(
-        valueAsString: String?,
+        value: ObjectAttributeValue,
         kType: KType
     ): Either<InsightClientError, Any?> = either {
-        val value: String? = valueAsString
-        value?.let {
-            when (kType.classifier) {
-                String::class -> value
-                Int::class -> value.toInt()
-                Boolean::class -> value.toBoolean()
-                ZonedDateTime::class -> ZonedDateTime.parse(value)
-                Double::class -> value.toDouble()
-                Byte::class -> value.toByte()
-                Short::class -> value.toShort()
-                Long::class -> value.toLong()
-                Float::class -> value.toFloat()
-                Number::class -> value.toDouble()
-                else -> invalidArgumentError<DomainType?>(
-                    "kType.classifier ${kType.classifier} is not supported."
-                ).bind()
-            }
+        when(value) {
+            is ObjectAttributeValue.Bool -> value.value
+            is ObjectAttributeValue.Date -> value.value
+            is ObjectAttributeValue.DateTime -> value.value
+            is ObjectAttributeValue.DoubleNumber -> value.value
+            is ObjectAttributeValue.Email -> value.value
+            is ObjectAttributeValue.Integer -> value.value
+            is ObjectAttributeValue.Ipaddress -> value.value
+            is ObjectAttributeValue.Text -> value.value
+            is ObjectAttributeValue.Textarea -> value.value
+            is ObjectAttributeValue.Time -> value.value
+            is ObjectAttributeValue.Url -> value.value
+            is ObjectAttributeValue.Select -> value.values// List<String>
+            else -> invalidArgumentError<DomainType?>(
+                "kType.classifier ${kType.classifier} is not supported."
+            ).bind()
         }
     }
 

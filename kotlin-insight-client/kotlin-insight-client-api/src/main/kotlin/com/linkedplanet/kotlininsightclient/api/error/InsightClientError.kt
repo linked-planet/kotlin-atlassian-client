@@ -19,6 +19,9 @@
  */
 package com.linkedplanet.kotlininsightclient.api.error
 
+import arrow.core.Either
+import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+
 @Suppress("unused")
 open class InsightClientError(
     val error: String,
@@ -31,8 +34,14 @@ open class InsightClientError(
             InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
         fun fromException(e: Throwable): InsightClientError =
             InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+
+        fun internalError(message: String): Either<InsightClientError, ObjectAttributeValue> = Either.Left(
+            InsightClientError("InternalError", message)
+        )
     }
 }
+
+
 
 class ObjectTypeNotFoundError :
     InsightClientError("Nicht gefunden", "Der ObjectType mit der angegebenen Id wurde nicht gefunden.")

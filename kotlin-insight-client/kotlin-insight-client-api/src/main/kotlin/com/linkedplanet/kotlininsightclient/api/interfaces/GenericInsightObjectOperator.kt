@@ -40,8 +40,8 @@ interface GenericInsightObjectOperator<DomainType> {
     suspend fun getByIQL(
         iql: String,
         withChildren: Boolean = false,
-        pageFrom: Int = 1,
-        perPage: Int = Int.MAX_VALUE
+        pageIndex: Int = 0,
+        pageSize: Int = Int.MAX_VALUE
     ): Either<InsightClientError, List<DomainType>>
 
 }
