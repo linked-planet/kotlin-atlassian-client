@@ -67,26 +67,6 @@ data class InsightObject(
     val objectSelf: String
 )
 
-/**
- * See type attribute in response of https://insight-javadoc.riada.io/insight-javadoc-8.6/insight-rest/#object__id__attributes_get
- */
-enum class InsightObjectAttributeType(val attributeTypeId: Int) {
-    UNKNOWN(-1),
-    DEFAULT(0),
-    REFERENCE(1),
-    USER(2),
-    CONFLUENCE(3),
-    GROUP(4),
-    VERSION(5),
-    PROJECT(6),
-    STATUS(7);
-
-    companion object {
-        fun parse(value: Int) =
-            values().singleOrNull { it.attributeTypeId == value } ?: UNKNOWN
-    }
-}
-
 data class InsightReference(
     val objectTypeId: InsightObjectTypeId,
     val objectTypeName: String,
@@ -143,12 +123,7 @@ data class InsightAttribute(
         infix fun InsightAttributeId.toValue(referencedObjectId: InsightObjectId?) = InsightAttribute(
             this,
             value = ObjectAttributeValue.Reference(listOfNotNull(referencedObjectId?.let {
-                (ReferencedObject(
-                    it,
-                    "",
-                    "",
-                    null
-                ))
+                ReferencedObject(it, "", "", null)
             })),
             schema = null, // null during creation
         )
@@ -166,39 +141,191 @@ data class ObjectTypeSchema(
     val parentObjectTypeId: InsightObjectTypeId?
 )
 
-data class ObjectTypeSchemaAttribute(
-    val id: InsightAttributeId,
-    val name: String,
-    val defaultType: DefaultType?, // only set when the type is a default type
-    val options: String, // comma separated list of String for default type Select (comma is invalid character inside an option)
-    val minimumCardinality: Int,
-    val maximumCardinality: Int,
-    val referenceKind: ReferenceKind?,
-    val includeChildObjectTypes: Boolean,
-    val referenceObjectTypeId: InsightObjectTypeId?, // objectTypeId of the referenced object
-    val type: InsightObjectAttributeType
-)
+sealed class ObjectTypeSchemaAttribute {
 
-// if attributeType is default, this determines which kind of default type the value is
-enum class DefaultType(var defaultTypeId: Int) {
-    // NONE(-1),  // HTTP API models this with null, sdk with NONE
-    TEXT(0),
-    INTEGER(1),
-    BOOLEAN(2),
-    DOUBLE(3),
-    DATE(4),
-    TIME(5),
-    DATE_TIME(6),
-    URL(7),
-    EMAIL(8),
-    TEXTAREA(9),
-    SELECT(10),
-    IPADDRESS(11);
+    abstract val id: InsightAttributeId
+    abstract val name: String // attributeName
+    abstract val minimumCardinality: Int
+    abstract val maximumCardinality: Int
+    abstract val includeChildObjectTypes: Boolean
 
-    companion object {
-        fun parse(defaultTypeId: Int): DefaultType? =
-            DefaultType.values().singleOrNull { it.defaultTypeId == defaultTypeId }
+    fun isValueAttribute(): Boolean = when(this){
+        is Text -> true
+        is Integer -> true
+        is Bool -> true
+        is DoubleNumber -> true
+        is Select -> true
+        is Date -> true
+        is Time -> true
+        is DateTime -> true
+        is Url -> true
+        is Email -> true
+        is Textarea -> true
+        is Ipaddress -> true
+
+        is Unknown -> false
+        is Reference -> false
+        is User -> false
+        is Confluence -> false
+        is Group -> false
+        is Version -> false
+        is Project -> false
+        is Status -> false
     }
+
+    fun isReference() : Boolean = this is Reference
+
+    class Select(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+        val options: List<String>,
+    ) : ObjectTypeSchemaAttribute() // Select is the only DefaultType with maximumCardinality > 1
+
+    class Reference(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+        val referenceObjectTypeId: InsightObjectTypeId, // objectTypeId of the referenced object
+        val referenceKind: ReferenceKind
+    ) : ObjectTypeSchemaAttribute()
+
+    class Unknown(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+        val debugDescription: String
+    ) : ObjectTypeSchemaAttribute()
+
+    // region types having just the superclass attributes
+    data class Text(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Integer(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Bool(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class DoubleNumber(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Date(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Time(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class DateTime(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Url(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Email(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Textarea(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Ipaddress(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+
+    class User(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Confluence(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Group(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Version(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Project(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Status(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+
+    // endregion types having just the superclass attributes
 }
 
 /**
@@ -213,7 +340,7 @@ enum class ReferenceKind(var referenceKindId: Int) {
     TECHNICAL(5);
 
     companion object {
-        fun parse(referenceKindId: Int): ReferenceKind =
+        fun parse(referenceKindId: Int?): ReferenceKind =
             ReferenceKind.values().singleOrNull { it.referenceKindId == referenceKindId } ?: UNKNOWN
     }
 }
@@ -279,10 +406,10 @@ sealed class ObjectAttributeValue{
         is User -> users.joinToString(",") { it.key }
 
         is Group -> "" // TODO
-        is Project -> "" // TODO
-        is Status -> "" // TODO
-        is Version -> "" // TODO
-        is Confluence -> "" // TODO
+        is Project -> ""
+        is Status -> ""
+        is Version -> ""
+        is Confluence -> ""
         is Unknown -> ""
     }
 }

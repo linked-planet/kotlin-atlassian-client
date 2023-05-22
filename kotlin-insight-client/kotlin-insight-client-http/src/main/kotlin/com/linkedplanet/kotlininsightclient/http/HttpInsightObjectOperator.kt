@@ -31,6 +31,8 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Compani
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
 import com.linkedplanet.kotlininsightclient.api.model.*
+import com.linkedplanet.kotlininsightclient.http.model.DefaultType
+import com.linkedplanet.kotlininsightclient.http.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.http.model.InsightAttributeApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
@@ -68,6 +70,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     ): Either<InsightClientError, T?> =
         getObjectByPlainIQL("Key=\"$key\"", toDomain)
 
+    @Deprecated("use getObjectByIQL instead")
     override suspend fun <T> getObjectByName(
         objectTypeId: InsightObjectTypeId, name: String,
         toDomain: MapToDomain<T>
@@ -181,7 +184,6 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             obj.objectTypeId.raw,
             obj.getEditAttributes()
         )
-        // TODO: ensure object type has the specified attributes
         val response = context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "POST",
             "rest/insight/1.0/object/create",
@@ -361,19 +363,90 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         }
     }
 
-    private fun mapToObjectTypeSchemaAttribute(type: ObjectTypeAttributeApiResponse): ObjectTypeSchemaAttribute =
-        ObjectTypeSchemaAttribute(
-            id = InsightAttributeId(type.id),
-            name = type.name,
-            defaultType = type.defaultType?.id?.let { DefaultType.parse(it) },
-            options = type.options,
-            minimumCardinality = type.minimumCardinality,
-            maximumCardinality = type.maximumCardinality,
-            referenceKind = ReferenceKind.parse(type.referenceObjectTypeId),
-            includeChildObjectTypes = type.includeChildObjectTypes,
-            referenceObjectTypeId = InsightObjectTypeId(type.referenceObjectTypeId),
-            type = InsightObjectAttributeType.parse(type.type),
-        )
+    private fun mapToObjectTypeSchemaAttribute(apiAttributeType: ObjectTypeAttributeApiResponse): ObjectTypeSchemaAttribute =
+        apiAttributeType.run {
+            val iId = InsightAttributeId(id)
+            return when (InsightObjectAttributeType.parse(type)) {
+                InsightObjectAttributeType.DEFAULT -> mapDefaultType(this, iId)
+
+                InsightObjectAttributeType.REFERENCE -> ObjectTypeSchemaAttribute.Reference(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
+                    referenceObjectTypeId = InsightObjectTypeId(referenceObjectTypeId),
+                    referenceKind = ReferenceKind.parse(referenceObjectTypeId)
+                )
+                InsightObjectAttributeType.USER -> ObjectTypeSchemaAttribute.User(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+
+                InsightObjectAttributeType.CONFLUENCE -> ObjectTypeSchemaAttribute.Confluence(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                InsightObjectAttributeType.GROUP -> ObjectTypeSchemaAttribute.Group(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                InsightObjectAttributeType.VERSION -> ObjectTypeSchemaAttribute.Version(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                InsightObjectAttributeType.PROJECT -> ObjectTypeSchemaAttribute.Project(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                InsightObjectAttributeType.STATUS -> ObjectTypeSchemaAttribute.Status(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                else -> ObjectTypeSchemaAttribute.Unknown(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
+                    "HttpInsightObjectOperator: unknown ObjectTypeAttributeApiResponse.id :$id"
+                )
+            }
+        }
+
+    private fun mapDefaultType(apiAttributeType: ObjectTypeAttributeApiResponse, iId: InsightAttributeId) =
+        apiAttributeType.run {
+            when (defaultType?.id?.let { DefaultType.parse(it) }) {
+                DefaultType.TEXT -> ObjectTypeSchemaAttribute.Text(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.INTEGER -> ObjectTypeSchemaAttribute.Integer(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.BOOLEAN -> ObjectTypeSchemaAttribute.Bool(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.DOUBLE -> ObjectTypeSchemaAttribute.DoubleNumber(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.DATE -> ObjectTypeSchemaAttribute.Date(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.TIME -> ObjectTypeSchemaAttribute.Time(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.DATE_TIME -> ObjectTypeSchemaAttribute.DateTime(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.URL -> ObjectTypeSchemaAttribute.Url(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.EMAIL -> ObjectTypeSchemaAttribute.Email(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.TEXTAREA -> ObjectTypeSchemaAttribute.Textarea(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.Textarea(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
+                )
+                DefaultType.SELECT -> ObjectTypeSchemaAttribute.Select(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
+                    options.split(",")
+                )
+                else -> ObjectTypeSchemaAttribute.Unknown(
+                    iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
+                    "HttpInsightObjectOperator: got unknown DefaultType: name:${defaultType?.name} id:${defaultType?.id}"
+                )
+            }
+        }
+
 
     private fun getIQLWithChildren(objTypeId: InsightObjectTypeId, withChildren: Boolean): String =
         if (withChildren) {

@@ -82,6 +82,7 @@ interface InsightObjectOperator {
      * @param name The name of the Insight object to retrieve
      * @return Either an [InsightClientError] or the retrieved [InsightObject] object
      */
+    @Deprecated("Use getObjectsByIQL the name of the \"Name\" Attribute could change any time.")
     suspend fun <T> getObjectByName(
         objectTypeId: InsightObjectTypeId, name: String,
         toDomain: MapToDomain<T>

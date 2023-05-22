@@ -36,10 +36,10 @@ import com.linkedplanet.kotlininsightclient.api.model.addSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeByName
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeIdByName
 import com.linkedplanet.kotlininsightclient.api.model.getMultiReferenceValue
+import com.linkedplanet.kotlininsightclient.api.model.getSelectValues
 import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 import com.linkedplanet.kotlininsightclient.api.model.getUserList
-import com.linkedplanet.kotlininsightclient.api.model.getSelectValues
 import com.linkedplanet.kotlininsightclient.api.model.removeSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.setValue
 import kotlinx.coroutines.runBlocking
@@ -74,7 +74,11 @@ interface InsightObjectOperatorTest {
             attributeToReferencedObjectId = { schema: ObjectTypeSchemaAttribute, obj: Any? ->
                 val country = obj as Country
                 listOfNotNull(
-                    insightObjectOperator.getObjectByName(schema.referenceObjectTypeId!!, country.name, ::identity)
+                    insightObjectOperator.getObjectByName(
+                        objectTypeId = (schema as ObjectTypeSchemaAttribute.Reference).referenceObjectTypeId,
+                        name = country.name,
+                        toDomain = ::identity
+                    )
                         .orNull()?.id
                 )
             }
@@ -135,7 +139,11 @@ interface InsightObjectOperatorTest {
                 (domainObjects as List<*>)
                     .mapNotNull { it as? SimpleObject }
                     .mapNotNull {
-                        insightObjectOperator.getObjectByName(schema.referenceObjectTypeId!!, it.name, ::identity)
+                        insightObjectOperator.getObjectByName(
+                            objectTypeId = (schema as ObjectTypeSchemaAttribute.Reference).referenceObjectTypeId,
+                            name = it.name,
+                            toDomain = ::identity
+                        )
                             .orFail()?.id
                     }
             }
@@ -263,6 +271,13 @@ interface InsightObjectOperatorTest {
         assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
         assertThat(company.objectSelf, startsWith("http"))
 
+        val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.Date
+        assertThat(created.value?.toInstant()?.toString(), equalTo("2022-10-27T09:15:53.212Z"))
+        assertThat(created.displayValue, equalTo("27/Oct/22 11:15 AM"))
+        val updated = company.getAttributeByName("Updated")!!.value as ObjectAttributeValue.Date
+        assertThat(updated.value?.toInstant()?.toString(), equalTo("2023-02-21T07:10:25.993Z"))
+        assertThat(updated.displayValue, equalTo("21/Feb/23 8:10 AM"))
+
         assertThat(company.attachmentsExist, equalTo(false))
         println("### END object_testObjectById")
     }
@@ -304,6 +319,13 @@ interface InsightObjectOperatorTest {
         val obj = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
         }!!.objects.first()
+
+        // check if options are A B C
+        val selectSchema = runBlocking {
+                insightObjectTypeOperator.getObjectType(InsightObjectType.TestWithLists.id).orFail()
+        }.attributes.firstOrNull { it.id == TestWithListsStringList.attributeId } as? ObjectTypeSchemaAttribute.Select
+        assertThat(selectSchema?.options, containsInAnyOrder("A", "B", "C"))
+
         val results = obj.getSelectValues(TestWithListsStringList.attributeId)
         assertThat(results, equalTo(emptyList()))
         obj.addSelectValue(TestWithListsStringList.attributeId, "A")

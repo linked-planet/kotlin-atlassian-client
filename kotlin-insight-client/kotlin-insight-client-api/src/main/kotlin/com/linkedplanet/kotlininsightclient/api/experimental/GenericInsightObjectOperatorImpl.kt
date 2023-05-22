@@ -29,7 +29,6 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOper
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
@@ -123,36 +122,36 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
 
     private suspend fun setAttributesFromDomainObject(insightObject: InsightObject, domainObject: DomainType) {
         props.forEach { prop ->
-            val attribute = attrsMap[prop.name.lowercase()]!!
+            val attributeType: ObjectTypeSchemaAttribute = attrsMap[prop.name.lowercase()]!!
             val value = prop.get(domainObject)
-            when (attribute.type) {
-                InsightObjectAttributeType.DEFAULT -> {
+            when  {
+                attributeType.isValueAttribute() -> {
                     when (value) {
-                        is String -> insightObject.setValue(attribute.id, value)
-                        is Int -> insightObject.setValue(attribute.id, value)
-                        is Boolean -> insightObject.setValue(attribute.id, value)
-                        is Double -> insightObject.setValue(attribute.id, value)
-                        is Float -> insightObject.setValue(attribute.id, value.toDouble())
-                        is ZonedDateTime -> insightObject.setValue(attribute.id, value, value.toString())
-                        is List<Any?> -> insightObject.setSelectValues(attribute.id,
+                        is String -> insightObject.setValue(attributeType.id, value)
+                        is Int -> insightObject.setValue(attributeType.id, value)
+                        is Boolean -> insightObject.setValue(attributeType.id, value)
+                        is Double -> insightObject.setValue(attributeType.id, value)
+                        is Float -> insightObject.setValue(attributeType.id, value.toDouble())
+                        is ZonedDateTime -> insightObject.setValue(attributeType.id, value, value.toString())
+                        is List<Any?> -> insightObject.setSelectValues(attributeType.id,
                             (value as? List<*>)?.map(Any?::toString) ?: emptyList())
                         else -> TODO()
                     }
                 }
-                InsightObjectAttributeType.REFERENCE -> {
-                    val referencedObjectIds = attributeToReferencedObjectId(attribute, value)
-                    insightObject.clearReferenceValue(attribute.id)
+                attributeType is ObjectTypeSchemaAttribute.Reference -> {
+                    val referencedObjectIds = attributeToReferencedObjectId(attributeType, value)
+                    insightObject.clearReferenceValue(attributeType.id)
                     if (value is List<Any?>) {
                         referencedObjectIds.forEach {
-                            insightObject.addReference(attribute.id, it)
+                            insightObject.addReference(attributeType.id, it)
                         }
                     } else {
                         if (referencedObjectIds.isNotEmpty()) {
-                            insightObject.setSingleReference(attribute.id, referencedObjectIds.first())
+                            insightObject.setSingleReference(attributeType.id, referencedObjectIds.first())
                         }
                     }
                 }
-                else -> invalidArgumentError<DomainType>("Attribute.type ${attribute.type.name} is not supported")
+                else -> invalidArgumentError<DomainType>("Attribute.type ${attributeType.name} is not supported")
             }
         }
     }

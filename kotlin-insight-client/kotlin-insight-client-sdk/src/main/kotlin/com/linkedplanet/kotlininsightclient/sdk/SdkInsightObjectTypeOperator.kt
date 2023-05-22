@@ -23,8 +23,6 @@ import arrow.core.Either
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
-import com.linkedplanet.kotlininsightclient.api.model.DefaultType
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
@@ -79,48 +77,90 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
         }
 
 
-    internal fun typeAttributeBeanToSchema(bean: ObjectTypeAttributeBean) =
+    internal fun typeAttributeBeanToSchema(bean: ObjectTypeAttributeBean): ObjectTypeSchemaAttribute =
         bean.run {
-            ObjectTypeSchemaAttribute(
-                InsightAttributeId(id),
-                name,
-                defaultType?.let(::mapDefaultType),
-                options,
-                minimumCardinality,
-                maximumCardinality,
-                referenceTypeBean?.run { ReferenceKind.parse(id) },
-                isIncludeChildObjectTypes,
-                referenceObjectTypeId?.let { InsightObjectTypeId(it) },
-                mapAttributeType(type)
-            )
+            val iId = InsightAttributeId(id)
+            when(type){
+                ObjectTypeAttributeBean.Type.DEFAULT -> mapDefaultType(iId)
+
+                ObjectTypeAttributeBean.Type.REFERENCED_OBJECT -> ObjectTypeSchemaAttribute.Reference(
+                    iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
+                    InsightObjectTypeId(referenceObjectTypeId ?: -1),
+                    ReferenceKind.parse(referenceTypeBean.id)
+                )
+
+                ObjectTypeAttributeBean.Type.USER -> ObjectTypeSchemaAttribute.User(
+                    iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+                )
+
+                ObjectTypeAttributeBean.Type.CONFLUENCE -> ObjectTypeSchemaAttribute.Confluence(
+                    iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+                )
+                ObjectTypeAttributeBean.Type.GROUP -> ObjectTypeSchemaAttribute.Group(
+                    iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+                )
+                ObjectTypeAttributeBean.Type.VERSION -> ObjectTypeSchemaAttribute.Version(
+                    iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+                )
+                ObjectTypeAttributeBean.Type.PROJECT -> ObjectTypeSchemaAttribute.Project(
+                    iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+                )
+                ObjectTypeAttributeBean.Type.STATUS -> ObjectTypeSchemaAttribute.Status(
+                    iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+                )
+                else -> ObjectTypeSchemaAttribute.Unknown(
+                    iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
+                    "SdkInsightObjectOperator: got type $type for Attribute with ID: $iId"
+                )
+            }
         }
 
-    private fun mapAttributeType(type: ObjectTypeAttributeBean.Type): InsightObjectAttributeType =
-        when(type){
-            ObjectTypeAttributeBean.Type.DEFAULT -> InsightObjectAttributeType.DEFAULT
-            ObjectTypeAttributeBean.Type.REFERENCED_OBJECT -> InsightObjectAttributeType.REFERENCE
-            ObjectTypeAttributeBean.Type.USER -> InsightObjectAttributeType.USER
-            ObjectTypeAttributeBean.Type.CONFLUENCE -> InsightObjectAttributeType.CONFLUENCE
-            ObjectTypeAttributeBean.Type.GROUP -> InsightObjectAttributeType.GROUP
-            ObjectTypeAttributeBean.Type.VERSION -> InsightObjectAttributeType.VERSION
-            ObjectTypeAttributeBean.Type.PROJECT -> InsightObjectAttributeType.PROJECT
-            ObjectTypeAttributeBean.Type.STATUS -> InsightObjectAttributeType.STATUS
-        }
-
-    private fun mapDefaultType(defaultType: ObjectTypeAttributeBean.DefaultType) =
+    private fun ObjectTypeAttributeBean.mapDefaultType(iId: InsightAttributeId) =
         when (defaultType) {
-            ObjectTypeAttributeBean.DefaultType.NONE -> null
-            ObjectTypeAttributeBean.DefaultType.TEXT -> DefaultType.TEXT
-            ObjectTypeAttributeBean.DefaultType.INTEGER -> DefaultType.INTEGER
-            ObjectTypeAttributeBean.DefaultType.BOOLEAN -> DefaultType.BOOLEAN
-            ObjectTypeAttributeBean.DefaultType.DOUBLE -> DefaultType.DOUBLE
-            ObjectTypeAttributeBean.DefaultType.DATE -> DefaultType.DATE
-            ObjectTypeAttributeBean.DefaultType.TIME -> DefaultType.TIME
-            ObjectTypeAttributeBean.DefaultType.DATE_TIME -> DefaultType.DATE_TIME
-            ObjectTypeAttributeBean.DefaultType.URL -> DefaultType.URL
-            ObjectTypeAttributeBean.DefaultType.EMAIL -> DefaultType.EMAIL
-            ObjectTypeAttributeBean.DefaultType.TEXTAREA -> DefaultType.TEXTAREA
-            ObjectTypeAttributeBean.DefaultType.SELECT -> DefaultType.SELECT
-            ObjectTypeAttributeBean.DefaultType.IPADDRESS -> DefaultType.IPADDRESS
+            ObjectTypeAttributeBean.DefaultType.TEXT -> ObjectTypeSchemaAttribute.Text(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.INTEGER -> ObjectTypeSchemaAttribute.Integer(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.BOOLEAN -> ObjectTypeSchemaAttribute.Bool(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.DOUBLE -> ObjectTypeSchemaAttribute.DoubleNumber(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.DATE -> ObjectTypeSchemaAttribute.Date(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.TIME -> ObjectTypeSchemaAttribute.Time(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.DATE_TIME -> ObjectTypeSchemaAttribute.DateTime(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.URL -> ObjectTypeSchemaAttribute.Url(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.EMAIL -> ObjectTypeSchemaAttribute.Email(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.TEXTAREA -> ObjectTypeSchemaAttribute.Textarea(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.Textarea(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
+            )
+            ObjectTypeAttributeBean.DefaultType.SELECT -> ObjectTypeSchemaAttribute.Select(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
+                options.split(",")
+            )
+            ObjectTypeAttributeBean.DefaultType.NONE -> ObjectTypeSchemaAttribute.Unknown(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
+                "SdkInsightObjectOperator: got DefaultType with DefaultType.None for Attribute with ID: $iId"
+            )
+            else -> ObjectTypeSchemaAttribute.Unknown(
+                iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
+                "SdkInsightObjectOperator: got unknown DefaultType $defaultType for Attribute with ID: $iId"
+            )
         }
 }
