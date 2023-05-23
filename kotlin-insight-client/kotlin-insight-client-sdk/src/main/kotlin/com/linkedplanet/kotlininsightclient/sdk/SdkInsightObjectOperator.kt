@@ -141,23 +141,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectFacade.storeObjectBean(objectBean)
         }.flatMap { it.toInsightObject() }
 
-    private fun setAttributesForObjectBean(
-        obj: InsightObject,
-        objectBean: MutableObjectBean
-    ) {
-        val attributeBeans = obj.attributes.map { insightAttr ->
-            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId).createMutable()
-            if (obj.isReferenceAttribute(insightAttr.attributeId)) {
-                val values = insightAttr.value.map { it.referencedObject!!.id.value }.toTypedArray()
-                objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id) }
-            } else {
-                val values = insightAttr.value.map { it.value.toString() }.toTypedArray()
-                objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, ota, *values)
-            }
-        }
-        objectBean.setObjectAttributeBeans(attributeBeans)
-    }
-
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         catchAsInsightClientError {
             objectFacade.deleteObjectBean(id.value)
@@ -188,6 +171,23 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             attachmentsExist = false,
             objectSelf = ""
         )
+    }
+
+    private fun setAttributesForObjectBean(
+        obj: InsightObject,
+        objectBean: MutableObjectBean
+    ) {
+        val attributeBeans = obj.attributes.map { insightAttr ->
+            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId).createMutable()
+            if (obj.isReferenceAttribute(insightAttr.attributeId)) {
+                val values = insightAttr.value.map { it.referencedObject!!.id.value }.toTypedArray()
+                objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id) }
+            } else {
+                val values = insightAttr.value.map { it.value.toString() }.toTypedArray()
+                objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, ota, *values)
+            }
+        }
+        objectBean.setObjectAttributeBeans(attributeBeans)
     }
 
     private suspend fun ObjectResultBean.toInsightObjectPage(): Either<InsightClientError, InsightObjectPage> = either {
