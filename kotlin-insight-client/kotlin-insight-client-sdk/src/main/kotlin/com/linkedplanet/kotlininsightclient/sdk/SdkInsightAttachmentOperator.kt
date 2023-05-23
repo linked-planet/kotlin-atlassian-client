@@ -92,7 +92,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         objectId: InsightObjectId,
         filename: String,
         byteArray: ByteArray
-    ): Either<InsightClientError, List<InsightAttachment>> =
+    ): Either<InsightClientError, InsightAttachment> =
         catchAsInsightClientError {
             val tempFilePath: Path = createTempFile(filename)
             val tempFile = tempFilePath.toFile()
@@ -100,7 +100,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             val mimeType = URLConnection.guessContentTypeFromName(filename)
             val bean = objectFacade.addAttachmentBean(objectId.value, tempFile, filename, mimeType, null)
             val insightAttachment = beanToInsightAttachment(bean)
-            listOf(insightAttachment)
+            insightAttachment
         }
 
     override suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit> =

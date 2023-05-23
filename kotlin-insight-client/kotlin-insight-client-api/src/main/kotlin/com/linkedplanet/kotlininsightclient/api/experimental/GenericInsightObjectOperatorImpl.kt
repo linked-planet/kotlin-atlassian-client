@@ -22,6 +22,7 @@ package com.linkedplanet.kotlininsightclient.api.experimental
 import arrow.core.Either
 import arrow.core.computations.either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.invalidArgumentError
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
@@ -223,11 +224,4 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
             }
         }
     }
-
-    private fun <T> invalidArgumentError(message: String): Either<InsightClientError, T> = Either.Left(
-        InsightClientError(
-            "InvalidArgumentError",
-            message
-        )
-    )
 }
