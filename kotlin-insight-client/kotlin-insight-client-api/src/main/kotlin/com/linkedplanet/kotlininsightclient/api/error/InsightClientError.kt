@@ -27,10 +27,11 @@ open class InsightClientError(
     val stacktrace: String = Exception(message).stackTraceToString()
 
     companion object {
+        private const val internalErrorString = "Jira/Insight hat ein internes Problem festgestellt"
         fun fromException(e: Exception): InsightClientError =
-            InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+            InsightClientError(e.message ?: internalErrorString, e.stackTraceToString())
         fun fromException(e: Throwable): InsightClientError =
-            InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+            InsightClientError(e.message ?: internalErrorString, e.stackTraceToString())
     }
 }
 
