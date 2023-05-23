@@ -68,7 +68,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
     private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<InsightObjectId> = { _, _ -> emptyList() },
 ) : GenericInsightObjectOperator<DomainType> {
     private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
-    var objectTypeSchema: ObjectTypeSchema
+    var objectTypeSchema: ObjectTypeSchema // this is public, so clients could use it to add missing functionality
     private var attrsMap: Map<String, ObjectTypeSchemaAttribute>
 
     companion object {

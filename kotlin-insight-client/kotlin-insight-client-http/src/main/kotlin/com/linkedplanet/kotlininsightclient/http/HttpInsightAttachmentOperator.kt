@@ -86,7 +86,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             null,
             "application/json"
         )
-            .map { }
+            .map { /*to Unit */ }
             .mapLeft { it.toInsightClientError() }
 
     override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray> = either {
