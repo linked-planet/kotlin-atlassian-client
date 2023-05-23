@@ -151,16 +151,18 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         func: suspend (InsightObject) -> Unit // to configure the model
     ): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
-            val freshInsightObject = createEmptyDomainObject(objectTypeId)
-            func(freshInsightObject)
             val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
+            val freshInsightObject = createEmptyDomainObject(objectTypeId, objectTypeBean)
+            func(freshInsightObject)
             val freshObjectBean = objectTypeBean.createMutableObjectBean()
             setAttributesForObjectBean(freshInsightObject, freshObjectBean)
             objectFacade.storeObjectBean(freshObjectBean)
         }.flatMap { it.toInsightObject() }
 
-    private fun createEmptyDomainObject(objectTypeId: InsightObjectTypeId): InsightObject {
-        val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
+    private fun createEmptyDomainObject(
+        objectTypeId: InsightObjectTypeId,
+        objectTypeBean: ObjectTypeBean
+    ): InsightObject {
         return InsightObject(
             objectTypeId = objectTypeId,
             id = InsightObjectId.notPersistedObjectId,
