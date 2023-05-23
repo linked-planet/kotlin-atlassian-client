@@ -278,7 +278,6 @@ interface InsightObjectOperatorTest {
             .openConnection()
             .let { it as HttpURLConnection }
             .apply { requestMethod = "GET" }
-            .apply { contentType }
             .apply {
                 val credentials = Base64.getEncoder().encodeToString("admin:admin".encodeToByteArray())
                 setRequestProperty("Authorization", "Basic $credentials")
