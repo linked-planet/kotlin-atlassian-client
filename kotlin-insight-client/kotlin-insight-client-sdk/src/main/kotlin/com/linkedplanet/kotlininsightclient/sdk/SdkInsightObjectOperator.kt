@@ -208,7 +208,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             val objectType = objectTypeFacade.loadObjectType(objectTypeId)
             val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
             val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
-            return@toInsightObject createInsightObject(
+            return@toInsightObject mapObjectBeanToInsightObject(
                 this@toInsightObject,
                 objectType,
                 objectTypeAttributeBeans,
@@ -216,7 +216,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             )
         }
 
-    private suspend fun createInsightObject(
+    private suspend fun mapObjectBeanToInsightObject(
         objectBean: ObjectBean,
         objectTypeBean: ObjectTypeBean,
         objectTypeAttributeBeans: List<ObjectTypeAttributeBean>,
