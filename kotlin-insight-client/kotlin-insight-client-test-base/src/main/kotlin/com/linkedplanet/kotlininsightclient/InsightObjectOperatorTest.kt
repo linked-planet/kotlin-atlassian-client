@@ -37,13 +37,18 @@ import com.linkedplanet.kotlininsightclient.api.model.getValueList
 import com.linkedplanet.kotlininsightclient.api.model.removeValue
 import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
 import com.linkedplanet.kotlininsightclient.api.model.setValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
 import org.junit.Test
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.*
 
 interface InsightObjectOperatorTest {
     val insightObjectOperator: InsightObjectOperator
@@ -247,11 +252,38 @@ interface InsightObjectOperatorTest {
         )
         assertThat(company.objectTypeName, equalTo("Company"))
         assertThat(company.objectTypeId, equalTo(InsightObjectTypeId(1)))
-        assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
-        assertThat(company.objectSelf, startsWith("http"))
 
         assertThat(company.attachmentsExist, equalTo(false))
         println("### END object_testObjectById")
+    }
+
+    @Test
+    fun testObjectSelfLink() = runBlocking {
+        println("### START object_testObjectSelfLink")
+        val company = insightObjectOperator.getObjectById(InsightObjectId(1)).orFail()!!
+        assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
+        assertThat(company.objectSelf, startsWith("http"))
+        val selfUrl = company.objectSelf
+
+        val connection = httpGet(selfUrl)
+        assertThat(connection.responseCode, equalTo(200))
+        val bodyAsString = connection.inputStream.reader().use { it.readText() }
+        assertThat(bodyAsString, containsString("Test GmbH"))
+
+        println("### END object_testObjectSelfLink")
+    }
+
+    suspend fun httpGet(selfUrl: String): HttpURLConnection = withContext(Dispatchers.IO) {
+        URL(selfUrl)
+            .openConnection()
+            .let { it as HttpURLConnection }
+            .apply { requestMethod = "GET" }
+            .apply { contentType }
+            .apply {
+                val credentials = Base64.getEncoder().encodeToString("admin:admin".encodeToByteArray())
+                setRequestProperty("Authorization", "Basic $credentials")
+            }
+            .apply { connect() }
     }
 
     @Test
