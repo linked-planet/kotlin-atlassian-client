@@ -224,7 +224,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     ): Either<InsightClientError, InsightObject> = either {
         val attributes = objectBean.objectAttributeBeans.map { objAttributeBean ->
             val objTypeAttributeBean = objectTypeAttributeBeans.typeForBean(objAttributeBean).bind()
-            createInsightAttribute(objAttributeBean, objTypeAttributeBean).bind()
+            mapAttributeBeanToInsightAttribute(objAttributeBean, objTypeAttributeBean).bind()
         }
         val objectSelf = "${baseUrl}/secure/insight/assets/${objectBean.objectKey}"
         InsightObject(
@@ -246,7 +246,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             ?.right()
             ?: ObjectTypeNotFoundError().left()
 
-    private suspend fun createInsightAttribute(
+    private suspend fun mapAttributeBeanToInsightAttribute(
         objectAttributeBean: ObjectAttributeBean, objectTypeAttributeBean: ObjectTypeAttributeBean
     ): Either<InsightClientError, InsightAttribute> = either {
         InsightAttribute(
