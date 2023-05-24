@@ -57,7 +57,7 @@ class InsightApplinkClientTest constructor(
             appLink
         )
 
-        clientContext = HttpInsightClientContext("http://localhost:8080", httpClient)
+        clientContext = HttpInsightClientContext("http://localhost:2990", httpClient)
 
         GenericInsightObjectOperatorImpl.insightObjectOperator = insightObjectOperator
         GenericInsightObjectOperatorImpl.insightObjectTypeOperator = insightObjectTypeOperator

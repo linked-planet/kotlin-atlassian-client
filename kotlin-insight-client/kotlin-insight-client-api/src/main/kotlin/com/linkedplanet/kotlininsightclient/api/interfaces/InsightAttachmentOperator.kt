@@ -67,7 +67,7 @@ interface InsightAttachmentOperator {
         objectId: InsightObjectId,
         filename: String,
         inputStream: InputStream
-    ): Either<InsightClientError, List<InsightAttachment>>
+    ): Either<InsightClientError, InsightAttachment>
 
     /**
      * Deletes the specified attachment.

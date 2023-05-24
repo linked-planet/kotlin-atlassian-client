@@ -1,6 +1,4 @@
 # kotlin-jira-client
-![Maven Central](https://img.shields.io/maven-central/v/com.linked-planet.client/kotlin-jira-client-api)
-![Jira 9.4.2](https://img.shields.io/badge/Jira-9.4.2-blue)
 
 Provides a Kotlin client for interaction with Atlassian Jira. It provides management functionality for
 
@@ -120,7 +118,7 @@ The project is structured using multiple Maven modules.
 - **kotlin-jira-client-test-applink**: Tests the `kotlin-jira-client-http` with `kotlin-http-client-atlas` in a
   Confluence Plugin that is connected to Jira via an Applink
 - **kotlin-jira-client-test-ktor**: Tests the `kotlin-jira-client-http` with `kotlin-http-client-ktor` using Ktor
-- **kotlin-jira-client-test-ktor**: Tests the `kotlin-jira-client-sdk` in a Jira Plugin
+- **kotlin-jira-client-test-sdk**: Tests the `kotlin-jira-client-sdk` in a Jira Plugin
 
 ### Development
 

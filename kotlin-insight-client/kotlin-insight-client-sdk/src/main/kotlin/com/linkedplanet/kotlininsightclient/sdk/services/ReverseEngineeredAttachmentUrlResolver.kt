@@ -21,10 +21,15 @@ package com.linkedplanet.kotlininsightclient.sdk.services
 
 import com.atlassian.jira.component.ComponentAccessor.getComponent
 import com.atlassian.jira.config.properties.ApplicationProperties
+
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
 import java.util.regex.Pattern
 
-
+/**
+ * Kotlin version of import com.riadalabs.jira.plugins.insight.services.AttachmentUrlResolver
+ * The original class is not part of the public API, but there is no other way to get or parse the url.
+ * There also might be a bug in the original implementation, where the "+" is missing from the pattern.
+ */
 internal class ReverseEngineeredAttachmentUrlResolver {
 
     private val applicationProperties by lazy { getComponent(ApplicationProperties::class.java) }
