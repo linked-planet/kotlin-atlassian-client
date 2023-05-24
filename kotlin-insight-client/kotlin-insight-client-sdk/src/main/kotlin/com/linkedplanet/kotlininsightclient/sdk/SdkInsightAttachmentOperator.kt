@@ -36,6 +36,8 @@ import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
 import java.io.ByteArrayOutputStream
 import java.net.URLConnection
 import java.nio.file.Path
+import java.text.CharacterIterator
+import java.text.StringCharacterIterator
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.createTempFile
@@ -108,7 +110,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     private fun beanToInsightAttachment(bean: AttachmentBean): InsightAttachment = bean.run {
         val url = attachmentUrlResolver.buildUrlForAttachment(bean)
-        val humanReadableFileSize = org.apache.commons.io.FileUtils.byteCountToDisplaySize(fileSize)
+        val humanReadableFileSize = humanReadableByteCountSI(fileSize)
         InsightAttachment(
             AttachmentId(id!!), // we assume that when getting existing attachments, the id is always set
             author,
@@ -119,6 +121,19 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             comment ?: "",
             url,
         )
+    }
+
+    private fun humanReadableByteCountSI(bytesIn: Long): String {
+        var bytes = bytesIn
+        if (-1000 < bytes && bytes < 1000) {
+            return "$bytes B"
+        }
+        val ci: CharacterIterator = StringCharacterIterator("kMGTPE")
+        while (bytes <= -999950 || bytes >= 999950) {
+            bytes /= 1000
+            ci.next()
+        }
+        return java.lang.String.format("%.1f %cB", bytes / 1000.0, ci.current())
     }
 
 }
