@@ -27,6 +27,12 @@ import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.InputStream
 
+/**
+ * Partial Kotlin Version of io.riada.insight.persistence.FileManager
+ *
+ * The public API offers ways to upload an attachment File, but there is no way to download the File.
+ * The original File is not accessible at all by our projects class loader.
+ */
 internal class ReverseEngineeredFileManager{
 
     private val attachmentManager by lazy { getComponent(AttachmentManager::class.java) }

@@ -19,6 +19,8 @@
  */
 package com.linkedplanet.kotlininsightclient.api.error
 
+import arrow.core.Either
+
 @Suppress("unused")
 open class InsightClientError(
     val error: String,
@@ -27,10 +29,25 @@ open class InsightClientError(
     val stacktrace: String = Exception(message).stackTraceToString()
 
     companion object {
+        private const val internalErrorString = "Jira/Insight hat ein internes Problem festgestellt"
         fun fromException(e: Exception): InsightClientError =
-            InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+            InsightClientError(e.message ?: internalErrorString, e.stackTraceToString())
         fun fromException(e: Throwable): InsightClientError =
-            InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+            InsightClientError(e.message ?: internalErrorString, e.stackTraceToString())
+
+        fun <T> invalidArgumentError(message: String): Either<InsightClientError, T> = Either.Left(
+            InsightClientError(
+                "InvalidArgumentError",
+                message
+            )
+        )
+
+        fun <T> notFoundError(message: String): Either<InsightClientError, T> = Either.Left(
+            InsightClientError(
+                "Object not found",
+                message
+            )
+        )
     }
 }
 

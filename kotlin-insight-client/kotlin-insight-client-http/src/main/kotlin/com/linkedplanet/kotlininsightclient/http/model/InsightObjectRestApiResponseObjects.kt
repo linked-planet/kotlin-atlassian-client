@@ -99,7 +99,7 @@ internal data class ObjectTypeAttributeDefaultTypeApiResponse(
 )
 
 internal data class ObjectTypeSchemaAttributeReferenceTypeApiResponse(
-    val id: Int, // id 3, name = "Reference"; prefer an ENUM
+    val id: Int, // see Model.ReferenceKind
     val name: String,
     val type: Int
 )
