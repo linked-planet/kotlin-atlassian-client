@@ -37,7 +37,7 @@ interface GenericInsightObjectOperator<DomainType> {
      * @param domainObject The object that should be created inside insight.
      * @return Either the InsightObjectId of the new object or an InsightClientError.
      */
-    suspend fun create(domainObject: DomainType): Either<InsightClientError, InsightObjectId>
+    suspend fun create(domainObject: DomainType): Either<InsightClientError, DomainType>
 
     /**
      * Updates an existing object.
@@ -45,7 +45,7 @@ interface GenericInsightObjectOperator<DomainType> {
      * @param domainObject The object that should be updated.
      * @return Either the InsightObjectId of the updated object or an InsightClientError.
      */
-    suspend fun update(domainObject: DomainType): Either<InsightClientError, InsightObjectId>
+    suspend fun update(domainObject: DomainType): Either<InsightClientError, DomainType>
 
     /**
      * Deletes an existing object

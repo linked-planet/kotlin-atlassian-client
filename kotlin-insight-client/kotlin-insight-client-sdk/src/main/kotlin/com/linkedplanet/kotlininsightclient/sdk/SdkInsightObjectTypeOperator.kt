@@ -25,6 +25,7 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
@@ -74,20 +75,24 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
 
     private fun attributesForObjectType(objectTypeId: Int): List<ObjectTypeSchemaAttribute> =
         objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectTypeId).map { bean: ObjectTypeAttributeBean ->
-            bean.run {
-                ObjectTypeSchemaAttribute(
-                    id,
-                    name,
-                    defaultType?.let(::mapDefaultType),
-                    options,
-                    minimumCardinality,
-                    maximumCardinality,
-                    referenceTypeBean?.run { ReferenceKind.parse(id) },
-                    isIncludeChildObjectTypes,
-                    referenceObjectTypeId?.let { InsightObjectTypeId(it) },
-                    mapAttributeType(type)
-                )
-            }
+            typeAttributeBeanToSchema(bean)
+        }
+
+
+    internal fun typeAttributeBeanToSchema(bean: ObjectTypeAttributeBean) =
+        bean.run {
+            ObjectTypeSchemaAttribute(
+                InsightAttributeId(id),
+                name,
+                defaultType?.let(::mapDefaultType),
+                options,
+                minimumCardinality,
+                maximumCardinality,
+                referenceTypeBean?.run { ReferenceKind.parse(id) },
+                isIncludeChildObjectTypes,
+                referenceObjectTypeId?.let { InsightObjectTypeId(it) },
+                mapAttributeType(type)
+            )
         }
 
     private fun mapAttributeType(type: ObjectTypeAttributeBean.Type): InsightObjectAttributeType =

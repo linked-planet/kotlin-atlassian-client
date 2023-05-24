@@ -39,14 +39,17 @@ value class AttachmentId(val raw: Int)
 @JvmInline
 value class InsightSchemaId(val raw: Int)
 
+@JvmInline
+value class InsightAttributeId(val raw: Int)
+
 // endregion ID wrapper
 
-data class InsightObjectPage(
+data class InsightObjectPage<T>(
     val totalFilterCount: Int = -1,
-    val objects: List<InsightObject> = emptyList()
+    val objects: List<T> = emptyList(),
 )
 
-fun InsightObjectPage.plus(insightObjectPage: InsightObjectPage): InsightObjectPage =
+fun <T> InsightObjectPage<T>.plus(insightObjectPage: InsightObjectPage<T>): InsightObjectPage<T> =
     InsightObjectPage(
         this.totalFilterCount + insightObjectPage.totalFilterCount,
         this.objects.plus(insightObjectPage.objects)
@@ -95,15 +98,76 @@ data class InsightReference(
  * Holds the actual data value(s)
  */
 data class InsightAttribute(
-    val attributeId: Int,
-    val attributeName: String?,
+    val attributeId: InsightAttributeId,
     val attributeType: InsightObjectAttributeType,
-    val defaultType: ObjectTypeAttributeDefaultType?,
-    val options: String?,
-    val minimumCardinality: Int?,
-    val maximumCardinality: Int?,
     var value: List<ObjectAttributeValue>,
-)
+    val schema: ObjectTypeSchemaAttribute?,
+) {
+    companion object {
+
+        infix fun InsightAttributeId.toValue(value: Any?): InsightAttribute =
+            createAttr(
+                id = this,
+                type = InsightObjectAttributeType.DEFAULT,
+                value = listOf(
+                    ObjectAttributeValue(
+                        value = value,
+                        displayValue = null,
+                        referencedObject = null,
+                        user = null
+                    )
+                )
+            )
+
+        infix fun InsightAttributeId.toValues(primitiveValueList: List<Any?>): InsightAttribute =
+            createAttr(
+                id = this,
+                type = InsightObjectAttributeType.DEFAULT,
+                value = primitiveValueList.map {
+                    ObjectAttributeValue(
+                        value = it,
+                        displayValue = null,
+                        referencedObject = null,
+                        user = null
+                    )
+                }
+            )
+
+        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?): InsightAttribute =
+            createAttr(
+                id = this,
+                type = InsightObjectAttributeType.REFERENCE,
+                value = listOfNotNull(
+                    referencedObjectId?.let { createRef(it) }
+                )
+            )
+
+        infix fun InsightAttributeId.toReferences(referencedObjectIds: List<InsightObjectId>): InsightAttribute =
+            createAttr(
+                id = this,
+                type = InsightObjectAttributeType.REFERENCE,
+                value = referencedObjectIds.map {
+                    createRef(it)
+                }
+            )
+
+        private fun createRef(id: InsightObjectId) = ObjectAttributeValue(
+            value = null,
+            displayValue = null,
+            referencedObject = ReferencedObject(id, "", "", null),
+            user = null
+        )
+
+        private fun createAttr(id: InsightAttributeId, type: InsightObjectAttributeType, value: List<ObjectAttributeValue>) =
+            InsightAttribute(
+                attributeId = id,
+                attributeType = type,
+                value = value,
+                schema = null
+            )
+    }
+
+}
 
 // region InsightObjectTypeOperator
 data class ObjectTypeSchema(
@@ -114,7 +178,7 @@ data class ObjectTypeSchema(
 )
 
 data class ObjectTypeSchemaAttribute(
-    val id: Int,
+    val id: InsightAttributeId,
     val name: String,
     val defaultType: DefaultType?,
     val options: String,
@@ -128,7 +192,7 @@ data class ObjectTypeSchemaAttribute(
 
 // if attributeType is default, this determines which kind of default type the value is
 enum class DefaultType(var defaultTypeId: Int) {
-//    NONE(-1),  HTTP API models this with null, sdk with NONE
+    //    NONE(-1),  HTTP API models this with null, sdk with NONE
     TEXT(0),
     INTEGER(1),
     BOOLEAN(2),
@@ -158,16 +222,13 @@ enum class ReferenceKind(var referenceKindId: Int) {
     REFERENCE(3),
     FINANCIAL(4),
     TECHNICAL(5);
+
     companion object {
         fun parse(referenceKindId: Int): ReferenceKind =
             ReferenceKind.values().singleOrNull { it.referenceKindId == referenceKindId } ?: UNKNOWN
     }
 }
 
-data class ObjectTypeAttributeDefaultType(
-    val id: Int,
-    val name: String
-)
 // endregion InsightObjectTypeOperator
 
 // region InsightSchemaOperator

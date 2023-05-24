@@ -22,15 +22,19 @@ package com.linkedplanet.kotlininsightclient.sdk
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatMap
+import arrow.core.identity
 import arrow.core.left
 import arrow.core.right
+import arrow.core.rightIfNotNull
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
 import com.atlassian.jira.user.util.UserManager
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
@@ -38,10 +42,10 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightUser
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeAttributeDefaultType
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.api.model.isReferenceAttribute
+import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
@@ -70,60 +74,73 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
     private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
 
-    override suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?> =
+    override suspend fun <T> getObjectById(
+        id: InsightObjectId,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?> =
         catchAsInsightClientError { objectFacade.loadObjectBean(id.value) }
-            .flatMap { it.toNullableInsightObject() }
+            .flatMap<InsightClientError, ObjectBean?, T?> { it.toNullableInsightObject(toDomain) }
 
-    override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
+    override suspend fun <T> getObjectByKey(
+        key: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?> =
         catchAsInsightClientError { objectFacade.loadObjectBean(key) }
-            .flatMap { it.toNullableInsightObject() }
+            .flatMap { it.toNullableInsightObject(toDomain) }
 
-    override suspend fun getObjectByName(
+    override suspend fun <T> getObjectByName(
         objectTypeId: InsightObjectTypeId,
-        name: String
-    ): Either<InsightClientError, InsightObject?> =
+        name: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?> =
         catchAsInsightClientError {
             val iql = "objectTypeId=${objectTypeId.raw} AND Name=\"$name\""
             val objs = iqlFacade.findObjects(iql)
             objs.firstOrNull()
-        }.flatMap { it.toNullableInsightObject() }
+        }.flatMap { it.toNullableInsightObject(toDomain) }
 
-    override suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>> {
+    override suspend fun <T> getObjectsByObjectTypeName(
+        objectTypeName: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, List<T>> {
         val iql = "objectType=$objectTypeName"
-        return getObjectsByIQL(iql, 0, Int.MAX_VALUE).map { it.objects }
+        return getObjectsByIQL(iql, 0, Int.MAX_VALUE, toDomain).map { it.objects }
     }
 
-    override suspend fun getObjects(
+    override suspend fun <T> getObjects(
         objectTypeId: InsightObjectTypeId,
         withChildren: Boolean,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> =
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> =
         catchAsInsightClientError {
             val iql = getIQLWithChildren(objectTypeId, withChildren)
             iqlFacade.findObjects(iql, pageIndex * pageSize, pageSize)
-        }.flatMap { it.toInsightObjectPage() }
+        }.flatMap { it.toInsightObjectPage(toDomain) }
 
-    override suspend fun getObjectsByIQL(
+    override suspend fun <T> getObjectsByIQL(
         objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> =
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> =
         catchAsInsightClientError {
             val compositeIql = getIQLWithChildren(objectTypeId, withChildren) + " AND " + iql
             iqlFacade.findObjects(compositeIql, pageIndex * pageSize, pageSize)
-        }.flatMap { it.toInsightObjectPage() }
+        }.flatMap { it.toInsightObjectPage(toDomain) }
 
-    override suspend fun getObjectsByIQL(
+    override suspend fun <T> getObjectsByIQL(
         iql: String,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> =
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> =
         catchAsInsightClientError {
             iqlFacade.findObjects(iql, pageIndex * pageSize, pageSize)
-        }.flatMap { it.toInsightObjectPage() }
+        }.flatMap { it.toInsightObjectPage(toDomain) }
 
     override suspend fun getObjectCount(iql: String): Either<InsightClientError, Int> =
         catchAsInsightClientError {
@@ -131,7 +148,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objs.totalFilterSize
         }
 
-    @Suppress("DEPRECATION") // fix it with the newest insight version
+    @Suppress("DEPRECATION")
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
             val objectBean = objectFacade.loadObjectBean(obj.id.value).createMutable()
@@ -141,6 +158,50 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectFacade.storeObjectBean(objectBean)
         }.flatMap { it.toInsightObject() }
 
+    override suspend fun updateObject(
+        obj: InsightObject,
+        vararg insightAttributes: InsightAttribute
+    ): Either<InsightClientError, InsightObject> = either {
+        val attributeMap = obj.attributes.associateBy { it.attributeId }.toMutableMap()
+        insightAttributes.forEach {
+            attributeMap[it.attributeId] = it
+        }
+        obj.attributes = attributeMap.values.toList()
+        updateObject(obj).bind()
+    }
+
+    override suspend fun <T> updateObject(
+        objectId: InsightObjectId,
+        vararg insightAttributes: InsightAttribute,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T> =
+        either {
+            val obj = getObjectById(objectId, ::identity).bind().rightIfNotNull {
+                InsightClientError(
+                    "InsightObject update failed.",
+                    "Could not retrieve the object."
+                )
+            }.bind()
+            updateObject(obj, *insightAttributes).bind()
+        }
+            .map{ toDomain(it) }
+    private fun setAttributesForObjectBean(
+        obj: InsightObject,
+        objectBean: MutableObjectBean
+    ) {
+        val attributeBeans = obj.attributes.map { insightAttr ->
+            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId.raw).createMutable()
+            if (obj.isReferenceAttribute(insightAttr.attributeId)) {
+                val values = insightAttr.value.map { it.referencedObject!!.id.value }.toTypedArray()
+                objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id) }
+            } else {
+                val values = insightAttr.value.map { it.value.toString() }.toTypedArray()
+                objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, ota, *values)
+            }
+        }
+        objectBean.setObjectAttributeBeans(attributeBeans)
+    }
+
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         catchAsInsightClientError {
             objectFacade.deleteObjectBean(id.value)
@@ -148,16 +209,31 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override suspend fun createObject(
         objectTypeId: InsightObjectTypeId,
-        func: suspend (InsightObject) -> Unit // to configure the model
-    ): Either<InsightClientError, InsightObject> =
+        vararg insightAttributes: InsightAttribute
+    ): Either<InsightClientError, InsightObjectId> =
         catchAsInsightClientError {
             val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
             val freshInsightObject = createEmptyDomainObject(objectTypeId, objectTypeBean)
-            func(freshInsightObject)
+            freshInsightObject.attributes = insightAttributes.toList()
             val freshObjectBean = objectTypeBean.createMutableObjectBean()
             setAttributesForObjectBean(freshInsightObject, freshObjectBean)
-            objectFacade.storeObjectBean(freshObjectBean)
-        }.flatMap { it.toInsightObject() }
+            val bean = objectFacade.storeObjectBean(freshObjectBean)
+            InsightObjectId(bean.id)
+        }
+
+    override suspend fun <T> createObject(
+        objectTypeId: InsightObjectTypeId,
+        vararg insightAttributes: InsightAttribute,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T> = either {
+        val insightObjectId = createObject(objectTypeId, *insightAttributes).bind()
+        getObjectById(insightObjectId, toDomain).bind().rightIfNotNull {
+            InsightClientError(
+                "InsightObject create failed.",
+                "Could not retrieve the object after seemingly successful creation."
+            )
+        }.bind()
+    }
 
     private fun createEmptyDomainObject(
         objectTypeId: InsightObjectTypeId,
@@ -175,32 +251,19 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         )
     }
 
-    private fun setAttributesForObjectBean(
-        obj: InsightObject,
-        objectBean: MutableObjectBean
-    ) {
-        val attributeBeans = obj.attributes.map { insightAttr ->
-            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId).createMutable()
-            if (obj.isReferenceAttribute(insightAttr.attributeId)) {
-                val values = insightAttr.value.map { it.referencedObject!!.id.value }.toTypedArray()
-                objectAttributeBeanFactory.createReferenceAttributeValue(ota) { values.contains(it.id) }
-            } else {
-                val values = insightAttr.value.map { it.value.toString() }.toTypedArray()
-                objectAttributeBeanFactory.createObjectAttributeBeanForObject(objectBean, ota, *values)
-            }
+    private suspend fun <T> ObjectResultBean.toInsightObjectPage(toDomain: MapToDomain<T>): Either<InsightClientError, InsightObjectPage<T>> =
+        either {
+            InsightObjectPage(
+                totalFilterSize,
+                objects
+                    .map { it.toInsightObject().bind() }
+                    .map{ toDomain(it) }
+            )
         }
-        objectBean.setObjectAttributeBeans(attributeBeans)
-    }
 
-    private suspend fun ObjectResultBean.toInsightObjectPage(): Either<InsightClientError, InsightObjectPage> = either {
-        InsightObjectPage(
-            totalFilterSize,
-            objects.map { it.toInsightObject().bind() })
-    }
-
-    private suspend fun ObjectBean?.toNullableInsightObject(): Either<InsightClientError, InsightObject?> {
+    private suspend fun <T> ObjectBean?.toNullableInsightObject(toDomain: MapToDomain<T>): Either<InsightClientError, T?> {
         if (this == null) return Either.Right(null)
-        return this.toInsightObject()
+        return this.toInsightObject().map{ toDomain(it) }
     }
 
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> =
@@ -235,7 +298,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectBean.label,
             attributes,
             hasAttachments,
-            attributes.singleOrNull { it.attributeName == "Link" }?.toDisplayValue() as? String ?: objectSelf
+            attributes.singleOrNull { it.schema?.name == "Link" }?.toDisplayValue() as? String ?: objectSelf
         )
     }
 
@@ -250,16 +313,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         objectAttributeBean: ObjectAttributeBean, objectTypeAttributeBean: ObjectTypeAttributeBean
     ): Either<InsightClientError, InsightAttribute> = either {
         InsightAttribute(
-            objectTypeAttributeBean.id,
-            objectTypeAttributeBean.name,
+            InsightAttributeId(objectTypeAttributeBean.id),
             InsightObjectAttributeType.parse(objectTypeAttributeBean.type.typeId),
-            defaultType = ObjectTypeAttributeDefaultType(
-                objectTypeAttributeBean.defaultType.defaultTypeId,
-                objectTypeAttributeBean.defaultType.name
-            ),
-            options = objectTypeAttributeBean.options,
-            minimumCardinality = objectTypeAttributeBean.maximumCardinality,
-            maximumCardinality = objectTypeAttributeBean.minimumCardinality,
             value = objectAttributeBean.objectAttributeValueBeans.map { attribute ->
                 when (objectTypeAttributeBean.type) {
                     Type.REFERENCED_OBJECT -> {
@@ -273,7 +328,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     }
                     else -> ObjectAttributeValue(attribute.value, attribute.textValue, null, null)
                 }
-            }
+            },
+            typeAttributeBeanToSchema(objectTypeAttributeBean)
         )
     }
 

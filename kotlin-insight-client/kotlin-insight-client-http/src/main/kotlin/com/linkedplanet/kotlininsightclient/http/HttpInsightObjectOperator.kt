@@ -22,16 +22,19 @@ package com.linkedplanet.kotlininsightclient.http
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
+import arrow.core.identity
+import arrow.core.rightIfNotNull
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
 import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectAttributeValueApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectEditItem
-import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeAttributeDefaultTypeApiResponse
+import com.linkedplanet.kotlininsightclient.http.model.ObjectTypeAttributeApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectUpdateApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.getEditAttributes
 import com.linkedplanet.kotlininsightclient.http.model.toEditObjectItem
@@ -41,46 +44,58 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     override var RESULTS_PER_PAGE: Int = 25
 
-    override suspend fun getObjects(
+    override suspend fun <T> getObjects(
         objectTypeId: InsightObjectTypeId,
         withChildren: Boolean,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> = either {
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> = either {
         val iql = getIQLWithChildren(objectTypeId, withChildren)
-        getObjectsByIQL(iql, pageIndex, pageSize).bind()
+        getObjectsByIQL(iql, pageIndex, pageSize, toDomain).bind()
     }
 
-    override suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?> =
-        getObjectByPlainIQL("objectId=${id.value}")
+    override suspend fun <T> getObjectById(id: InsightObjectId, toDomain: MapToDomain<T>): Either<InsightClientError, T?> =
+        getObjectByPlainIQL("objectId=${id.value}", toDomain)
 
-    override suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?> =
-        getObjectByPlainIQL("Key=\"$key\"")
+    override suspend fun <T> getObjectByKey(
+        key: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?> =
+        getObjectByPlainIQL("Key=\"$key\"", toDomain)
 
-    override suspend fun getObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, InsightObject?> =
-        getObjectByPlainIQL("objectTypeId=${objectTypeId.raw} AND Name=\"$name\"")
+    override suspend fun <T> getObjectByName(
+        objectTypeId: InsightObjectTypeId, name: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T?> =
+        getObjectByPlainIQL("objectTypeId=${objectTypeId.raw} AND Name=\"$name\"", toDomain)
 
-    override suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>> {
+    override suspend fun <T> getObjectsByObjectTypeName(
+        objectTypeName: String,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, List<T>> {
         val iql = "objectType=$objectTypeName"
-        return getObjectsByIQL(iql, pageIndex = 0, pageSize = Int.MAX_VALUE).map { it.objects }
+        return getObjectsByIQL(iql, pageIndex = 0, pageSize = Int.MAX_VALUE, toDomain).map { it.objects }
     }
 
-    override suspend fun getObjectsByIQL(
+    override suspend fun <T> getObjectsByIQL(
         objectTypeId: InsightObjectTypeId,
         iql: String,
         withChildren: Boolean,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> = either {
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> = either {
         val fullIql = "${getIQLWithChildren(objectTypeId, withChildren)} AND $iql"
-        getObjectsByIQL(fullIql, pageIndex, pageSize).bind()
+        getObjectsByIQL(fullIql, pageIndex, pageSize, toDomain).bind()
     }
 
-    override suspend fun getObjectsByIQL(
+    override suspend fun <T> getObjectsByIQL(
         iql: String,
         pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, InsightObjectPage> = either {
+        pageSize: Int,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, InsightObjectPage<T>> = either {
         val objects = context.httpClient.executeRest<InsightObjectEntriesApiResponse>(
             "GET",
             "rest/insight/1.0/iql/objects",
@@ -98,11 +113,18 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
             .bind()
-            ?.toValues()
+            ?.toValues(toDomain)
         objects ?: InsightObjectPage(getObjectCount(iql).bind(), emptyList())
     }
 
-    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> = either {
+    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>{
+        return updateObject(obj, *obj.attributes.toTypedArray())
+    }
+
+    override suspend fun updateObject(
+        obj: InsightObject,
+        vararg insightAttributes: InsightAttribute
+    ): Either<InsightClientError, InsightObject> = either {
         context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "PUT",
             "rest/insight/1.0/object/${obj.id.value}",
@@ -111,11 +133,31 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             "application/json",
             ObjectUpdateApiResponse::class.java
         )
-            .map { updateResponse -> getObjectById(InsightObjectId(updateResponse.body!!.id)).map { it!! } }
+            .map { updateResponse -> getObjectById(InsightObjectId(updateResponse.body!!.id), ::identity).map { it!! } }
             .mapLeft { it.toInsightClientError() }
             .flatten()
             .bind()
     }
+
+    override suspend fun <T> updateObject(
+        objectId: InsightObjectId,
+        vararg insightAttributes: InsightAttribute,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T> = either {
+        val obj = getObjectById(objectId, ::identity).bind().rightIfNotNull {
+            InsightClientError(
+                "InsightObject update failed.",
+                "Could not retrieve the object."
+            )
+        }.bind()
+
+        val attributeMap = obj.attributes.associateBy { it.attributeId }.toMutableMap()
+        insightAttributes.forEach {
+            attributeMap[it.attributeId] = it
+        }
+        obj.attributes = attributeMap.values.toList()
+        updateObject(obj).bind()
+    }.map{ toDomain(it) }
 
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
@@ -130,10 +172,10 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     override suspend fun createObject(
         objectTypeId: InsightObjectTypeId,
-        func: suspend (InsightObject) -> Unit
-    ): Either<InsightClientError, InsightObject> = either {
+        vararg insightAttributes: InsightAttribute
+    ): Either<InsightClientError, InsightObjectId> = either {
         val obj = createEmptyObject(objectTypeId)
-        func(obj)
+        obj.attributes = insightAttributes.toList()
         val editItem = ObjectEditItem(
             obj.objectTypeId.raw,
             obj.getEditAttributes()
@@ -148,25 +190,39 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             ObjectUpdateApiResponse::class.java
         )
         val objectId = InsightObjectId(response.mapLeft { it.toInsightClientError() }.bind().body!!.id)
-        getObjectById(objectId).bind()!!
+        objectId
     }
 
+    override suspend fun <T> createObject(
+        objectTypeId: InsightObjectTypeId,
+        vararg insightAttributes: InsightAttribute,
+        toDomain: MapToDomain<T>
+    ): Either<InsightClientError, T> = either {
+        val insightObjectId = createObject(objectTypeId, *insightAttributes).bind()
+        getObjectById(insightObjectId, toDomain).bind().rightIfNotNull {
+            InsightClientError(
+                "InsightObject create failed.",
+                "Could not retrieve the object after seemingly successful creation."
+            )
+        }.bind()
+    }
 
     // PRIVATE DOWN HERE
-    private fun InsightObjectEntriesApiResponse.toValues(): InsightObjectPage =
+    private suspend fun <T>InsightObjectEntriesApiResponse.toValues(mapper: MapToDomain<T>): InsightObjectPage<T> =
         InsightObjectPage(
             this.totalFilterCount,
-            this.objectEntries.map {
-                it.toValue()
-            }
+            this.objectEntries
+                .map { it.toValue() }
+                .map { mapper(it) }
         )
 
     /**
      * ATTENTION: Method returns only the first page -> don't use for big result sets...
      */
-    private suspend fun getObjectByPlainIQL(
-        iql: String
-    ): Either<InsightClientError, InsightObject?> = either {
+    private suspend fun <T> getObjectByPlainIQL(
+        iql: String,
+        mapper: MapToDomain<T>
+    ): Either<InsightClientError, T?> = either {
         context.httpClient.executeRest<InsightObjectEntriesApiResponse>(
             "GET",
             "rest/insight/1.0/iql/objects",
@@ -182,7 +238,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
             .bind()
-            ?.toValues()
+            ?.toValues(mapper)
             ?.objects
             ?.firstOrNull()
     }
@@ -213,15 +269,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                     ?.let { type -> InsightObjectAttributeType.parse(type) }
                     ?: InsightObjectAttributeType.DEFAULT
             InsightAttribute(
-                it.objectTypeAttributeId,
-                it.objectTypeAttribute?.name,
+                InsightAttributeId(it.objectTypeAttributeId),
                 attributeType,
-                it.objectTypeAttribute?.defaultType?.let { dt: ObjectTypeAttributeDefaultTypeApiResponse ->
-                    ObjectTypeAttributeDefaultType(dt.id, dt.name)
-                },
-                it.objectTypeAttribute?.options,
-                it.objectTypeAttribute?.minimumCardinality,
-                it.objectTypeAttribute?.maximumCardinality,
                 it.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
                     ObjectAttributeValue(
                         value = av.value,
@@ -233,6 +282,9 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                         },
                         user = av.user?.run { InsightUser(displayName, name, emailAddress?: "", key) }
                     )
+                },
+                schema = it.objectTypeAttribute?.let { type: ObjectTypeAttributeApiResponse ->
+                    objectTypeSchemaAttribute(type)
                 }
             )
         }
@@ -248,6 +300,20 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             objectSelf
         )
     }
+
+    private fun objectTypeSchemaAttribute(type: ObjectTypeAttributeApiResponse) =
+        ObjectTypeSchemaAttribute(
+            id = InsightAttributeId(type.id),
+            name = type.name,
+            defaultType = type.defaultType?.id?.let { DefaultType.parse(it) },
+            options = type.options,
+            minimumCardinality = type.minimumCardinality,
+            maximumCardinality = type.maximumCardinality,
+            referenceKind = ReferenceKind.parse(type.referenceObjectTypeId),
+            includeChildObjectTypes = type.includeChildObjectTypes,
+            referenceObjectTypeId = InsightObjectTypeId(type.referenceObjectTypeId),
+            type = InsightObjectAttributeType.parse(type.type),
+        )
 
     private fun getIQLWithChildren(objTypeId: InsightObjectTypeId, withChildren: Boolean): String =
         if (withChildren) {
