@@ -19,6 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient
 
+import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
@@ -37,18 +38,14 @@ import com.linkedplanet.kotlininsightclient.api.model.getValueList
 import com.linkedplanet.kotlininsightclient.api.model.removeValue
 import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
 import com.linkedplanet.kotlininsightclient.api.model.setValue
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
 import org.junit.Test
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.*
+import java.net.URI
 
 interface InsightObjectOperatorTest {
     val insightObjectOperator: InsightObjectOperator
@@ -261,28 +258,18 @@ interface InsightObjectOperatorTest {
     fun testObjectSelfLink() = runBlocking {
         println("### START object_testObjectSelfLink")
         val company = insightObjectOperator.getObjectById(InsightObjectId(1)).orFail()!!
+        // first check if the URL is correct
         assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
         assertThat(company.objectSelf, startsWith("http"))
-        val selfUrl = company.objectSelf
 
-        val connection = httpGet(selfUrl)
-        assertThat(connection.responseCode, equalTo(200))
-        val bodyAsString = connection.inputStream.reader().use { it.readText() }
-        assertThat(bodyAsString, containsString("Test GmbH"))
-
+        // check if Atlassian did change the URL of the Assets app (Insight)
+        val uri = URI(company.objectSelf)
+        val httpClientFactory = AuthenticatedJiraHttpClientFactory(jiraOrigin = uri.scheme + "://" + uri.authority)
+        val httpClient = httpClientFactory.login(Credentials("admin", "admin")).orFail()
+        val response = httpClient.getWithRelativePath(uri.path)
+        assertThat(response.status.code, equalTo(200)) // also 200 if not logged in, but 404 if url is unknown
+        assertThat(response.bodyString(), containsString("<title>Assets Search"))
         println("### END object_testObjectSelfLink")
-    }
-
-    suspend fun httpGet(selfUrl: String): HttpURLConnection = withContext(Dispatchers.IO) {
-        URL(selfUrl)
-            .openConnection()
-            .let { it as HttpURLConnection }
-            .apply { requestMethod = "GET" }
-            .apply {
-                val credentials = Base64.getEncoder().encodeToString("admin:admin".encodeToByteArray())
-                setRequestProperty("Authorization", "Basic $credentials")
-            }
-            .apply { connect() }
     }
 
     @Test
