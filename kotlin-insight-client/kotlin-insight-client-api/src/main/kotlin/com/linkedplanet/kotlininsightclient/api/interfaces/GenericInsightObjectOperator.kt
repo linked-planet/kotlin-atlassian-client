@@ -41,7 +41,7 @@ interface GenericInsightObjectOperator<DomainType> {
 
     /**
      * Updates an existing object.
-     * If the object does not exist an InsightClientError is returned. //TODO: debate
+     * If the object does not exist an InsightClientError is returned.
      * @param domainObject The object that should be updated.
      * @return Either the InsightObjectId of the updated object or an InsightClientError.
      */
