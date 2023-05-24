@@ -22,8 +22,9 @@ package com.linkedplanet.kotlinjiraclient
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
 import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert
-import org.junit.Assert.assertEquals
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
@@ -34,7 +35,7 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
 
         val issueTypeNames = listOf("Bug", "Epic", "Story", "Sub-task", "Task")
         val issueTypes = runBlocking { issueTypeOperator.getIssueTypes(projectId) }.rightAssertedJiraClientError()
-        assertEquals(issueTypeNames.toSet(), issueTypes.map { it.name }.toSet())
+        assertThat(issueTypes.map { it.name }.toSet(), equalTo(issueTypeNames.toSet()))
 
         println("### END issueTypes_01GetIssueTypes")
     }
@@ -44,8 +45,8 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         println("### START issueTypes_02GetIssueType")
 
         val issueType = runBlocking { issueTypeOperator.getIssueType(issueTypeId) }.rightAssertedJiraClientError()
-        assertEquals(issueTypeId.toString(), issueType.id)
-        assertEquals("Story", issueType.name)
+        assertThat(issueType.id, equalTo(issueTypeId.toString()))
+        assertThat(issueType.name, equalTo("Story"))
 
         println("### START issueTypes_02GetIssueType")
     }
@@ -68,7 +69,7 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         )   // Newer Jira does not include "Project
 
         val attributeNames = attributes.map(JiraIssueTypeAttribute::name)
-        assertEquals(attributes.size, attributeNames.size)
+        assertThat(attributeNames.size, equalTo(attributes.size))
         expectedAttributes.forEach {
             Assert.assertTrue("Attributes does not contain: $it", attributeNames.contains(it))
         }

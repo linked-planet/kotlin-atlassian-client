@@ -23,8 +23,11 @@ import arrow.core.Either
 import arrow.core.computations.either
 import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.notFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
+import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 import java.io.ByteArrayOutputStream
 import java.net.URLConnection
@@ -33,10 +36,10 @@ import java.util.zip.ZipOutputStream
 
 class HttpInsightAttachmentOperator(private val context: HttpInsightClientContext) : InsightAttachmentOperator {
 
-    override suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>> =
+    override suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>> =
         context.httpClient.executeRestList<InsightAttachment>(
             "GET",
-            "rest/insight/1.0/attachments/object/${objectId}",
+            "rest/insight/1.0/attachments/object/${objectId.value}",
             emptyMap(),
             null,
             "application/json",
@@ -45,7 +48,6 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
 
-    // TODO: Downloads not working in both
     override suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray> =
         context.httpClient.executeDownload(
             "GET",
@@ -57,17 +59,15 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .map { it.body }
             .mapLeft { it.toInsightClientError() }
 
-    // TODO: Uploads not working in both
     override suspend fun uploadAttachment(
-        objectId: Int,
+        objectId: InsightObjectId,
         filename: String,
-        byteArray: ByteArray,
-        comment: String
-    ): Either<InsightClientError, List<InsightAttachment>> = either {
+        byteArray: ByteArray
+    ): Either<InsightClientError, InsightAttachment> = either {
         val mimeType = URLConnection.guessContentTypeFromName(filename)
         context.httpClient.executeUpload(
             "POST",
-            "/rest/insight/1.0/attachments/object/${objectId}",
+            "/rest/insight/1.0/attachments/object/${objectId.value}",
             emptyMap(),
             mimeType,
             filename,
@@ -77,20 +77,23 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .bind()
 
         getAttachments(objectId).bind()
+            .firstOrNull { it.filename == filename }
+            ?: notFoundError<InsightAttachment>("Attachment with Filename ($filename) for " +
+                    "object (id=$objectId) was created but could not be retrieved.").bind()
     }
 
-    override suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String> =
+    override suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
             "DELETE",
-            "/rest/insight/1.0/attachments/${attachmentId}",
+            "/rest/insight/1.0/attachments/${attachmentId.raw}",
             emptyMap(),
             null,
             "application/json"
         )
-            .map { it.body }
+            .map { /*to Unit */ }
             .mapLeft { it.toInsightClientError() }
 
-    override suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray> = either {
+    override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray> = either {
         val attachments = getAttachments(objectId).bind()
         val fileMap = attachments.map { attachment ->
             val attachmentContent = downloadAttachment(attachment.url).bind()

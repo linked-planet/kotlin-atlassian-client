@@ -21,16 +21,42 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 
+/**
+ * Provides operations for interacting with InsightObjectTypes in the system that provide meta information about
+ * InsightObjects.
+ */
 interface InsightObjectTypeOperator {
 
-    suspend fun getObjectType(objectTypeId: Int): Either<InsightClientError, ObjectTypeSchema>
+    /**
+     * Retrieves the schema for the Insight object type with the specified ID.
+     *
+     * @param objectTypeId The ID of the Insight object type.
+     * @return either an [InsightClientError] or an [ObjectTypeSchema] representing the schema of the object type.
+     */
+    suspend fun getObjectType(objectTypeId: InsightObjectTypeId): Either<InsightClientError, ObjectTypeSchema>
 
-    suspend fun getObjectTypesBySchema(schemaId: Int): Either<InsightClientError, List<ObjectTypeSchema>>
+    /**
+     * Retrieves a list of Insight object types that belong to the schema with the specified ID.
+     *
+     * @param schemaId The ID of the schema.
+     * @return either an [InsightClientError] or a list of [ObjectTypeSchema] objects representing the object types in the schema.
+     */
+    suspend fun getObjectTypesBySchema(schemaId: InsightSchemaId): Either<InsightClientError, List<ObjectTypeSchema>>
 
+    /**
+     * Retrieves a list of Insight object types that belong to the schema with the specified ID and have the specified root object type.
+     * So this includes the root type and all of its child types (think: java inheritance)
+     *
+     * @param schemaId The ID of the schema.
+     * @param rootObjectTypeId The ID of the root object type.
+     * @return either an [InsightClientError] or a list of [ObjectTypeSchema] objects representing the object types in the schema with the specified root object type.
+     */
     suspend fun getObjectTypesBySchemaAndRootObjectType(
-        schemaId: Int,
-        rootObjectTypeId: Int
+        schemaId: InsightSchemaId,
+        rootObjectTypeId: InsightObjectTypeId
     ): Either<InsightClientError, List<ObjectTypeSchema>>
 }

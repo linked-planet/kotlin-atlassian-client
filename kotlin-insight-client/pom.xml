@@ -16,7 +16,48 @@
     <modules>
         <module>kotlin-insight-client-api</module>
         <module>kotlin-insight-client-http</module>
+        <module>kotlin-insight-client-sdk</module>
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Atlassian -->
+            <dependency>
+                <groupId>com.atlassian.jira</groupId>
+                <artifactId>jira-api</artifactId>
+                <version>${jira.version}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>jta</groupId>
+                        <artifactId>jta</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.jira</groupId>
+                <artifactId>jira-core</artifactId>
+                <version>${jira.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.jira</groupId>
+                <artifactId>jira-rest-plugin</artifactId>
+                <version>${jira.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.jira.plugins</groupId>
+                <artifactId>insight</artifactId>
+                <version>${insight.version}</version>
+            </dependency>
+
+            <!-- Kotlin -->
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-core</artifactId>
+                <version>${kotlinx.coroutines.core.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
@@ -87,6 +128,16 @@
             <modules>
                 <module>kotlin-insight-client-test-base</module>
                 <module>kotlin-insight-client-test-applink</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>insight-itest-sdk</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>kotlin-insight-client-test-base</module>
+                <module>kotlin-insight-client-test-sdk</module>
             </modules>
         </profile>
     </profiles>

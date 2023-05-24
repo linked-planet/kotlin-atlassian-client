@@ -19,370 +19,165 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
-import java.time.ZonedDateTime
 import java.util.Collections.emptyList
 
-data class InsightObjects(
-    val searchResult: Int = -1,
+// region ID wrapper
+
+@JvmInline
+value class InsightObjectId(val value: Int) {
+    companion object {
+        val notPersistedObjectId = InsightObjectId(-1)
+    }
+}
+
+@JvmInline
+value class InsightObjectTypeId(val raw: Int)
+
+@JvmInline
+value class AttachmentId(val raw: Int)
+
+@JvmInline
+value class InsightSchemaId(val raw: Int)
+
+// endregion ID wrapper
+
+data class InsightObjectPage(
+    val totalFilterCount: Int = -1,
     val objects: List<InsightObject> = emptyList()
 )
 
-fun InsightObjects.plus(insightObjects: InsightObjects): InsightObjects =
-    InsightObjects(
-        this.searchResult + insightObjects.searchResult,
-        this.objects.plus(insightObjects.objects)
+fun InsightObjectPage.plus(insightObjectPage: InsightObjectPage): InsightObjectPage =
+    InsightObjectPage(
+        this.totalFilterCount + insightObjectPage.totalFilterCount,
+        this.objects.plus(insightObjectPage.objects)
     )
 
 data class InsightObject(
-    val objectTypeId: Int,
-    var id: Int,
+    val objectTypeId: InsightObjectTypeId,
+    val id: InsightObjectId,
     val objectTypeName: String,
-    var objectKey: String,
-    var label: String,
+    val objectKey: String,
+    val label: String,
     var attributes: List<InsightAttribute>,
-    var attachmentsExist: Boolean,
+    val attachmentsExist: Boolean,
     val objectSelf: String
 )
-
-fun InsightObject.getAttribute(id: Int): InsightAttribute? =
-    this.attributes.singleOrNull { it.attributeId == id }
-
-fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?.attributeId
-
-fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
-    this.attributes.firstOrNull { it.attributeName == name }
-
-fun InsightObject.isReferenceAttribute(id: Int): Boolean =
-    getAttribute(id)
-        ?.attributeType == InsightObjectAttributeType.REFERENCE
-
-fun InsightObject.isValueAttribute(id: Int): Boolean =
-    getAttribute(id)
-        ?.attributeType == InsightObjectAttributeType.DEFAULT
-
-fun InsightObject.exists(id: Int): Boolean =
-    getAttribute(id) != null
-
-fun InsightObject.clearValueList(id: Int) {
-    getAttribute(id)
-        ?.value = emptyList()
-}
-
-fun InsightObject.getValueList(id: Int): List<Any> =
-    getAttribute(id)
-        ?.value
-        ?.mapNotNull { it.value }
-        ?: emptyList()
-
-fun <T> InsightObject.setValueList(id: Int, values: List<T?>) = setValueList(id, null, values)
-
-fun <T> InsightObject.setValueList(id: Int, name: String? = null, values: List<T?>) {
-    if (!exists(id)) {
-        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
-    }
-    getAttribute(id)
-        ?.value = values.map {
-        ObjectAttributeValue(it, "", null, null)
-    }
-}
-
-fun <T> InsightObject.setValue(id: Int, value: T?) = setValue(id, null, value)
-
-fun <T> InsightObject.setValue(id: Int, name: String? = null, value: T?) {
-    if (!exists(id)) {
-        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
-    }
-    getAttribute(id)
-        ?.value = listOf(ObjectAttributeValue(value, "", null, null))
-}
-
-fun <T> InsightObject.removeValue(id: Int, value: T?) {
-    getAttribute(id)
-        ?.apply { this.value = this.value.filter { cur -> cur.value != value } }
-}
-
-fun InsightObject.addValue(id: Int, value: Any?) = addValue(id, null, value)
-
-fun InsightObject.addValue(id: Int, name: String? = null, value: Any?) {
-    if (!exists(id)) {
-        this.createAttribute(id, name, InsightObjectAttributeType.DEFAULT)
-    }
-    getAttribute(id)
-        ?.apply {
-            this.value = this.value + ObjectAttributeValue(value, "", null, null)
-        }
-}
-
-fun <T> InsightObject.getValue(id: Int, transform: (Any) -> T): T? =
-    getAttribute(id)
-        ?.value
-        ?.firstOrNull()
-        ?.value
-        ?.let { transform(it) }
-
-fun <T> InsightObject.getValueByName(name: String, transform: (Any) -> T): T? =
-    getAttributeIdByName(name)
-        ?.let { getValue(it, transform) }
-
-fun <T> InsightObject.getValueList(id: Int, transform: (Any) -> T): List<T?> =
-    getAttribute(id)
-        ?.value
-        ?.map { transform(it) }
-        ?: emptyList()
-
-fun <T> InsightObject.getValueListByName(name: String, transform: (Any) -> T): List<T?> =
-    getAttributeIdByName(name)
-        ?.let { getValueList(it, transform) }
-        ?: emptyList()
-
-fun InsightObject.getStringValue(id: Int): String? =
-    this.getValue(id) { it.toString() }
-
-fun InsightObject.getIntValue(id: Int): Int? =
-    getStringValue(id)?.toInt()
-
-fun InsightObject.getFloatValue(id: Int): Float? =
-    getStringValue(id)?.toFloat()
-
-fun InsightObject.getBooleanValue(id: Int): Boolean? =
-    getStringValue(id)?.toBoolean()
-
-fun InsightObject.getDateTimeValue(id: Int): ZonedDateTime? =
-    getStringValue(id)?.let { ZonedDateTime.parse(it) }
-
-fun InsightObject.getSingleReferenceValue(id: Int): InsightReference? =
-    getAttribute(id)
-        ?.value
-        ?.firstOrNull()
-        ?.referencedObject
-        ?.let {
-            InsightReference(
-                it.objectType!!.id,
-                it.objectType!!.name,
-                it.id,
-                it.objectKey,
-                it.label
-            )
-        }
-
-fun InsightObject.getMultiReferenceValue(id: Int): List<InsightReference> =
-    getAttribute(id)
-        ?.value
-        ?.mapNotNull { it.referencedObject }
-        ?.map {
-            InsightReference(
-                it.objectType!!.id,
-                it.objectType!!.name,
-                it.id,
-                it.objectKey,
-                it.label
-            )
-        }
-        ?: emptyList()
-
-
-fun InsightObject.removeReference(attributeId: Int, referencedObjectId: Int) {
-    getAttribute(attributeId)
-        ?.let {
-            it.value = it.value.filter { cur -> cur.referencedObject?.id != referencedObjectId }
-        }
-}
-
-fun InsightObject.clearReferenceValue(id: Int) {
-    getAttribute(id)
-        ?.value = emptyList()
-}
-
-fun InsightObject.addReference(attributeId: Int, referencedObjectId: Int) =
-    addReference(attributeId, null, referencedObjectId)
-
-fun InsightObject.addReference(attributeId: Int, name: String?, referencedObjectId: Int) {
-    if (!exists(attributeId)) {
-        this.createAttribute(attributeId, name, InsightObjectAttributeType.REFERENCE)
-    }
-    getAttribute(attributeId)
-        ?.let {
-            it.value = (it.value + ObjectAttributeValue(
-                null,
-                null,
-                ReferencedObject(
-                    referencedObjectId,
-                    "",
-                    "",
-                    null
-                ),
-                null
-            ))
-        }
-}
-
-fun InsightObject.setSingleReference(id: Int, referencedObjectId: Int) =
-    setSingleReference(id, null, referencedObjectId)
-
-fun InsightObject.setSingleReference(id: Int, name: String?, referencedObjectId: Int) {
-    this.clearReferenceValue(id)
-    this.addReference(id, name, referencedObjectId)
-}
-
-fun InsightObject.toEditObjectItem() =
-    ObjectEditItem(
-        objectTypeId,
-        getEditAttributes()
-    )
-
-fun InsightObject.getEditAttributes() =
-    this.attributes.map { insightAttr ->
-        val values = insightAttr.value.map {
-            if (insightAttr.attributeType == InsightObjectAttributeType.REFERENCE) {
-                ObjectEditItemAttributeValue(
-                    it.referencedObject!!.id
-                )
-            } else {
-                ObjectEditItemAttributeValue(
-                    it.value
-                )
-            }
-        }
-        ObjectEditItemAttribute(
-            insightAttr.attributeId,
-            values
-        )
-    }
-
-fun InsightObject.getUserList(id: Int): List<InsightUser> =
-    this.attributes
-        .firstOrNull { it.attributeId == id }
-        ?.value
-        ?.mapNotNull { it.user }
-        ?: emptyList()
 
 /**
  * See type attribute in response of https://insight-javadoc.riada.io/insight-javadoc-8.6/insight-rest/#object__id__attributes_get
  */
-enum class InsightObjectAttributeType(val value: Int) {
+enum class InsightObjectAttributeType(val attributeTypeId: Int) {
+    UNKNOWN(-1),
     DEFAULT(0),
     REFERENCE(1),
-    UNKNOWN(-1);
+    USER(2),
+    CONFLUENCE(3),
+    GROUP(4),
+    VERSION(5),
+    PROJECT(6),
+    STATUS(7);
 
     companion object {
         fun parse(value: Int) =
-            values().singleOrNull { it.value == value } ?: UNKNOWN
+            values().singleOrNull { it.attributeTypeId == value } ?: UNKNOWN
     }
 }
 
-private fun InsightObject.createAttribute(id: Int, name: String? = null, attributeType: InsightObjectAttributeType) {
-    this.attributes = this.attributes + InsightAttribute(
-        id,
-        name,
-        attributeType,
-        emptyList()
-    )
-}
-
 data class InsightReference(
-    val objectTypeId: Int,
+    val objectTypeId: InsightObjectTypeId,
     val objectTypeName: String,
-    val objectId: Int,
+    val objectId: InsightObjectId,
     val objectKey: String,
     val objectName: String
 )
 
+/**
+ * Holds the actual data value(s)
+ */
 data class InsightAttribute(
     val attributeId: Int,
     val attributeName: String?,
     val attributeType: InsightObjectAttributeType,
-    var value: List<ObjectAttributeValue>
+    val defaultType: ObjectTypeAttributeDefaultType?,
+    val options: String?,
+    val minimumCardinality: Int?,
+    val maximumCardinality: Int?,
+    var value: List<ObjectAttributeValue>,
 )
 
+// region InsightObjectTypeOperator
 data class ObjectTypeSchema(
-    val id: Int,
+    val id: InsightObjectTypeId,
     val name: String,
-    var attributes: List<ObjectTypeSchemaAttribute>,
-    val parentObjectTypeId: Int?
-)
-
-data class ObjectEditItem(
-    val objectTypeId: Int,
-    val attributes: List<ObjectEditItemAttribute>
-)
-
-data class ObjectEditItemAttribute(
-    val objectTypeAttributeId: Int,
-    val objectAttributeValues: List<ObjectEditItemAttributeValue>
-)
-
-data class ObjectEditItemAttributeValue(
-    val value: Any?
+    val attributes: List<ObjectTypeSchemaAttribute>,
+    val parentObjectTypeId: InsightObjectTypeId?
 )
 
 data class ObjectTypeSchemaAttribute(
     val id: Int,
     val name: String,
-    val defaultType: ObjectTypeAttributeDefaultType?,
+    val defaultType: DefaultType?,
     val options: String,
     val minimumCardinality: Int,
     val maximumCardinality: Int,
-    val referenceType: ObjectTypeSchemaAttributeReferenceType?
+    val referenceKind: ReferenceKind?,
+    val includeChildObjectTypes: Boolean,
+    val referenceObjectTypeId: InsightObjectTypeId?, // objectTypeId of the referenced object
+    val type: InsightObjectAttributeType
 )
 
-data class ObjectTypeSchemaAttributeReferenceType(
-    val id: Int,
-    val name: String
-)
+// if attributeType is default, this determines which kind of default type the value is
+enum class DefaultType(var defaultTypeId: Int) {
+//    NONE(-1),  HTTP API models this with null, sdk with NONE
+    TEXT(0),
+    INTEGER(1),
+    BOOLEAN(2),
+    DOUBLE(3),
+    DATE(4),
+    TIME(5),
+    DATE_TIME(6),
+    URL(7),
+    EMAIL(8),
+    TEXTAREA(9),
+    SELECT(10),
+    IPADDRESS(11);
+
+    companion object {
+        fun parse(defaultTypeId: Int): DefaultType? =
+            DefaultType.values().singleOrNull { it.defaultTypeId == defaultTypeId }
+    }
+}
+
+/**
+ * This is the "Additional Value" one can select when choosing object as the attribute type.
+ */
+enum class ReferenceKind(var referenceKindId: Int) {
+    UNKNOWN(-1),
+    DEPENDENCY(1),
+    LINK(2),
+    REFERENCE(3),
+    FINANCIAL(4),
+    TECHNICAL(5);
+    companion object {
+        fun parse(referenceKindId: Int): ReferenceKind =
+            ReferenceKind.values().singleOrNull { it.referenceKindId == referenceKindId } ?: UNKNOWN
+    }
+}
 
 data class ObjectTypeAttributeDefaultType(
     val id: Int,
     val name: String
 )
+// endregion InsightObjectTypeOperator
 
-data class InsightObjectEntries(
-    val totalFilterCount: Int,
-    val objectEntries: List<InsightObjectApiResponse>
-)
-
+// region InsightSchemaOperator
 data class InsightSchema(
-    val id: Int,
+    val id: InsightSchemaId,
     val name: String,
     val objectCount: Int,
     val objectTypeCount: Int
 )
-
-data class InsightObjectApiResponse(
-    val id: Int,
-    val label: String,
-    val objectKey: String,
-    val objectType: InsightMetaObjectType,
-    val attributes: List<InsightAttributeApiResponse>,
-    val extendedInfo: InsightExtendedInfo
-)
-
-data class InsightExtendedInfo(
-    val openIssuesExists: Boolean,
-    val attachmentsExists: Boolean
-)
-
-data class InsightMetaObjectType(
-    val id: Int,
-    val name: String,
-    val objectSchemaId: Int
-)
-
-
-data class InsightAttributeApiResponse(
-    val id: Int,
-    val objectTypeAttribute: ObjectTypeAttribute?,
-    val objectTypeAttributeId: Int,
-    val objectId: Int,
-    val objectAttributeValues: List<ObjectAttributeValue>
-)
-
-data class ObjectTypeAttribute(
-    val id: Int,
-    val name: String,
-    val referenceObjectTypeId: Int,
-    val referenceObjectType: InsightMetaObjectType,
-    val type: Int
-)
+// endregion InsightSchemaOperator
 
 data class InsightUser(
     val displayName: String,
@@ -399,45 +194,48 @@ data class ObjectAttributeValue(
 )
 
 data class ReferencedObject(
-    var id: Int,
+    var id: InsightObjectId,
     var label: String,
     var objectKey: String,
     var objectType: ReferencedObjectType?
 )
 
 data class ReferencedObjectType(
-    val id: Int,
+    val id: InsightObjectTypeId,
     val name: String
+)
+
+// region InsightHistoryOperator
+data class InsightHistory(
+    val objectId: InsightObjectId,
+    val historyItems: List<InsightHistoryItem>
 )
 
 data class InsightHistoryItem(
     val id: Int,
-    val affectedAttribute: String,
-    val newValue: String,
+    val affectedAttribute: String?,
+    val oldValue: String?,
+    val newValue: String?,
     val actor: Actor,
     val type: Int,
-    val created: String,
-    val updated: String,
-    val objectId: Int
+    val created: String, // updated is neither available through sdk nor ktor
+    val objectId: InsightObjectId
 )
 
 data class Actor(
-    val name: String
+    val key: String
 )
+// endregion InsightHistoryOperator
 
-data class ObjectUpdateResponse(
-    val id: Int,
-    val objectKey: String
-)
-
+// region InsightAttachmentOperator
 data class InsightAttachment(
-    val id: Int,
+    val id: AttachmentId,
     val author: String,
     val mimeType: String,
     val filename: String,
-    val filesize: String,
-    val created: String,
-    val comment: String,
-    val commentOutput: String,
+    val filesize: String, // for human display e.g. 10.1 kB
+    val created: String, // ISO 8601 String
+    val comment: String, // we are only able to download them but can not create attachments with comments
     val url: String
 )
+// endregion InsightAttachmentOperator

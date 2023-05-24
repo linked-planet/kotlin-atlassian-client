@@ -22,7 +22,6 @@ package com.linkedplanet.kotlinhttpclient.api.http
 import arrow.core.Either
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.linkedplanet.kotlinhttpclient.error.DomainError
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import java.lang.reflect.Type
 import java.net.URLEncoder

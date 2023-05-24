@@ -19,6 +19,8 @@
  */
 package com.linkedplanet.kotlinhttpclient.error
 
+import com.linkedplanet.kotlinhttpclient.api.http.GSON
+
 data class DomainErrorObject(
     val error: String,
     val message: String

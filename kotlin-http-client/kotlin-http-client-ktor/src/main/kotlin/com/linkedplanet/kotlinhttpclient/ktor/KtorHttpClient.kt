@@ -19,25 +19,23 @@
  */
 package com.linkedplanet.kotlinhttpclient.ktor
 
-import arrow.core.*
-import com.google.gson.JsonParser
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
 import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.call.receive
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.features.auth.Auth
-import io.ktor.client.features.auth.providers.BasicAuthCredentials
-import io.ktor.client.features.auth.providers.basic
-import io.ktor.client.features.json.GsonSerializer
-import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.*
 import io.ktor.http.*
+import io.ktor.serialization.gson.*
+import java.text.DateFormat
 
 class KtorHttpClient(
     private val baseUrl: String,
@@ -65,9 +63,7 @@ class KtorHttpClient(
         requestBuilder.url("$baseUrl/$path$parameterString")
         requestBuilder.contentType(parsedContentType)
         if (bodyIn != null) {
-            // Keep JsonParser instantiation for downwards compatibility
-            @Suppress("DEPRECATION")
-            requestBuilder.body = JsonParser().parse(bodyIn)
+            requestBuilder.setBody(bodyIn)
         }
     }
 
@@ -82,25 +78,25 @@ class KtorHttpClient(
         val pathWithoutPrefix = path.removePrefix("/")
         return when (method) {
             "GET" -> {
-                httpClient.get<io.ktor.client.statement.HttpResponse> {
+                httpClient.get {
                     prepareRequest(this, pathWithoutPrefix, params, body, contentType)
                 }.handleResponse()
             }
 
             "POST" -> {
-                httpClient.post<io.ktor.client.statement.HttpResponse>(pathWithoutPrefix) {
+                httpClient.post(pathWithoutPrefix) {
                     prepareRequest(this, pathWithoutPrefix, params, body, contentType)
                 }.handleResponse()
             }
 
             "PUT" -> {
-                httpClient.put<io.ktor.client.statement.HttpResponse> {
+                httpClient.put {
                     prepareRequest(this, pathWithoutPrefix, params, body, contentType)
                 }.handleResponse()
             }
 
             "DELETE" -> {
-                httpClient.delete<io.ktor.client.statement.HttpResponse> {
+                httpClient.delete {
                     prepareRequest(this, pathWithoutPrefix, params, body, contentType)
                 }.handleResponse()
             }
@@ -118,7 +114,7 @@ class KtorHttpClient(
         body: String?,
         contentType: String?
     ): Either<HttpDomainError, HttpResponse<ByteArray>> {
-        return httpClient.get<io.ktor.client.statement.HttpResponse> {
+        return httpClient.get {
             url(path)
         }.handleResponse()
     }
@@ -130,36 +126,37 @@ class KtorHttpClient(
         mimeType: String,
         filename: String,
         byteArray: ByteArray
-    ): Either<HttpDomainError, HttpResponse<ByteArray>> =
-        httpClient.post<io.ktor.client.statement.HttpResponse> {
+    ): Either<HttpDomainError, HttpResponse<ByteArray>> {
+        val post = httpClient.submitFormWithBinaryData(
+            formData = formData {
+                append(
+                    key = "file",
+                    byteArray,
+                    Headers.build {
+                        append(HttpHeaders.ContentType, mimeType)
+                        append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
+                    })
+            }
+        ) {
             url("$baseUrl$url")
             header("Connection", "keep-alive")
             header("Cache-Control", "no-cache")
-            body = MultiPartFormDataContent(
-                formData {
-                    this.append(
-                        "file",
-                        byteArray,
-                        Headers.build {
-                            append(HttpHeaders.ContentType, mimeType)
-                            append(HttpHeaders.ContentDisposition, "filename=$filename")
-                        })
-                }
-            )
-        }.handleResponse()
+        }
+        return post.handleResponse()
+    }
 
 
     private suspend inline fun <reified T> io.ktor.client.statement.HttpResponse.handleResponse(): Either<HttpDomainError, HttpResponse<T>> =
         if (this.status.value < 400) {
             HttpResponse<T>(
                 this.status.value,
-                this.receive()
+                this.body()
             ).right()
         } else {
             HttpDomainError(
                 this.status.value,
                 "HTTP-ERROR",
-                this.receive()
+                this.body()
             ).left()
         }
 }
@@ -171,8 +168,11 @@ private fun createHttpClient(
 ) =
     HttpClient(Apache) {
         expectSuccess = false
-        install(JsonFeature) {
-            serializer = GsonSerializer()
+        install(ContentNegotiation) {
+            gson {
+                setDateFormat(DateFormat.LONG)
+                setPrettyPrinting()
+            }
         }
         install(Auth) {
             basic {

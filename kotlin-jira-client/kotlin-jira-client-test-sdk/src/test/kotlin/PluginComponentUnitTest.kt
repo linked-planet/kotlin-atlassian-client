@@ -21,14 +21,15 @@ package com.linkedplanet.plugin.jira
 
 import org.junit.Test
 import com.linkedplanet.plugin.jira.jiraclient.test.api.PluginComponent
+import org.hamcrest.CoreMatchers.equalTo
 
-import org.junit.Assert.assertEquals
+import org.hamcrest.MatcherAssert.assertThat
 
 class PluginComponentUnitTest {
 
     @Test
     fun testMyName() {
-        assertEquals("kotlin-jira-client-sdk-test", PluginComponent.name)
+        assertThat(PluginComponent.name, equalTo("kotlin-jira-client-sdk-test"))
     }
 
 }

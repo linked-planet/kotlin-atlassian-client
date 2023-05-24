@@ -21,8 +21,9 @@ package com.linkedplanet.kotlinjiraclient
 
 import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
@@ -34,8 +35,8 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
         val testName = "comments_01CreateComment"
         val (_, comment) = jiraCommentTestHelper.createIssueWithComment(testName)
 
-        assertEquals(testName, comment.content)
-        assertEquals("admin", comment.author)
+        assertThat(comment.content, equalTo(testName))
+        assertThat(comment.author, equalTo("admin"))
 
         println("### END comments_01CreateComment")
     }
@@ -50,8 +51,8 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
             commentOperator.getComments(issue.key)
         }.rightAssertedJiraClientError()
 
-        assertNotNull(comments)
-        assertEquals(0, comments.size)
+        assertThat(comments, notNullValue())
+        assertThat(comments.size, equalTo(0))
 
         println("### END comments_02GetCommentsEmpty")
     }
@@ -67,12 +68,12 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
             commentOperator.getComments(issue.key)
         }.rightAssertedJiraClientError()
 
-        assertNotNull(comments)
-        assertEquals(1, comments.size)
+        assertThat(comments, notNullValue())
+        assertThat(comments.size, equalTo(1))
 
         val comment = comments.first()
-        assertEquals(testName, comment.content)
-        assertEquals("admin", comment.author)
+        assertThat(comment.content, equalTo(testName))
+        assertThat(comment.author, equalTo("admin"))
 
         println("### END comments_03GetComments")
     }
@@ -92,11 +93,11 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
         }.rightAssertedJiraClientError()
 
         val comments = runBlocking { commentOperator.getComments(issue.key) }.rightAssertedJiraClientError()
-        assertEquals(1, comments.size)
+        assertThat(comments.size, equalTo(1))
         val comment = comments.first()
 
-        assertEquals("Test-Update", comment.content)
-        assertEquals("admin", comment.author)
+        assertThat(comment.content, equalTo("Test-Update"))
+        assertThat(comment.author, equalTo("admin"))
 
         println("### END comments_04UpdateComment")
     }
@@ -111,7 +112,7 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
 
         val commentsAfterDeletion =
             runBlocking { commentOperator.getComments(issue.key) }.rightAssertedJiraClientError()
-        assertEquals(0, commentsAfterDeletion.size)
+        assertThat(commentsAfterDeletion.size, equalTo(0))
 
         println("### END comments_05DeleteComment")
     }

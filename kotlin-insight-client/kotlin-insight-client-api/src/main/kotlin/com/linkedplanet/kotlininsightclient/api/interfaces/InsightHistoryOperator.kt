@@ -21,9 +21,19 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
+import com.linkedplanet.kotlininsightclient.api.model.InsightHistory
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 
+/**
+ * The InsightHistoryOperator interface provides a method to retrieve the history of an Insight object.
+ */
 interface InsightHistoryOperator {
 
-    suspend fun getHistory(objectId: Int): Either<InsightClientError, List<InsightHistoryItem>>
+    /**
+     * Retrieves the history of the specified Insight object.
+     *
+     * @param objectId The id of the Insight object to retrieve the history for
+     * @return Either an [InsightClientError] or an [InsightHistory] object containing the history information
+     */
+    suspend fun getHistory(objectId: InsightObjectId): Either<InsightClientError, InsightHistory>
 }

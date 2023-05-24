@@ -19,18 +19,21 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-enum class SchemaObject(val id: Int) {
-    ITest(1)
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
+
+enum class SchemaObject(val id: InsightSchemaId) {
+    ITest(InsightSchemaId(1))
 }
 
-enum class InsightObjectType(val id: Int) {
-    Company(1),
-    Country(2),
-    TestWithLists(4),
-    SimpleObject(3),
-    Many(5),
-    Abstract(6),
-    User(9)
+enum class InsightObjectType(val id: InsightObjectTypeId) {
+    Company(InsightObjectTypeId(1)),
+    Country(InsightObjectTypeId(2)),
+    TestWithLists(InsightObjectTypeId(4)),
+    SimpleObject(InsightObjectTypeId(3)),
+    Many(InsightObjectTypeId(5)),
+    Abstract(InsightObjectTypeId(6)),
+    User(InsightObjectTypeId(9))
 }
 
 enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
@@ -50,3 +53,25 @@ enum class InsightAttribute(val attributeId: Int, val attributeName: String) {
     UserTestUser(43, "User"),
     UserTestUsers(44, "Users"),
 }
+
+data class Company(
+    val name: String,
+    val country: Country?
+)
+
+data class Country(
+    val name: String,
+    val shortName: String,
+)
+
+data class SimpleObject(
+    val name: String,
+    val firstName: String,
+    val lastName: String,
+)
+
+data class TestWithLists(
+    val name: String,
+    val itemList: List<SimpleObject>,
+    val stringList: List<String>,
+)

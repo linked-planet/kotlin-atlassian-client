@@ -13,7 +13,7 @@
     <name>kotlin-http-client-ktor</name>
 
     <properties>
-        <ktor.version>1.6.8</ktor.version>
+        <ktor.version>2.2.4</ktor.version>
     </properties>
 
     <dependencies>
@@ -26,12 +26,17 @@
         <!-- External -->
         <dependency>
             <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-apache</artifactId>
+            <artifactId>ktor-client-apache-jvm</artifactId>
             <version>${ktor.version}</version>
         </dependency>
         <dependency>
             <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-gson</artifactId>
+            <artifactId>ktor-serialization-gson-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-content-negotiation-jvm</artifactId>
             <version>${ktor.version}</version>
         </dependency>
         <dependency>

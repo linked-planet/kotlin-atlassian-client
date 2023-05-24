@@ -26,6 +26,7 @@ import com.atlassian.confluence.user.UserAccessor
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlinhttpclient.atlas.AtlasHttpClient
 import com.linkedplanet.kotlininsightclient.InsightClientTest
+import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.*
 import com.linkedplanet.kotlininsightclient.http.*
 import org.junit.Before
@@ -56,8 +57,11 @@ class InsightApplinkClientTest constructor(
             appLink
         )
 
-        clientContext = HttpInsightClientContext("http://localhost:8080", httpClient)
+        clientContext = HttpInsightClientContext("http://localhost:2990", httpClient)
 
+        GenericInsightObjectOperatorImpl.insightObjectOperator = insightObjectOperator
+        GenericInsightObjectOperatorImpl.insightObjectTypeOperator = insightObjectTypeOperator
+        GenericInsightObjectOperatorImpl.insightSchemaOperator = insightSchemaOperator
         println("### Starting InsightApplinkClientTest")
     }
 

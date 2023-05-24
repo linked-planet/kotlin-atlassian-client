@@ -21,22 +21,58 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 
+/**
+ * The InsightAttachmentOperator interface provides methods to interact with attachments belonging to an InsightObject.
+ */
 interface InsightAttachmentOperator {
 
-    suspend fun getAttachments(objectId: Int): Either<InsightClientError, List<InsightAttachment>>
+    /**
+     * Returns a list of attachments for the specified insight object.
+     *
+     * @param objectId The id of the insight object the attachment belongs to
+     * @return Either an [InsightClientError] or a list of [InsightAttachment] objects
+     */
+    suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>>
 
-    suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray?>
+    /**
+     * Downloads the attachment content from the specified URL.
+     *
+     * @param url The URL of the attachment to download
+     * @return Either an [InsightClientError] or a [ByteArray] containing the attachment data
+     */
+    suspend fun downloadAttachment(url: String): Either<InsightClientError, ByteArray>
 
-    suspend fun downloadAttachmentZip(objectId: Int): Either<InsightClientError, ByteArray>
+    /**
+     * Downloads a zip file containing all attachments for the specified insight object.
+     *
+     * @param objectId The id of the insight object to download attachments for
+     * @return Either an [InsightClientError] or a [ByteArray] containing the zip file data
+     */
+    suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, ByteArray>
 
+    /**
+     * Uploads an attachment to the specified insight object.
+     *
+     * @param objectId The id of the insight object to upload the attachment to
+     * @param filename The name of the attachment file (not the path to the file, so avoid "/")
+     * @param byteArray The byte array containing the attachment data
+     * @return Either an [InsightClientError] or a list of [InsightAttachment] objects
+     */
     suspend fun uploadAttachment(
-        objectId: Int,
+        objectId: InsightObjectId,
         filename: String,
-        byteArray: ByteArray,
-        comment: String = ""
-    ): Either<InsightClientError, List<InsightAttachment>>
+        byteArray: ByteArray
+    ): Either<InsightClientError, InsightAttachment>
 
-    suspend fun deleteAttachment(attachmentId: Int): Either<InsightClientError, String>
+    /**
+     * Deletes the specified attachment.
+     *
+     * @param attachmentId The id of the attachment to delete
+     * @return Either an [InsightClientError] or Unit if the deletion was successful
+     */
+    suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit>
 }

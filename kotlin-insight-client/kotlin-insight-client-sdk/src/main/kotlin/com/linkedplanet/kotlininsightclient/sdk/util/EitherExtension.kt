@@ -1,6 +1,6 @@
 /*-
  * #%L
- * kotlin-http-client-api
+ * kotlin-jira-client-api
  * %%
  * Copyright (C) 2022 - 2023 linked-planet GmbH
  * %%
@@ -17,9 +17,13 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlinhttpclient.error
+package com.linkedplanet.kotlininsightclient.sdk.util
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import arrow.core.Either
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 
-val GSON: Gson = GsonBuilder().create()
+inline fun <B> catchAsInsightClientError(
+    f: () -> B
+): Either<InsightClientError, B> = Either.catch(f).mapLeft {
+    InsightClientError.fromException(it)
+}

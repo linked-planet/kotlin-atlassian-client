@@ -21,14 +21,15 @@ package com.linkedplanet.plugin.confluence.insightclient.test
 
 import org.junit.Test
 import com.linkedplanet.plugin.confluence.insightclient.test.api.PluginComponent
+import org.hamcrest.CoreMatchers.equalTo
 
-import org.junit.Assert.assertEquals
+import org.hamcrest.MatcherAssert.assertThat
 
 class PluginComponentUnitTest {
 
     @Test
     fun testMyName() {
-        assertEquals("kotlin-insight-client-atlas-test", PluginComponent.name)
+        assertThat(PluginComponent.name, equalTo("kotlin-insight-client-atlas-test"))
     }
 
 }

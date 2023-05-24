@@ -20,8 +20,11 @@
 package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
+import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
+import org.hamcrest.CoreMatchers.*
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 interface InsightObjectTypeOperatorTest {
@@ -32,30 +35,30 @@ interface InsightObjectTypeOperatorTest {
         println("### START testGetObjectType")
 
         val objectType = runBlocking {
-            insightObjectTypeOperator.getObjectType(1).orNull()
+            insightObjectTypeOperator.getObjectType(InsightObjectType.Company.id).orFail()
         }
-        assertNotNull(objectType)
-        assertTrue(objectType!!.name == "Company")
-        assertNull(objectType.parentObjectTypeId)
+        assertThat(objectType, notNullValue())
+        assertThat(objectType.name, equalTo("Company"))
+        assertThat(objectType.parentObjectTypeId, equalTo(null))
 
-        assertEquals(5, objectType.attributes.size)
+        assertThat(objectType.attributes.size, equalTo(5))
 
-        val nameAttribute = objectType.attributes.singleOrNull {it.name == "Name"}
-        assertNotNull(nameAttribute)
-        assertNull(nameAttribute?.referenceType)
-        assertEquals(nameAttribute?.defaultType?.name, "Text")
+        val nameAttribute = objectType.attributes.singleOrNull { it.name == "Name" }
+        assertThat(nameAttribute, notNullValue())
+        assertThat(nameAttribute?.referenceKind, equalTo(null))
+        assertThat(nameAttribute?.defaultType, equalTo(DefaultType.TEXT))
 
-        val createdAttribute = objectType.attributes.singleOrNull {it.name == "Created"}
-        assertNotNull(createdAttribute)
-        assertNull(createdAttribute?.referenceType)
-        assertEquals(createdAttribute?.defaultType?.name, "DateTime")
+        val createdAttribute = objectType.attributes.singleOrNull { it.name == "Created" }
+        assertThat(createdAttribute, notNullValue())
+        assertThat(createdAttribute?.referenceKind, equalTo(null))
+        assertThat(createdAttribute?.defaultType, equalTo(DefaultType.DATE_TIME))
 
-        val countryAttribute = objectType.attributes.singleOrNull {it.name == "Country"}
-        assertNotNull(countryAttribute)
-        assertNull(countryAttribute?.defaultType)
-        assertEquals(countryAttribute?.referenceType?.name, "Reference")
-        assertEquals(countryAttribute?.minimumCardinality, 0)
-        assertEquals(countryAttribute?.maximumCardinality, 1)
+        val countryAttribute = objectType.attributes.singleOrNull { it.name == "Country" }
+        assertThat(countryAttribute, notNullValue())
+        assertThat(countryAttribute?.defaultType, equalTo(null))
+        assertThat(countryAttribute?.referenceKind, equalTo(ReferenceKind.REFERENCE))
+        assertThat(countryAttribute?.minimumCardinality, equalTo(0))
+        assertThat(countryAttribute?.maximumCardinality, equalTo(1))
 
         println("### END testGetObjectType")
     }

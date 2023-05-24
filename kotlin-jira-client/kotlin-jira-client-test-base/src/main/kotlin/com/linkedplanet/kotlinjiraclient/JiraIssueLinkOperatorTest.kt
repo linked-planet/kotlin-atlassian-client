@@ -21,7 +21,8 @@ package com.linkedplanet.kotlinjiraclient
 
 import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 interface JiraIssueLinkOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
@@ -43,19 +44,19 @@ interface JiraIssueLinkOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
 
         // Check
         val issueLinks = jiraIssueLinkTestHelper.getIssueLinks(inward.key)
-        assertEquals(1, issueLinks.size())
+        assertThat(issueLinks.size(), equalTo(1))
 
         val issueLink = issueLinks.first().asJsonObject
         val issueLinkId = issueLink.get("id").asString
         val outwardIssue = issueLink.getAsJsonObject("outwardIssue")
-        assertEquals(outward.key, outwardIssue.get("key").asString)
+        assertThat(outwardIssue.get("key").asString, equalTo(outward.key))
 
         // Delete
         runBlocking { issueLinkOperator.deleteIssueLink(issueLinkId) }.rightAssertedJiraClientError()
 
         // Check
         val issueLinksAfterDeletion = jiraIssueLinkTestHelper.getIssueLinks(inward.key)
-        assertEquals(0, issueLinksAfterDeletion.size())
+        assertThat(issueLinksAfterDeletion.size(), equalTo(0))
 
         println("### END issueLinks_01CreateAndDeleteIssueLink")
     }
@@ -77,7 +78,7 @@ interface JiraIssueLinkOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         )
 
         val issue = jiraIssueTestHelper.getIssueByKey(issueWithEpicLink.key)
-        assertEquals(epic.key, issue.epicKey)
+        assertThat(issue.epicKey, equalTo(epic.key))
 
         println("### END issueLinks_02EpicLink")
     }

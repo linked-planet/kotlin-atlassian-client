@@ -22,50 +22,134 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjects
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 
+/**
+ * The InsightObjectOperator interface provides methods to interact with Insight objects.
+ */
 interface InsightObjectOperator {
 
+    /**
+     * The number of results to be returned per page when requesting a paginated list of Insight objects.
+     */
     var RESULTS_PER_PAGE: Int
 
+    /**
+     * Retrieves a paginated list of Insight objects of the specified type. Exactly one page will be returned.
+     *
+     * @param objectTypeId The id of the Insight object type to retrieve
+     * @param withChildren Determines whether to retrieve child objects (think java inheritance) as well
+     * @param pageIndex The starting page of the paginated list. Starting at 0.
+     * @param pageSize The number of results to be returned per page
+     * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the list of Insight objects
+     */
     suspend fun getObjects(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
         withChildren: Boolean = false,
-        pageFrom: Int = 1,
-        pageTo: Int? = null,
-        perPage: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, InsightObjects>
+        pageIndex: Int = 0,
+        pageSize: Int = RESULTS_PER_PAGE
+    ): Either<InsightClientError, InsightObjectPage>
 
-    suspend fun getObjectById(id: Int): Either<InsightClientError, InsightObject?>
+    /**
+     * Retrieves the Insight object with the specified id.
+     *
+     * @param id The id of the Insight object to retrieve
+     * @return Either an [InsightClientError] or the retrieved [InsightObject] object
+     */
+    suspend fun getObjectById(id: InsightObjectId): Either<InsightClientError, InsightObject?>
 
+    /**
+     * Retrieves the Insight object with the specified key.
+     *
+     * @param key The key of the Insight object to retrieve
+     * @return Either an [InsightClientError] or the retrieved [InsightObject] object
+     */
     suspend fun getObjectByKey(key: String): Either<InsightClientError, InsightObject?>
 
-    suspend fun getObjectByName(objectTypeId: Int, name: String): Either<InsightClientError, InsightObject?>
+    /**
+     * Retrieves the InsightObject with the specified name and type.
+     *
+     * @param objectTypeId The id of the Insight object type to retrieve
+     * @param name The name of the Insight object to retrieve
+     * @return Either an [InsightClientError] or the retrieved [InsightObject] object
+     */
+    suspend fun getObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, InsightObject?>
 
+    /**
+     * Retrieves a list of Insight objects of the specified type name.
+     *
+     * @param objectTypeName The name of the Insight object type to retrieve
+     * @return Either an [InsightClientError] or a list of [InsightObject] objects
+     */
+    suspend fun getObjectsByObjectTypeName(objectTypeName: String): Either<InsightClientError, List<InsightObject>>
+
+    /**
+     * Retrieves a paginated list of Insight objects of the specified type that match the given IQL query.
+     *
+     * @param objectTypeId The id of the Insight object type to retrieve
+     * @param iql The IQL query to use for filtering
+     * @param withChildren Determines whether or not to retrieve child objects as well
+     * @param pageIndex The starting page of the paginated list. Starting at 0.
+     * @param pageSize The number of results to be returned per page
+     * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the filtered list of Insight objects
+     */
     suspend fun getObjectsByIQL(
-        objectTypeId: Int,
+        objectTypeId: InsightObjectTypeId,
+        iql: String,
         withChildren: Boolean = false,
-        iql: String,
-        pageFrom: Int = 1,
-        pageTo: Int? = null,
-        perPage: Int = RESULTS_PER_PAGE
-    ): Either<InsightClientError, InsightObjects>
+        pageIndex: Int = 0,
+        pageSize: Int = RESULTS_PER_PAGE
+    ): Either<InsightClientError, InsightObjectPage>
 
+    /**
+     * Retrieves a paginated list of Insight objects that match the given IQL query.
+     *
+     * @param iql The IQL query to use for filtering
+     * @param pageIndex The starting page of the paginated list. Starting at 0.
+     * @param pageSize The number of results to be returned per page
+     * @return Either an [InsightClientError] or an [InsightObjectPage] object containing the filtered list of Insight objects
+     */
     suspend fun getObjectsByIQL(
         iql: String,
-        pageFrom: Int,
-        pageTo: Int?,
-        perPage: Int
-    ): Either<InsightClientError, InsightObjects>
+        pageIndex: Int = 0,
+        pageSize: Int = RESULTS_PER_PAGE
+    ): Either<InsightClientError, InsightObjectPage>
 
+    /**
+     * Returns the number of Insight objects that match the specified IQL (Insight Query Language) statement.
+     *
+     * @param iql The IQL statement to execute.
+     * @return An [Either] that contains either an [InsightClientError] or an [Int] representing the number of matching objects.
+     */
     suspend fun getObjectCount(iql: String): Either<InsightClientError, Int>
 
+    /**
+     * Updates an existing Insight object in the system.
+     *
+     * @param obj The Insight object to update.
+     * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
+     */
     suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>
 
-    suspend fun deleteObject(id: Int): Boolean
+    /**
+     * Deletes the Insight object with the specified ID from the system.
+     *
+     * @param id The ID of the object to delete.
+     * @return An [Either] that contains either an [InsightClientError] or [Unit] if the object was successfully deleted.
+     */
+    suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit>
 
+    /**
+     * Creates a new Insight object with the specified type and properties.
+     *
+     * @param objectTypeId The ID of the Insight object type.
+     * @param func A suspend function that takes an [InsightObject] parameter and sets the properties of the new object.
+     * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the newly created object.
+     */
     suspend fun createObject(
-        objectTypeId: Int,
-        func: (InsightObject) -> Unit
+        objectTypeId: InsightObjectTypeId,
+        func: suspend (InsightObject) -> Unit
     ): Either<InsightClientError, InsightObject>
 }
