@@ -43,7 +43,7 @@ internal data class ObjectTypeSchemaAttributeApiResponse(
     val referenceType: ObjectTypeSchemaAttributeReferenceTypeApiResponse?,
     val includeChildObjectTypes: Boolean,
     val referenceObjectTypeId: Int?,
-    val type: Int // AttributeType 0=Default 1=Reference
+    val type: Int // see InsightObjectAttributeType or Atlassians ObjectTypeAttributeBean.Type
     // uniqueAttribute: Boolean
     // hidden: Boolean
 )

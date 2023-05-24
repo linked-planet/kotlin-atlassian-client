@@ -25,7 +25,16 @@ See [kotlin-jira-client](kotlin-jira-client/README.md) for more details.
 
 ### kotlin-insight-client
 
-TODO..
+Provides a Kotlin client for interaction with Atlassian Assets / Insight.
+It provides access to
+
+- InsightObjects
+- Attachments
+- History
+- Object types
+- Schemas
+
+See [kotlin-jira-client](kotlin-insight-client/README.md) for more details.
 
 ### kotlin-http-client
 

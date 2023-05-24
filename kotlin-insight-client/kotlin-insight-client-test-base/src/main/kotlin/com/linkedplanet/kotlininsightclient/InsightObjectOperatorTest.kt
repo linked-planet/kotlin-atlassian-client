@@ -21,6 +21,7 @@ package com.linkedplanet.kotlininsightclient
 
 import arrow.core.identity
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
+import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
@@ -49,6 +50,7 @@ import org.hamcrest.Matchers
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
 import org.junit.Test
+import java.net.URI
 
 interface InsightObjectOperatorTest {
     val insightObjectOperator: InsightObjectOperator
@@ -268,8 +270,6 @@ interface InsightObjectOperatorTest {
         )
         assertThat(company.objectTypeName, equalTo("Company"))
         assertThat(company.objectTypeId, equalTo(InsightObjectTypeId(1)))
-        assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
-        assertThat(company.objectSelf, startsWith("http"))
 
         val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.Date
 //        assertThat(created.value?.toInstant()?.toString(), equalTo("2022-10-27T09:15:53.212Z"))
@@ -284,6 +284,24 @@ interface InsightObjectOperatorTest {
 
         assertThat(company.attachmentsExist, equalTo(false))
         println("### END object_testObjectById")
+    }
+
+    @Test
+    fun testObjectSelfLink() = runBlocking {
+        println("### START object_testObjectSelfLink")
+        val company = insightObjectOperator.getObjectById(InsightObjectId(1), ::identity).orFail()!!
+        // first check if the URL is correct
+        assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
+        assertThat(company.objectSelf, startsWith("http"))
+
+        // check if Atlassian did change the URL of the Assets app (Insight)
+        val uri = URI(company.objectSelf)
+        val httpClientFactory = AuthenticatedJiraHttpClientFactory(jiraOrigin = uri.scheme + "://" + uri.authority)
+        val httpClient = httpClientFactory.login(Credentials("admin", "admin")).orFail()
+        val response = httpClient.getWithRelativePath(uri.path)
+        assertThat(response.status.code, equalTo(200)) // also 200 if not logged in, but 404 if url is unknown
+        assertThat(response.bodyString(), containsString("<title>Assets Search"))
+        println("### END object_testObjectSelfLink")
     }
 
     @Test

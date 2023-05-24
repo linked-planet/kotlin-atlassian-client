@@ -251,9 +251,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         vararg insightAttributes: InsightAttribute
     ): Either<InsightClientError, InsightObjectId> =
         catchAsInsightClientError {
-            val freshInsightObject = createEmptyDomainObject(objectTypeId)
-            freshInsightObject.attributes = insightAttributes.toList()
             val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
+            val freshInsightObject = createEmptyDomainObject(objectTypeId, objectTypeBean)
+            freshInsightObject.attributes = insightAttributes.toList()
             val freshObjectBean = objectTypeBean.createMutableObjectBean()
             setAttributesForObjectBean(freshInsightObject, freshObjectBean)
             val bean = objectFacade.storeObjectBean(freshObjectBean)
@@ -274,8 +274,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         }.bind()
     }
 
-    private fun createEmptyDomainObject(objectTypeId: InsightObjectTypeId): InsightObject {
-        val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
+    private fun createEmptyDomainObject(
+        objectTypeId: InsightObjectTypeId,
+        objectTypeBean: ObjectTypeBean
+    ): InsightObject {
         return InsightObject(
             objectTypeId = objectTypeId,
             id = InsightObjectId.notPersistedObjectId,
@@ -308,7 +310,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             val objectType = objectTypeFacade.loadObjectType(objectTypeId)
             val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
             val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
-            return@toInsightObject createInsightObject(
+            return@toInsightObject mapObjectBeanToInsightObject(
                 this@toInsightObject,
                 objectType,
                 objectTypeAttributeBeans,
@@ -316,7 +318,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             )
         }
 
-    private suspend fun createInsightObject(
+    private suspend fun mapObjectBeanToInsightObject(
         objectBean: ObjectBean,
         objectTypeBean: ObjectTypeBean,
         objectTypeAttributeBeans: List<ObjectTypeAttributeBean>,
@@ -324,7 +326,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     ): Either<InsightClientError, InsightObject> = either {
         val attributes = objectBean.objectAttributeBeans.map { objAttributeBean ->
             val objTypeAttributeBean = objectTypeAttributeBeans.typeForBean(objAttributeBean).bind()
-            createInsightAttribute(objAttributeBean, objTypeAttributeBean).bind()
+            mapAttributeBeanToInsightAttribute(objAttributeBean, objTypeAttributeBean).bind()
         }
         val objectSelf = "${baseUrl}/secure/insight/assets/${objectBean.objectKey}"
         InsightObject(
@@ -346,7 +348,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             ?.right()
             ?: ObjectTypeNotFoundError().left()
 
-    private suspend fun createInsightAttribute(
+    private suspend fun mapAttributeBeanToInsightAttribute(
         objectAttributeBean: ObjectAttributeBean,
         objectTypeAttributeBean: ObjectTypeAttributeBean
     ): Either<InsightClientError, InsightAttribute> = either {

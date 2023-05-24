@@ -23,6 +23,7 @@ import arrow.core.Either
 import arrow.core.computations.either
 import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.notFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
@@ -65,7 +66,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
         objectId: InsightObjectId,
         filename: String,
         inputStream: InputStream
-    ): Either<InsightClientError, List<InsightAttachment>> = either {
+    ): Either<InsightClientError, InsightAttachment> = either {
         val mimeType = URLConnection.guessContentTypeFromName(filename)
         context.httpClient.executeUpload(
             "POST",
@@ -79,6 +80,9 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             .bind()
 
         getAttachments(objectId).bind()
+            .firstOrNull { it.filename == filename }
+            ?: notFoundError<InsightAttachment>("Attachment with Filename ($filename) for " +
+                    "object (id=$objectId) was created but could not be retrieved.").bind()
     }
 
     override suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit> =
@@ -89,21 +93,21 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
             null,
             "application/json"
         )
-            .map { }
+            .map { /*to Unit */ }
             .mapLeft { it.toInsightClientError() }
 
     override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =
         either {
             val attachments = getAttachments(objectId).bind()
-            val fileMap: List<Pair<String, InputStream>> = attachments.map { attachment ->
+            val fileMap: Map<String, InputStream> = attachments.map { attachment ->
                 val attachmentContent = downloadAttachment(attachment.url).bind()
                 attachment.filename to attachmentContent
-            }
+            }.toMap()
             zipInputStreamForMultipleInputStreams(fileMap).bind()
         }
 
     private fun zipInputStreamForMultipleInputStreams(
-        fileMap: List<Pair<String, InputStream>>
+        fileMap: Map<String, InputStream>
     ): Either<InsightClientError, InputStream> =
         catchAsInsightClientError {
             val pipeInputStream = PipedInputStream()

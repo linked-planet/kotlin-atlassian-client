@@ -83,7 +83,7 @@ interface InsightAttachmentOperatorTest {
 
             val attachment = insightAttachmentOperator.uploadAttachment(
                 country.id, "attachistan.txt", "content".byteInputStream()
-            ).orFail().first()
+            ).orFail()
 
             assertThat(attachment.filename, equalTo("attachistan.txt"))
 
@@ -151,10 +151,10 @@ interface InsightAttachmentOperatorTest {
             // GIVEN an object with two attachment files
             insightAttachmentOperator.uploadAttachment(
                 country.id, files.keys.first(), files.values.first().byteInputStream(),
-            ).orFail().first()
+            ).orFail()
             insightAttachmentOperator.uploadAttachment(
                 country.id, files.keys.last(), files.values.last().byteInputStream(),
-            ).orFail().first()
+            ).orFail()
 
             // WHEN downloading attachment zip
             val downloadAttachmentZip = insightAttachmentOperator.downloadAttachmentZip(country.id).orFail()

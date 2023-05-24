@@ -23,6 +23,7 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.invalidArgumentError
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
@@ -66,7 +67,7 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
     private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<InsightObjectId> = { _, _ -> emptyList() },
 ) : GenericInsightObjectOperator<DomainType> {
     private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
-    var objectTypeSchema: ObjectTypeSchema
+    var objectTypeSchema: ObjectTypeSchema // this is public, so clients could use it to add missing functionality
     private var attrsMap: Map<String, ObjectTypeSchemaAttribute>
 
     companion object {
@@ -233,11 +234,4 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
             ).bind()
         }
     }
-
-    private fun <T> invalidArgumentError(message: String): Either<InsightClientError, T> = Either.Left(
-        InsightClientError(
-            "InvalidArgumentError",
-            message
-        )
-    )
 }

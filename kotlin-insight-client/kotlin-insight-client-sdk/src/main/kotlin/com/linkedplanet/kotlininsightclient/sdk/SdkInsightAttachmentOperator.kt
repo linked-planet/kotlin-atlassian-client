@@ -80,11 +80,11 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             attachmentBeans.map { bean ->
                 val attachmentContent = fileManager.getObjectAttachmentContent(bean.objectId, bean.nameInFileSystem)
                 bean.filename to attachmentContent
-            }
+            }.toMap()
         }
 
     private fun zipInputStreamForMultipleInputStreams(
-        fileMap: List<Pair<String, InputStream>>
+        fileMap: Map<String, InputStream>
     ): Either<InsightClientError, InputStream> =
         catchAsInsightClientError {
             val pipeInputStream = PipedInputStream()
@@ -105,14 +105,14 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         objectId: InsightObjectId,
         filename: String,
         inputStream: InputStream
-    ): Either<InsightClientError, List<InsightAttachment>> =
+    ): Either<InsightClientError, InsightAttachment> =
         catchAsInsightClientError {
             val tempFilePath: Path = createTempFile(filename)
             Files.copy(inputStream, tempFilePath, StandardCopyOption.REPLACE_EXISTING)
             val mimeType = URLConnection.guessContentTypeFromName(filename)
             val bean = objectFacade.addAttachmentBean(objectId.value, tempFilePath.toFile(), filename, mimeType, null)
             val insightAttachment = beanToInsightAttachment(bean)
-            listOf(insightAttachment)
+            insightAttachment
         }
 
     override suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit> =

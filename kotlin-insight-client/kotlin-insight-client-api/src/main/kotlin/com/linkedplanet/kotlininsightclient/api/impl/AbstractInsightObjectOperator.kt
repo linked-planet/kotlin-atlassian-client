@@ -53,19 +53,6 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
         ).bind()
     }
 
-    private fun createEmptyObject(objectTypeId: InsightObjectTypeId): InsightObject {
-        return InsightObject(
-            objectTypeId,
-            InsightObjectId.notPersistedObjectId,
-            "",
-            "",
-            "",
-            emptyList(),
-            false,
-            ""
-        )
-    }
-
     override suspend fun update(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
         val insightObject = loadExistingInsightObject(domainObject).bind().rightIfNotNull {
             InsightClientError(
@@ -89,7 +76,6 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
     override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> = either {
         insightObjectOperator.getObjectByName(objectTypeId, name) { toDomain(it).bind() }.bind()
     }
-
 
     override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
         insightObjectOperator.getObjectById(objectId) { toDomain(it).bind() }.bind()

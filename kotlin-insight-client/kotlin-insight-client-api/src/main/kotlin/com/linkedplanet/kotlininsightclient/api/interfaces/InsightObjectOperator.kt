@@ -84,7 +84,8 @@ interface InsightObjectOperator {
      */
     @Deprecated("Use getObjectsByIQL the name of the \"Name\" Attribute could change any time.")
     suspend fun <T> getObjectByName(
-        objectTypeId: InsightObjectTypeId, name: String,
+        objectTypeId: InsightObjectTypeId,
+        name: String,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T?>
 
