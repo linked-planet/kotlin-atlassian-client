@@ -80,11 +80,11 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             attachmentBeans.map { bean ->
                 val attachmentContent = fileManager.getObjectAttachmentContent(bean.objectId, bean.nameInFileSystem)
                 bean.filename to attachmentContent
-            }
+            }.toMap()
         }
 
     private fun zipInputStreamForMultipleInputStreams(
-        fileMap: List<Pair<String, InputStream>>
+        fileMap: Map<String, InputStream>
     ): Either<InsightClientError, InputStream> =
         catchAsInsightClientError {
             val pipeInputStream = PipedInputStream()

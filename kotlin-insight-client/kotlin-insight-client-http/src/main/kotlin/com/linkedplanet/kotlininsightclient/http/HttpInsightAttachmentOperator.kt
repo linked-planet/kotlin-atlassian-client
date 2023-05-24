@@ -95,15 +95,15 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
     override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =
         either {
             val attachments = getAttachments(objectId).bind()
-            val fileMap: List<Pair<String, InputStream>> = attachments.map { attachment ->
+            val fileMap: Map<String, InputStream> = attachments.map { attachment ->
                 val attachmentContent = downloadAttachment(attachment.url).bind()
                 attachment.filename to attachmentContent
-            }
+            }.toMap()
             zipInputStreamForMultipleInputStreams(fileMap).bind()
         }
 
     private fun zipInputStreamForMultipleInputStreams(
-        fileMap: List<Pair<String, InputStream>>
+        fileMap: Map<String, InputStream>
     ): Either<InsightClientError, InputStream> =
         catchAsInsightClientError {
             val pipeInputStream = PipedInputStream()
