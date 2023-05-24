@@ -212,9 +212,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         vararg insightAttributes: InsightAttribute
     ): Either<InsightClientError, InsightObjectId> =
         catchAsInsightClientError {
-            val freshInsightObject = createEmptyDomainObject(objectTypeId)
-            freshInsightObject.attributes = insightAttributes.toList()
             val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeId.raw)
+            val freshInsightObject = createEmptyDomainObject(objectTypeId, objectTypeBean)
+            freshInsightObject.attributes = insightAttributes.toList()
             val freshObjectBean = objectTypeBean.createMutableObjectBean()
             setAttributesForObjectBean(freshInsightObject, freshObjectBean)
             val bean = objectFacade.storeObjectBean(freshObjectBean)

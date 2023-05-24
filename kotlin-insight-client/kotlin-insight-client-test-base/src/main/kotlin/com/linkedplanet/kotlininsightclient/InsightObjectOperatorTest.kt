@@ -270,7 +270,7 @@ interface InsightObjectOperatorTest {
     @Test
     fun testObjectSelfLink() = runBlocking {
         println("### START object_testObjectSelfLink")
-        val company = insightObjectOperator.getObjectById(InsightObjectId(1)).orFail()!!
+        val company = insightObjectOperator.getObjectById(InsightObjectId(1), ::identity).orFail()!!
         // first check if the URL is correct
         assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
         assertThat(company.objectSelf, startsWith("http"))
