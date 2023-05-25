@@ -23,7 +23,6 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
 import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
-import org.junit.Assert
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
@@ -71,7 +70,7 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         val attributeNames = attributes.map(JiraIssueTypeAttribute::name)
         assertThat(attributeNames.size, equalTo(attributes.size))
         expectedAttributes.forEach {
-            Assert.assertTrue("Attributes does not contain: $it", attributeNames.contains(it))
+            assertThat("Attributes does not contain: $it", attributeNames.contains(it), equalTo(true))
         }
 
         println("### START issueTypes_03GetAttributesOfIssueType")

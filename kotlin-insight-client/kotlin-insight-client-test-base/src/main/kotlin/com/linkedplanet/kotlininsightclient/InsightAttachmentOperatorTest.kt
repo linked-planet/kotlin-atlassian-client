@@ -31,7 +31,6 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert
 import org.junit.Test
 import java.security.MessageDigest
 import java.util.*
@@ -165,7 +164,7 @@ interface InsightAttachmentOperatorTest {
             assertThat(String(zip.readBytes()), equalTo(files[firstZipFileName]))
             val secondZipEntryName = zip.nextEntry?.name
             assertThat(String(zip.readBytes()), equalTo(files[secondZipEntryName]))
-            Assert.assertNull(zip.nextEntry)
+            assertThat(zip.nextEntry, equalTo(null))
         } finally {
             insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
         }

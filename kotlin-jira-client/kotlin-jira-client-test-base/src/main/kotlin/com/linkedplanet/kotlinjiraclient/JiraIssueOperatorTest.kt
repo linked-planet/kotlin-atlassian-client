@@ -29,7 +29,6 @@ import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
@@ -63,7 +62,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
             createResult.isRight()
         }
-        assertTrue(success)
+        assertThat(success, equalTo(true))
 
         println("### END issues_01DeleteAllIssuesAndCreateTenTestIssues")
     }
@@ -240,7 +239,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                 fields
             )
         }.rightAssertedJiraClientError()
-        assertTrue(creationResponse.self.endsWith("/rest/api/2/issue/${creationResponse.id}"))
+        assertThat(creationResponse.self.endsWith("/rest/api/2/issue/${creationResponse.id}"), equalTo(true))
 
         val createdIssue = runBlocking {
             issueOperator.getIssueByJQL("key = \"${creationResponse.key}\"", ::issueParser)
@@ -270,9 +269,9 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         )
 
         val transitions = createdIssue.transitions
-        assertTrue(transitions.isNotEmpty())
-        assertTrue(transitions.singleOrNull { it.name == "Do it" }?.let { true } ?: false)
-        assertTrue(transitions.singleOrNull { it.name == "To Do" }?.let { true } ?: false)
+        assertThat(transitions.isNotEmpty(), equalTo(true))
+        assertThat(transitions.singleOrNull { it.name == "Do it" }?.let { true } ?: false, equalTo(true))
+        assertThat(transitions.singleOrNull { it.name == "To Do" }?.let { true } ?: false, equalTo(true))
 
         println("### END issues_07CreateIssue")
     }
@@ -372,7 +371,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val response = runBlocking {
             issueOperator.getIssueByKey("BLAAAA") { _, _ -> Either.Right(null) }
         }
-        assertTrue(response.isRight())
+        assertThat(response.isRight(), equalTo(true))
         assertThat(response.getOrElse { -1 }, equalTo(null))
 
         println("### END issues_10GetNonExistingIssue")
@@ -385,7 +384,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val response = runBlocking {
             issueOperator.getIssueByJQL("key = BLAAAA") { _, _ -> Either.Right(null) }
         }
-        assertTrue(response.isLeft())
+        assertThat(response.isLeft(), equalTo(true))
 
         println("### END issues_11GetIssuesByIQLError")
     }
@@ -398,7 +397,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         }
 
         assertThat(issues, notNullValue())
-        assertTrue(issues!!.isEmpty())
+        assertThat(issues!!.isEmpty(), equalTo(true))
 
         println("### END issues_12GetIssuesByJQLEmpty")
     }
@@ -414,7 +413,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertThat(page!!.totalItems, equalTo(0))
         assertThat(page.totalPages, equalTo(0))
         assertThat(page.currentPageIndex, equalTo(0))
-        assertTrue(page.items.isEmpty())
+        assertThat(page.items.isEmpty(), equalTo(true))
 
         println("### END issues_13GetIssuesByJQLPaginatedEmpty")
     }

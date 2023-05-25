@@ -22,7 +22,6 @@ package com.linkedplanet.kotlinjiraclient
 import arrow.core.*
 import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.api.model.*
-import org.junit.Assert.*
 import org.junit.FixMethodOrder
 import org.junit.runners.MethodSorters
 
