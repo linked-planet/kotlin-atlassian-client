@@ -21,7 +21,8 @@ package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import arrow.core.right
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
@@ -44,7 +45,7 @@ class CompanyTestOperatorManualImpl(
     private suspend fun toDomain(insightObject: InsightObject) = Company(
         name = insightObject.getStringValue(name)!!,
         country = countryTestOperatorManualImpl.getById(insightObject.getSingleReferenceValue(countryRef)!!.objectId).orNull()!!,
-    )
+    ).right()
 
     override suspend fun create(domainObject: Company): Either<InsightClientError, Company> = either {
         insightObjectOperator.createObject(
@@ -72,7 +73,7 @@ class CompanyTestOperatorManualImpl(
                 countryRef toValue domainObject.name,
                 toDomain = ::identity
             ).bind()
-            toDomain(udpatedObject)
+            toDomain(udpatedObject).bind()
         }
     }
 

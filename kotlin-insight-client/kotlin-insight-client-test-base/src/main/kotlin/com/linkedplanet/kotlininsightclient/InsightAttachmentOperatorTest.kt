@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.InsightObjectType.Country
 import com.linkedplanet.kotlininsightclient.TestAttributes.CountryName
 import com.linkedplanet.kotlininsightclient.TestAttributes.CountryShortName

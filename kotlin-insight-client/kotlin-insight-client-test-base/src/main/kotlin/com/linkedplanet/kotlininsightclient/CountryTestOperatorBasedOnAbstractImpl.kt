@@ -21,7 +21,7 @@ package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator

@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient.sdk
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatMap
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import arrow.core.left
 import arrow.core.right
 import arrow.core.rightIfNotNull
@@ -190,9 +190,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     "Could not retrieve the object."
                 )
             }.bind()
-            updateObject(obj, *insightAttributes).bind()
+            val updated = updateObject(obj, *insightAttributes).bind()
+            toDomain(updated).bind()
         }
-            .map { toDomain(it) }
 
     private fun setAttributesForObjectBean(
         obj: InsightObject,
@@ -298,13 +298,14 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 totalFilterSize,
                 objects
                     .map { it.toInsightObject().bind() }
-                    .map { toDomain(it) }
+                    .map { toDomain(it).bind() }
             )
         }
 
-    private suspend fun <T> ObjectBean?.toNullableInsightObject(toDomain: MapToDomain<T>): Either<InsightClientError, T?> {
-        if (this == null) return Either.Right(null)
-        return this.toInsightObject().map { toDomain(it) }
+    private suspend fun <T> ObjectBean?.toNullableInsightObject(toDomain: MapToDomain<T>): Either<InsightClientError, T?> = either {
+        if (this@toNullableInsightObject == null) return@either null
+        val asInsightObject = this@toNullableInsightObject.toInsightObject().bind()
+        toDomain(asInsightObject).bind()
     }
 
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> =

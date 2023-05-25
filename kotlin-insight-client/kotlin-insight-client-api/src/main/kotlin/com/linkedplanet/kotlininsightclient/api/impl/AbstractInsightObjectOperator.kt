@@ -49,7 +49,7 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
         insightObjectOperator.createObject(
             objectTypeId,
             *attributes.toTypedArray(),
-            toDomain = { toDomain(it).bind() }
+            toDomain = ::toDomain
         ).bind()
     }
 
@@ -74,11 +74,11 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
     }
 
     override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> = either {
-        insightObjectOperator.getObjectByName(objectTypeId, name) { toDomain(it).bind() }.bind()
+        insightObjectOperator.getObjectByName(objectTypeId, name) { toDomain(it) }.bind()
     }
 
     override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
-        insightObjectOperator.getObjectById(objectId) { toDomain(it).bind() }.bind()
+        insightObjectOperator.getObjectById(objectId) { toDomain(it) }.bind()
     }
 
     override suspend fun getByIQL(
@@ -93,7 +93,7 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
             withChildren,
             pageIndex,
             pageSize
-        ) { toDomain(it).bind() }
+        ) { toDomain(it) }
             .map { it.objects }.bind()
     }
 

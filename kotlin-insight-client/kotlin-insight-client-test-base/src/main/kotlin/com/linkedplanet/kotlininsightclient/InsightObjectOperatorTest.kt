@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
 import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl

@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
+import arrow.core.right
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
@@ -27,7 +28,8 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 
-typealias MapToDomain<T> = suspend (InsightObject) -> T
+typealias MapToDomain<T> = suspend (InsightObject) -> Either<InsightClientError, T>
+fun identity(insightObject: InsightObject): Either<InsightClientError, InsightObject> = insightObject.right()
 
 /**
  * The InsightObjectOperator interface provides methods to interact with Insight objects.

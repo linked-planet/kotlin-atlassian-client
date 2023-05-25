@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient.http
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import arrow.core.rightIfNotNull
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
@@ -160,8 +160,9 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             attributeMap[it.attributeId] = it
         }
         obj.attributes = attributeMap.values.toList()
-        updateObject(obj).bind()
-    }.map{ toDomain(it) }
+        val updatedObject = updateObject(obj).bind()
+        toDomain(updatedObject).bind()
+    }
 
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
@@ -217,7 +218,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 this@toValues.totalFilterCount,
                 this@toValues.objectEntries
                     .map { it.toValue().bind() }
-                    .map { mapper(it) }
+                    .map { mapper(it).bind() }
             )
         }
 

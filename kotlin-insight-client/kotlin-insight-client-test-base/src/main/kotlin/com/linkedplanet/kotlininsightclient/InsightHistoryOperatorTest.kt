@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import kotlinx.coroutines.runBlocking

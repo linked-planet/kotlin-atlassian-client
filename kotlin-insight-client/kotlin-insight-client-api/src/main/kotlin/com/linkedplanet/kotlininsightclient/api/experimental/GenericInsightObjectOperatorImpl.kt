@@ -21,13 +21,14 @@ package com.linkedplanet.kotlininsightclient.api.experimental
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.invalidArgumentError
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
