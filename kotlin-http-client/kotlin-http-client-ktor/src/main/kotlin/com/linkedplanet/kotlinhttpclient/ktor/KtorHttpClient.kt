@@ -35,6 +35,8 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
+import io.ktor.utils.io.streams.*
+import java.io.InputStream
 import java.text.DateFormat
 
 class KtorHttpClient(
@@ -113,7 +115,7 @@ class KtorHttpClient(
         params: Map<String, String>,
         body: String?,
         contentType: String?
-    ): Either<HttpDomainError, HttpResponse<ByteArray>> {
+    ): Either<HttpDomainError, HttpResponse<InputStream>> {
         return httpClient.get {
             url(path)
         }.handleResponse()
@@ -125,13 +127,13 @@ class KtorHttpClient(
         params: Map<String, String>,
         mimeType: String,
         filename: String,
-        byteArray: ByteArray
-    ): Either<HttpDomainError, HttpResponse<ByteArray>> {
+        inputStream: InputStream
+    ): Either<HttpDomainError, HttpResponse<InputStream>> {
         val post = httpClient.submitFormWithBinaryData(
             formData = formData {
                 append(
                     key = "file",
-                    byteArray,
+                    InputProvider(inputStream.available().toLong()) { inputStream.asInput() },
                     Headers.build {
                         append(HttpHeaders.ContentType, mimeType)
                         append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
