@@ -86,7 +86,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         id: InsightObjectId,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T?> =
-        catchAsInsightClientError { objectFacade.loadObjectBean(id.value) }
+        catchAsInsightClientError { objectFacade.loadObjectBean(id.raw) }
             .flatMap<InsightClientError, ObjectBean?, T?> { it.toNullableInsightObject(toDomain) }
 
     override suspend fun <T> getObjectByKey(
@@ -159,7 +159,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     @Suppress("DEPRECATION")
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
-            val objectBean = objectFacade.loadObjectBean(obj.id.value).createMutable()
+            val objectBean = objectFacade.loadObjectBean(obj.id.raw).createMutable()
             setAttributesForObjectBean(obj, objectBean)
             objectBean.objectTypeId = obj.objectTypeId.raw
             objectBean.objectKey = obj.objectKey
@@ -217,7 +217,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 )
 
                 is ObjectAttributeValue.Reference -> {
-                    val referenceIds = value.referencedObjects.map { it.id.value }.toTypedArray()
+                    val referenceIds = value.referencedObjects.map { it.id.raw }.toTypedArray()
                     objectAttributeBeanFactory.createReferenceAttributeValue(ota) { referenceIds.contains(it.id) }
                 }
                 is ObjectAttributeValue.User -> {
@@ -245,7 +245,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         catchAsInsightClientError {
-            objectFacade.deleteObjectBean(id.value)
+            objectFacade.deleteObjectBean(id.raw)
         }
 
     override suspend fun createObject(

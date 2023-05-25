@@ -401,9 +401,9 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orFail()
 
-            assertThat(country1.id.value, greaterThan(0))
+            assertThat(country1.id.raw, greaterThan(0))
             assertThat(country1.getStringValue(CountryKey.attributeId)!!.isNotBlank(), equalTo(true))
-            assertThat(company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectId.value, greaterThan(0))
+            assertThat(company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectId.raw, greaterThan(0))
             assertThat(
                 company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectKey.isNotBlank(),
                 equalTo(true)

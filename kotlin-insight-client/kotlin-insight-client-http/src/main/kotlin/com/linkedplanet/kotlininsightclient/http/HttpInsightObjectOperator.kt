@@ -62,7 +62,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     override suspend fun <T> getObjectById(id: InsightObjectId, toDomain: MapToDomain<T>): Either<InsightClientError, T?> =
-        getObjectByPlainIQL("objectId=${id.value}", toDomain)
+        getObjectByPlainIQL("objectId=${id.raw}", toDomain)
 
     override suspend fun <T> getObjectByKey(
         key: String,
@@ -131,7 +131,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         val body = GSON.toJson(obj.toEditObjectItem())
         context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "PUT",
-            "rest/insight/1.0/object/${obj.id.value}",
+            "rest/insight/1.0/object/${obj.id.raw}",
             emptyMap(),
             body,
             "application/json",
@@ -166,7 +166,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
             "DELETE",
-            "/rest/insight/1.0/object/${id.value}",
+            "/rest/insight/1.0/object/${id.raw}",
             emptyMap(),
             null,
             "application/json"

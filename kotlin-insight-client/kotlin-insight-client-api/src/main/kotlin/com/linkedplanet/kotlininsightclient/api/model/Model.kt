@@ -25,7 +25,7 @@ import java.util.Collections.emptyList
 // region ID wrapper
 
 @JvmInline
-value class InsightObjectId(val value: Int) {
+value class InsightObjectId(val raw: Int) {
     companion object {
         val notPersistedObjectId = InsightObjectId(-1)
     }
