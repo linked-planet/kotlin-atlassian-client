@@ -47,6 +47,7 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
+import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredDateTimeFormatterInJira
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
@@ -79,6 +80,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
     private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
     private val timezoneManager by lazy { ComponentAccessor.getComponent(TimeZoneManager::class.java) }
+    private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()
 
     override suspend fun <T> getObjectById(
         id: InsightObjectId,
@@ -390,17 +392,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             DefaultType.INTEGER -> ObjectAttributeValue.Integer(values.firstOrNull()?.integerValue)
             DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(values.firstOrNull()?.booleanValue)
             DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(values.firstOrNull()?.doubleValue)
-            DefaultType.DATE -> { // TODO: check if this is correct
+            DefaultType.DATE -> {
                 val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+                val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateToString(Date.from(it.toInstant())) }
+                ObjectAttributeValue.Date(zonedDateTime, displayValue)
             }
-            DefaultType.TIME -> { // TODO: check if this is correct
+            DefaultType.TIME -> {
                 val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+                val displayValue = null // Insights original ObjectAssembler does not handle this case at all.
+                ObjectAttributeValue.Time(zonedDateTime, displayValue)
             }
             DefaultType.DATE_TIME -> {
                 val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+                val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateTimeToString(Date.from(it.toInstant())) }
+                ObjectAttributeValue.DateTime(zonedDateTime, displayValue)
             }
             DefaultType.URL -> ObjectAttributeValue.Url(values.firstOrNull()?.textValue)
             DefaultType.EMAIL -> ObjectAttributeValue.Email(values.firstOrNull()?.textValue)

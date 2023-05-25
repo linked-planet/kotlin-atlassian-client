@@ -342,17 +342,17 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             DefaultType.INTEGER -> ObjectAttributeValue.Integer(singleValue() as Int?)
             DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(singleValue() as Boolean?)
             DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(singleValue() as Double?)
-            DefaultType.DATE -> { // TODO: test
+            DefaultType.DATE -> {
                 val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
             }
-            DefaultType.TIME -> { // TODO: test
+            DefaultType.TIME -> {
                 val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+                ObjectAttributeValue.Time(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
             }
-            DefaultType.DATE_TIME -> { // TODO: test
+            DefaultType.DATE_TIME -> {
                 val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+                ObjectAttributeValue.DateTime(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
             }
             DefaultType.URL -> ObjectAttributeValue.Url(singleValue() as String?)
             DefaultType.EMAIL -> ObjectAttributeValue.Email(singleValue() as String?)

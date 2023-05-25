@@ -271,12 +271,12 @@ interface InsightObjectOperatorTest {
         assertThat(company.objectTypeName, equalTo("Company"))
         assertThat(company.objectTypeId, equalTo(InsightObjectTypeId(1)))
 
-        val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.Date
+        val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.DateTime
 //        assertThat(created.value?.toInstant()?.toString(), equalTo("2022-10-27T09:15:53.212Z"))
         assertThat(created.value?.toInstant()?.toString(), endsWith(":15:53.212Z"))
         assertThat(created.value?.toInstant()?.toString(), startsWith("2022-10-27T"))
         assertThat(created.displayValue, equalTo("27/Oct/22 11:15 AM"))
-        val updated = company.getAttributeByName("Updated")!!.value as ObjectAttributeValue.Date
+        val updated = company.getAttributeByName("Updated")!!.value as ObjectAttributeValue.DateTime
 //        assertThat(updated.value?.toInstant()?.toString(), equalTo("2023-02-21T07:10:25.993Z"))
         assertThat(updated.value?.toInstant()?.toString(), endsWith(":10:25.993Z"))
         assertThat(updated.value?.toInstant()?.toString(), startsWith("2023-02-21T"))
