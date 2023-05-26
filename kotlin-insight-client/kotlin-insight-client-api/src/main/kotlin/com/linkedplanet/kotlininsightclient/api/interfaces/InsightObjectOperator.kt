@@ -29,7 +29,8 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 
 typealias MapToDomain<T> = suspend (InsightObject) -> Either<InsightClientError, T>
-fun identity(insightObject: InsightObject): Either<InsightClientError, InsightObject> = insightObject.right()
+
+fun <T> identity(obj: T): Either<InsightClientError, T> = obj.right()
 
 /**
  * The InsightObjectOperator interface provides methods to interact with Insight objects.
