@@ -70,7 +70,6 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     ): Either<InsightClientError, T?> =
         getObjectByPlainIQL("Key=\"$key\"", toDomain)
 
-    @Deprecated("use getObjectByIQL instead")
     override suspend fun <T> getObjectByName(
         objectTypeId: InsightObjectTypeId, name: String,
         toDomain: MapToDomain<T>
