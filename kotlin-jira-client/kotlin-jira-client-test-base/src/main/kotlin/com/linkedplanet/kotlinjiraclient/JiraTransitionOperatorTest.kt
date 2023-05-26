@@ -28,8 +28,6 @@ interface JiraTransitionOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jir
 
     @Test
     fun transitions_01Transitions() {
-        println("### START transitions_01Transitions")
-
         val issue = jiraIssueTestHelper.createDefaultIssue(fieldFactory.jiraSummaryField("Transition Test Ticket"))
 
         // get doIt transition
@@ -53,17 +51,11 @@ interface JiraTransitionOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jir
         assertThat(transitionToToDo, equalTo(true))
         val issueTodo = jiraIssueTestHelper.getIssueByKey(issue.key)
         assertThat(issueTodo.status.name, equalTo("To Do"))
-
-        println("### END transitions_01Transitions")
     }
 
     @Test
     fun transitions_02IssueNotFound() {
-        println("### START transitions_02IssueNotFound")
-
         val notFound = runBlocking { transitionOperator.getAvailableTransitions("unknownIssueKey") }
         assertThat(notFound.isLeft(), equalTo(true))
-
-        println("### END transitions_02IssueNotFound")
     }
 }

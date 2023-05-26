@@ -53,7 +53,6 @@ class JiraSdkClientTest : JiraClientTest<SdkJiraField>() {
 
     @Before
     fun initTest() {
-        println("### JiraSdkClientTest.initTest")
         val admin = userManager.getUserByName("admin")
         jiraAuthenticationContext.loggedInUser = admin
     }

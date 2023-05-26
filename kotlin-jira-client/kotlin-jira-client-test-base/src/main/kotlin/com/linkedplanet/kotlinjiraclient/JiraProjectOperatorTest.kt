@@ -29,8 +29,6 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
 
     @Test
     fun projects_01GetProjects() {
-        println("### START projects_01GetProjects")
-
         val projects = runBlocking {
             projectOperator.getProjects()
         }.rightAssertedJiraClientError()
@@ -39,14 +37,10 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
         assertThat(projects.first().id, equalTo("10000"))
         assertThat(projects.first().key, equalTo("TEST"))
         assertThat(projects.first().name, equalTo("Test"))
-
-        println("### END projects_01GetProjects")
     }
 
     @Test
     fun projects_02GetProject() {
-        println("### START projects_02GetProject")
-
         val project = runBlocking {
             projectOperator.getProject(projectId)
         }.rightAssertedJiraClientError()
@@ -54,7 +48,5 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
         assertThat(project.id, equalTo("10000"))
         assertThat(project.key, equalTo("TEST"))
         assertThat(project.name, equalTo("Test"))
-
-        println("### END projects_02GetProject")
     }
 }

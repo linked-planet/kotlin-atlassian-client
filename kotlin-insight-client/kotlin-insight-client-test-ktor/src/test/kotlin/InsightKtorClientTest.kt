@@ -33,7 +33,6 @@ class InsightKtorClientTest : InsightClientTest() {
     private val clientContext: HttpInsightClientContext
 
     init {
-        println("#### Starting setUp")
         val httpClient = KtorHttpClient(
             "http://localhost:2990",
             "admin",
