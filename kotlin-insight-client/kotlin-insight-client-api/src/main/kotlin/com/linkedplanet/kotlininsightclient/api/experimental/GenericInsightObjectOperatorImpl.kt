@@ -28,7 +28,6 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectO
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
-import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
@@ -36,6 +35,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
+import com.linkedplanet.kotlininsightclient.api.model.Page
 import com.linkedplanet.kotlininsightclient.api.model.addReference
 import com.linkedplanet.kotlininsightclient.api.model.clearReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttribute
@@ -67,8 +67,10 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
     private val referenceAttributeToValue: suspend (attribute: InsightAttribute) -> Any? = { null },
     private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<InsightObjectId> = { _, _ -> emptyList() },
 ) : GenericInsightObjectOperator<DomainType> {
-    private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     var objectTypeSchema: ObjectTypeSchema // this is public, so clients could use it to add missing functionality
+
+    private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
     private var attrsMap: Map<String, ObjectTypeSchemaAttribute>
 
     companion object {
@@ -179,14 +181,20 @@ class GenericInsightObjectOperatorImpl<DomainType : Any>(
         withChildren: Boolean,
         pageIndex: Int,
         pageSize: Int
-    ): Either<InsightClientError, List<DomainType>> = either {
-        val insightObjects =
-            insightObjectOperator.getObjectsByIQL(objectTypeSchema.id, iql, withChildren, pageIndex, pageSize, ::identity)
-                .bind()
-        insightObjects.objects.map {
-            domainObjectByInsightObject(it).bind()
-        }
+    ): Either<InsightClientError, Page<DomainType>> = either {
+        val page = insightObjectOperator.getObjectsByIQL(
+            objectTypeSchema.id, iql, withChildren, pageIndex, pageSize, ::identity).bind()
+        val domainObjects = page.objects.map { domainObjectByInsightObject(it).bind() }
+        @Suppress("MemberVisibilityCanBePrivate")
+        Page(
+            domainObjects,
+            page.totalFilterCount,
+            page.totalFilterCount / pageSize,
+            pageIndex,
+            pageSize
+        )
     }
+
 
     override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
         val insightObject = insightObjectOperator.getObjectById(objectId, ::identity).bind()

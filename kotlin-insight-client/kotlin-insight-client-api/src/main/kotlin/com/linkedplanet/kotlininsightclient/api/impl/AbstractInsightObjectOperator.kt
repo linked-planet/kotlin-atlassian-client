@@ -29,6 +29,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.Page
 
 abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectOperator<DomainType> {
 
@@ -73,28 +74,36 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
         }
     }
 
-    override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> = either {
-        insightObjectOperator.getObjectByName(objectTypeId, name) { toDomain(it) }.bind()
-    }
+    override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> =
+        insightObjectOperator.getObjectByName(objectTypeId, name, ::toDomain)
 
-    override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
-        insightObjectOperator.getObjectById(objectId) { toDomain(it) }.bind()
-    }
+    override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> =
+        insightObjectOperator.getObjectById(objectId, ::toDomain)
+
 
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
         pageIndex: Int,
         pageSize: Int
-    ): Either<InsightClientError, List<DomainType>> = either {
+    ): Either<InsightClientError, Page<DomainType>> = either {
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
             withChildren,
             pageIndex,
-            pageSize
-        ) { toDomain(it) }
-            .map { it.objects }.bind()
+            pageSize,
+            ::toDomain
+        )
+            .map { page ->
+                Page(
+                    page.objects,
+                    page.totalFilterCount,
+                    page.totalFilterCount / pageSize,
+                    pageIndex,
+                    pageSize
+                )
+            }.bind()
     }
 
 }

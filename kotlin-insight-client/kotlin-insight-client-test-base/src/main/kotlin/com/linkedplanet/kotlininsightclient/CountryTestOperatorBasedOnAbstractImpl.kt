@@ -34,6 +34,7 @@ class CountryTestOperatorBasedOnAbstractImpl(
     override val insightObjectOperator: InsightObjectOperator
 ) : AbstractInsightObjectOperator<Country>() {
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     override val objectTypeId = InsightObjectType.Country.id
     private val shortName = TestAttributes.CountryShortName.attributeId
     private val name = TestAttributes.CountryName.attributeId

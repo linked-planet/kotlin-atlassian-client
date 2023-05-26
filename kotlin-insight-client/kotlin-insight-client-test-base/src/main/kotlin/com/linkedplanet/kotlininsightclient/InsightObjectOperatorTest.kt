@@ -154,7 +154,7 @@ interface InsightObjectOperatorTest {
         val simpleObjects = simpleObjectOperator.getByIQL("Name in (Object2, Object3)").orFail()
         val objWithLists = TestWithLists(
             name = "CreatedByIntegrationTest",
-            itemList = simpleObjects,
+            itemList = simpleObjects.items,
             stringList = listOf("A", "B", "C")
         )
 

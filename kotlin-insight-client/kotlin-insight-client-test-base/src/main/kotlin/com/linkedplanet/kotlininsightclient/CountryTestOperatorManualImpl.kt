@@ -29,10 +29,12 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.Page
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 
 class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightObjectOperator) : GenericInsightObjectOperator<Country>{
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     val objectTypeId = InsightObjectType.Country.id
     private val shortName = TestAttributes.CountryShortName.attributeId
     private val name = TestAttributes.CountryName.attributeId
@@ -83,7 +85,7 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
         withChildren: Boolean,
         pageIndex: Int,
         pageSize: Int
-    ): Either<InsightClientError, List<Country>> =
+    ): Either<InsightClientError, Page<Country>> =
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
@@ -91,7 +93,15 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
             pageIndex,
             pageSize,
             ::toDomain
-        ).map { it.objects }
+        ).map { page ->
+            Page(
+                page.objects,
+                page.totalFilterCount,
+                page.totalFilterCount / pageSize,
+                pageIndex,
+                pageSize
+            )
+        }
 
 
 }
