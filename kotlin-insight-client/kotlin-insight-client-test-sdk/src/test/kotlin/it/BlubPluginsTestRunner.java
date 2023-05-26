@@ -20,10 +20,17 @@
 package it;
 
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 
 public class BlubPluginsTestRunner extends AtlassianPluginsTestRunner {
     public BlubPluginsTestRunner(Class<?> klass) throws InitializationError {
         super(klass);
     }
+
+    @Override
+    public void run(RunNotifier notifier) {
+        super.run(notifier);
+    }
+
 }
