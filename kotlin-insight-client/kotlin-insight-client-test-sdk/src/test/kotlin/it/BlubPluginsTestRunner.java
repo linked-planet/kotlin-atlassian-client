@@ -20,16 +20,21 @@
 package it;
 
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner;
+import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 
 public class BlubPluginsTestRunner extends AtlassianPluginsTestRunner {
+    private final RunListener runListener;
+
     public BlubPluginsTestRunner(Class<?> klass) throws InitializationError {
         super(klass);
+        this.runListener = new PrintlnJavaRunListener();
     }
 
     @Override
     public void run(RunNotifier notifier) {
+        notifier.addListener(runListener);
         super.run(notifier);
     }
 
