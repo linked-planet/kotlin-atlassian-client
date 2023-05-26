@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-import com.linkedplanet.kotlininsightclient.PrintlnTestRunner
+import com.linkedplanet.kotlininsightclient.util.PrintlnTestRunner
 import org.junit.runner.notification.RunNotifier
 import org.junit.runners.BlockJUnit4ClassRunner
 

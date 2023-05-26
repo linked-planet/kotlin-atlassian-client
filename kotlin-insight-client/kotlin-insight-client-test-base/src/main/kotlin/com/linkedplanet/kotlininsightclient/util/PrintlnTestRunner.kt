@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient
+package com.linkedplanet.kotlininsightclient.util
 
 import org.junit.runner.Description
 import org.junit.runner.notification.Failure

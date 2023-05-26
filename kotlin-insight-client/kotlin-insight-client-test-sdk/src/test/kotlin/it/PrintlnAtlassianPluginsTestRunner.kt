@@ -20,7 +20,7 @@
 package com.linkedplanet.plugin.jira.it
 
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
-import com.linkedplanet.kotlininsightclient.PrintlnTestRunner
+import com.linkedplanet.kotlininsightclient.util.PrintlnTestRunner
 import org.junit.runner.notification.RunNotifier
 
 class PrintlnAtlassianPluginsTestRunner(klass: Class<*>?) : AtlassianPluginsTestRunner(klass) {
