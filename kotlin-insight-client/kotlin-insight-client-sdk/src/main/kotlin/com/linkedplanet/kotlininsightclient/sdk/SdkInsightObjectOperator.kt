@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient.sdk
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatMap
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import arrow.core.left
 import arrow.core.right
 import arrow.core.rightIfNotNull
@@ -47,6 +47,7 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
+import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredDateTimeFormatterInJira
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
@@ -79,12 +80,13 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
     private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
     private val timezoneManager by lazy { ComponentAccessor.getComponent(TimeZoneManager::class.java) }
+    private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()
 
     override suspend fun <T> getObjectById(
         id: InsightObjectId,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T?> =
-        catchAsInsightClientError { objectFacade.loadObjectBean(id.value) }
+        catchAsInsightClientError { objectFacade.loadObjectBean(id.raw) }
             .flatMap<InsightClientError, ObjectBean?, T?> { it.toNullableInsightObject(toDomain) }
 
     override suspend fun <T> getObjectByKey(
@@ -157,7 +159,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     @Suppress("DEPRECATION")
     override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
-            val objectBean = objectFacade.loadObjectBean(obj.id.value).createMutable()
+            val objectBean = objectFacade.loadObjectBean(obj.id.raw).createMutable()
             setAttributesForObjectBean(obj, objectBean)
             objectBean.objectTypeId = obj.objectTypeId.raw
             objectBean.objectKey = obj.objectKey
@@ -188,9 +190,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     "Could not retrieve the object."
                 )
             }.bind()
-            updateObject(obj, *insightAttributes).bind()
+            val updated = updateObject(obj, *insightAttributes).bind()
+            toDomain(updated).bind()
         }
-            .map { toDomain(it) }
 
     private fun setAttributesForObjectBean(
         obj: InsightObject,
@@ -215,7 +217,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 )
 
                 is ObjectAttributeValue.Reference -> {
-                    val referenceIds = value.referencedObjects.map { it.id.value }.toTypedArray()
+                    val referenceIds = value.referencedObjects.map { it.id.raw }.toTypedArray()
                     objectAttributeBeanFactory.createReferenceAttributeValue(ota) { referenceIds.contains(it.id) }
                 }
                 is ObjectAttributeValue.User -> {
@@ -243,7 +245,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         catchAsInsightClientError {
-            objectFacade.deleteObjectBean(id.value)
+            objectFacade.deleteObjectBean(id.raw)
         }
 
     override suspend fun createObject(
@@ -296,13 +298,14 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 totalFilterSize,
                 objects
                     .map { it.toInsightObject().bind() }
-                    .map { toDomain(it) }
+                    .map { toDomain(it).bind() }
             )
         }
 
-    private suspend fun <T> ObjectBean?.toNullableInsightObject(toDomain: MapToDomain<T>): Either<InsightClientError, T?> {
-        if (this == null) return Either.Right(null)
-        return this.toInsightObject().map { toDomain(it) }
+    private suspend fun <T> ObjectBean?.toNullableInsightObject(toDomain: MapToDomain<T>): Either<InsightClientError, T?> = either {
+        if (this@toNullableInsightObject == null) return@either null
+        val asInsightObject = this@toNullableInsightObject.toInsightObject().bind()
+        toDomain(asInsightObject).bind()
     }
 
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> =
@@ -390,17 +393,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             DefaultType.INTEGER -> ObjectAttributeValue.Integer(values.firstOrNull()?.integerValue)
             DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(values.firstOrNull()?.booleanValue)
             DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(values.firstOrNull()?.doubleValue)
-            DefaultType.DATE -> { // TODO: check if this is correct
+            DefaultType.DATE -> {
                 val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+                val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateToString(Date.from(it.toInstant())) }
+                ObjectAttributeValue.Date(zonedDateTime, displayValue)
             }
-            DefaultType.TIME -> { // TODO: check if this is correct
+            DefaultType.TIME -> {
                 val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+                val displayValue = null // Insights original ObjectAssembler does not handle this case at all.
+                ObjectAttributeValue.Time(zonedDateTime, displayValue)
             }
             DefaultType.DATE_TIME -> {
                 val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.textValue)
+                val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateTimeToString(Date.from(it.toInstant())) }
+                ObjectAttributeValue.DateTime(zonedDateTime, displayValue)
             }
             DefaultType.URL -> ObjectAttributeValue.Url(values.firstOrNull()?.textValue)
             DefaultType.EMAIL -> ObjectAttributeValue.Email(values.firstOrNull()?.textValue)

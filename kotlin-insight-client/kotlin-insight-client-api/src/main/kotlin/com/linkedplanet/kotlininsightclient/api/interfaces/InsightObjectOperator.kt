@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
+import arrow.core.right
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
@@ -27,7 +28,13 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 
-typealias MapToDomain<T> = suspend (InsightObject) -> T
+typealias MapToDomain<DomainType> = suspend (InsightObject) -> Either<InsightClientError, DomainType>
+
+/**
+ * Function that does not change the input object
+ * Pass this as MapToDomain if you want to work directly with InsightObject instead of a specific DomainObject
+ */
+fun <T> identity(obj: T): Either<InsightClientError, T> = obj.right()
 
 /**
  * The InsightObjectOperator interface provides methods to interact with Insight objects.
@@ -82,7 +89,6 @@ interface InsightObjectOperator {
      * @param name The name of the Insight object to retrieve
      * @return Either an [InsightClientError] or the retrieved [InsightObject] object
      */
-    @Deprecated("Use getObjectsByIQL the name of the \"Name\" Attribute could change any time.")
     suspend fun <T> getObjectByName(
         objectTypeId: InsightObjectTypeId,
         name: String,
@@ -91,6 +97,7 @@ interface InsightObjectOperator {
 
     /**
      * Retrieves a list of Insight objects of the specified type name.
+     * WARNING: The Attribute named "Name" could be renamed or removed.
      *
      * @param objectTypeName The name of the Insight object type to retrieve
      * @return Either an [InsightClientError] or a list of [InsightObject] objects

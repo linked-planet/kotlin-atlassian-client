@@ -42,7 +42,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
     override suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>> =
         context.httpClient.executeRestList<InsightAttachment>(
             "GET",
-            "rest/insight/1.0/attachments/object/${objectId.value}",
+            "rest/insight/1.0/attachments/object/${objectId.raw}",
             emptyMap(),
             null,
             "application/json",
@@ -70,7 +70,7 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
         val mimeType = URLConnection.guessContentTypeFromName(filename)
         context.httpClient.executeUpload(
             "POST",
-            "/rest/insight/1.0/attachments/object/${objectId.value}",
+            "/rest/insight/1.0/attachments/object/${objectId.raw}",
             emptyMap(),
             mimeType,
             filename,

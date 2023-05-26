@@ -21,7 +21,8 @@ package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import arrow.core.right
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
@@ -29,6 +30,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.Page
 import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 
@@ -37,6 +39,7 @@ class CompanyTestOperatorManualImpl(
     private val countryTestOperatorManualImpl: CountryTestOperatorManualImpl
     ) : GenericInsightObjectOperator<Company>{
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     private val objectTypeId = InsightObjectType.Company.id
     private val countryRef = TestAttributes.CompanyCountry.attributeId
     private val name = TestAttributes.CompanyName.attributeId
@@ -44,7 +47,7 @@ class CompanyTestOperatorManualImpl(
     private suspend fun toDomain(insightObject: InsightObject) = Company(
         name = insightObject.getStringValue(name)!!,
         country = countryTestOperatorManualImpl.getById(insightObject.getSingleReferenceValue(countryRef)!!.objectId).orNull()!!,
-    )
+    ).right()
 
     override suspend fun create(domainObject: Company): Either<InsightClientError, Company> = either {
         insightObjectOperator.createObject(
@@ -72,7 +75,7 @@ class CompanyTestOperatorManualImpl(
                 countryRef toValue domainObject.name,
                 toDomain = ::identity
             ).bind()
-            toDomain(udpatedObject)
+            toDomain(udpatedObject).bind()
         }
     }
 
@@ -94,7 +97,7 @@ class CompanyTestOperatorManualImpl(
         withChildren: Boolean,
         pageIndex: Int,
         pageSize: Int
-    ): Either<InsightClientError, List<Company>> =
+    ): Either<InsightClientError, Page<Company>> =
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
@@ -102,7 +105,15 @@ class CompanyTestOperatorManualImpl(
             pageIndex,
             pageSize,
             ::toDomain
-        ).map { it.objects }
+        ).map { page ->
+            Page(
+                page.objects,
+                page.totalFilterCount,
+                page.totalFilterCount / pageSize,
+                pageIndex,
+                pageSize
+            )
+        }
 
 
 }

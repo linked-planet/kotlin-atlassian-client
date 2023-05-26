@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
 import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
@@ -154,7 +154,7 @@ interface InsightObjectOperatorTest {
         val simpleObjects = simpleObjectOperator.getByIQL("Name in (Object2, Object3)").orFail()
         val objWithLists = TestWithLists(
             name = "CreatedByIntegrationTest",
-            itemList = simpleObjects,
+            itemList = simpleObjects.items,
             stringList = listOf("A", "B", "C")
         )
 
@@ -271,12 +271,12 @@ interface InsightObjectOperatorTest {
         assertThat(company.objectTypeName, equalTo("Company"))
         assertThat(company.objectTypeId, equalTo(InsightObjectTypeId(1)))
 
-        val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.Date
+        val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.DateTime
 //        assertThat(created.value?.toInstant()?.toString(), equalTo("2022-10-27T09:15:53.212Z"))
         assertThat(created.value?.toInstant()?.toString(), endsWith(":15:53.212Z"))
         assertThat(created.value?.toInstant()?.toString(), startsWith("2022-10-27T"))
         assertThat(created.displayValue, equalTo("27/Oct/22 11:15 AM"))
-        val updated = company.getAttributeByName("Updated")!!.value as ObjectAttributeValue.Date
+        val updated = company.getAttributeByName("Updated")!!.value as ObjectAttributeValue.DateTime
 //        assertThat(updated.value?.toInstant()?.toString(), equalTo("2023-02-21T07:10:25.993Z"))
         assertThat(updated.value?.toInstant()?.toString(), endsWith(":10:25.993Z"))
         assertThat(updated.value?.toInstant()?.toString(), startsWith("2023-02-21T"))
@@ -401,9 +401,9 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orFail()
 
-            assertThat(country1.id.value, greaterThan(0))
+            assertThat(country1.id.raw, greaterThan(0))
             assertThat(country1.getStringValue(CountryKey.attributeId)!!.isNotBlank(), equalTo(true))
-            assertThat(company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectId.value, greaterThan(0))
+            assertThat(company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectId.raw, greaterThan(0))
             assertThat(
                 company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectKey.isNotBlank(),
                 equalTo(true)

@@ -23,7 +23,6 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraUser
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertTrue
 
 class JiraUserTestHelper {
 
@@ -42,9 +41,9 @@ class JiraUserTestHelper {
             assertThat(jiraUser!!.name, equalTo(expectedName))
             assertThat(jiraUser.displayName, equalTo(expectedDisplayName))
             assertThat(jiraUser.emailAddress, equalTo(expectedEmail))
-            assertTrue(jiraUser.key.isNotEmpty())
+            assertThat(jiraUser.key.isNotEmpty(), equalTo(true))
             assertThat(jiraUser.avatarUrl, notNullValue())
-            assertTrue(jiraUser.avatarUrl!!.startsWith("https://www.gravatar.com/avatar"))
+            assertThat(jiraUser.avatarUrl!!.startsWith("https://www.gravatar.com/avatar"), equalTo(true))
         }
     }
 }

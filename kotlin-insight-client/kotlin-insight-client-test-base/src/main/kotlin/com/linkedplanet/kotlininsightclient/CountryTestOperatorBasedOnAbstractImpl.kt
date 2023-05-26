@@ -21,7 +21,7 @@ package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
@@ -34,6 +34,7 @@ class CountryTestOperatorBasedOnAbstractImpl(
     override val insightObjectOperator: InsightObjectOperator
 ) : AbstractInsightObjectOperator<Country>() {
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     override val objectTypeId = InsightObjectType.Country.id
     private val shortName = TestAttributes.CountryShortName.attributeId
     private val name = TestAttributes.CountryName.attributeId

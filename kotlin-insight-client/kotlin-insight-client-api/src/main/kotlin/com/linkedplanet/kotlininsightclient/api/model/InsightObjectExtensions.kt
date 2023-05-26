@@ -26,14 +26,13 @@ import java.time.ZonedDateTime
 fun InsightObject.getAttribute(id: InsightAttributeId): InsightAttribute? =
     this.attributes.singleOrNull { it.attributeId == id }
 
-inline fun <reified T: ObjectAttributeValue> InsightObject.getAttributeAs(id: InsightAttributeId): T? =
-    getAttribute(id)
-    ?.let { it.value as? T }
+inline fun <reified T: ObjectAttributeValue> InsightObject.getAttributeValue(id: InsightAttributeId): T? =
+    getAttribute(id)?.value as? T
 
 fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?.attributeId
 
 fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
-    this.attributes.firstOrNull { it.schema?.name == name } // TODO: I think we should throw here. This means someone creates values and then uses byName, which does not exist at that point
+    this.attributes.firstOrNull { it.schema?.name == name }
 
 fun InsightObject.isReferenceAttribute(id: InsightAttributeId): Boolean =
     getAttribute(id)?.isReference() ?: false
@@ -46,7 +45,7 @@ fun InsightObject.exists(id: InsightAttributeId): Boolean =
 
 // region ObjectAttributeValue.Select
 fun InsightObject.getSelectValues(id: InsightAttributeId): List<String> =
-    getAttributeAs<ObjectAttributeValue.Select>(id)?.values ?: emptyList()
+    getAttributeValue<ObjectAttributeValue.Select>(id)?.values ?: emptyList()
 
 fun InsightObject.setSelectValues(attributeId: InsightAttributeId, values: List<String>) {
     this.attributes = attributes
@@ -126,7 +125,7 @@ fun InsightObject.getDateTimeValue(id: InsightAttributeId): ZonedDateTime? =
 
 //region ObjectAttributeValue.User
 fun InsightObject.getUserList(id: InsightAttributeId): List<InsightUser> =
-    getAttributeAs<ObjectAttributeValue.User>(id)?.users ?: emptyList()
+    getAttributeValue<ObjectAttributeValue.User>(id)?.users ?: emptyList()
 // endregion user
 
 
@@ -162,7 +161,7 @@ fun InsightObject.getMultiReferenceValue(id: InsightAttributeId): List<InsightRe
         ?: emptyList()
 
 fun InsightObject.removeReference(attributeId: InsightAttributeId, referencedObjectId: InsightObjectId) {
-    val existingList = getAttributeAs<ObjectAttributeValue.Reference>(attributeId)?.referencedObjects ?: emptyList()
+    val existingList = getAttributeValue<ObjectAttributeValue.Reference>(attributeId)?.referencedObjects ?: emptyList()
     val referenceAttributeList = existingList.filter { it.id != referencedObjectId }
     this.attributes = attributes
         .filter { it.attributeId != attributeId } +
@@ -176,7 +175,7 @@ fun InsightObject.clearReferenceValue(attributeId: InsightAttributeId) {
 }
 
 fun InsightObject.addReference(attributeId: InsightAttributeId, referencedObjectId: InsightObjectId) {
-    val existingList = getAttributeAs<ObjectAttributeValue.Reference>(attributeId)?.referencedObjects ?: emptyList()
+    val existingList = getAttributeValue<ObjectAttributeValue.Reference>(attributeId)?.referencedObjects ?: emptyList()
     val referenceAttributeList = existingList + ReferencedObject(referencedObjectId, "", "", null)
     this.attributes = attributes
         .filter { it.attributeId != attributeId } +

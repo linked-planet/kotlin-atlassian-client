@@ -21,17 +21,20 @@ package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import arrow.core.right
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.Page
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 
 class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightObjectOperator) : GenericInsightObjectOperator<Country>{
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     val objectTypeId = InsightObjectType.Country.id
     private val shortName = TestAttributes.CountryShortName.attributeId
     private val name = TestAttributes.CountryName.attributeId
@@ -39,7 +42,7 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
     private fun toDomain(insightObject: InsightObject) = Country(
         name = insightObject.getStringValue(name)!!,
         shortName = insightObject.getStringValue(shortName)!!,
-    )
+    ).right()
 
     override suspend fun create(domainObject: Country): Either<InsightClientError, Country> {
         return insightObjectOperator.createObject(objectTypeId,
@@ -60,7 +63,7 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
                 shortName toValue domainObject.name,
                 toDomain = ::identity
             ).bind()
-            toDomain(udpatedObject)
+            toDomain(udpatedObject).bind()
         }
     }
 
@@ -82,7 +85,7 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
         withChildren: Boolean,
         pageIndex: Int,
         pageSize: Int
-    ): Either<InsightClientError, List<Country>> =
+    ): Either<InsightClientError, Page<Country>> =
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
@@ -90,7 +93,15 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
             pageIndex,
             pageSize,
             ::toDomain
-        ).map { it.objects }
+        ).map { page ->
+            Page(
+                page.objects,
+                page.totalFilterCount,
+                page.totalFilterCount / pageSize,
+                pageIndex,
+                pageSize
+            )
+        }
 
 
 }

@@ -52,7 +52,7 @@ internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
 
             is ObjectAttributeValue.Select -> attr.values
 
-            is ObjectAttributeValue.Reference -> attr.referencedObjects.map { it.id.value }
+            is ObjectAttributeValue.Reference -> attr.referencedObjects.map { it.id.raw }
             is ObjectAttributeValue.User -> attr.users.map { it.key } //TODO: needs a test
 
             is ObjectAttributeValue.Group -> TODO()

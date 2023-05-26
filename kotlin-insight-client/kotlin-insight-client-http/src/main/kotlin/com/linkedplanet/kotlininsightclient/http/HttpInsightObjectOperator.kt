@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient.http
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import arrow.core.rightIfNotNull
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
@@ -62,7 +62,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     }
 
     override suspend fun <T> getObjectById(id: InsightObjectId, toDomain: MapToDomain<T>): Either<InsightClientError, T?> =
-        getObjectByPlainIQL("objectId=${id.value}", toDomain)
+        getObjectByPlainIQL("objectId=${id.raw}", toDomain)
 
     override suspend fun <T> getObjectByKey(
         key: String,
@@ -70,7 +70,6 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
     ): Either<InsightClientError, T?> =
         getObjectByPlainIQL("Key=\"$key\"", toDomain)
 
-    @Deprecated("use getObjectByIQL instead")
     override suspend fun <T> getObjectByName(
         objectTypeId: InsightObjectTypeId, name: String,
         toDomain: MapToDomain<T>
@@ -131,7 +130,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         val body = GSON.toJson(obj.toEditObjectItem())
         context.httpClient.executeRest<ObjectUpdateApiResponse>(
             "PUT",
-            "rest/insight/1.0/object/${obj.id.value}",
+            "rest/insight/1.0/object/${obj.id.raw}",
             emptyMap(),
             body,
             "application/json",
@@ -160,13 +159,14 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             attributeMap[it.attributeId] = it
         }
         obj.attributes = attributeMap.values.toList()
-        updateObject(obj).bind()
-    }.map{ toDomain(it) }
+        val updatedObject = updateObject(obj).bind()
+        toDomain(updatedObject).bind()
+    }
 
     override suspend fun deleteObject(id: InsightObjectId): Either<InsightClientError, Unit> =
         context.httpClient.executeRestCall(
             "DELETE",
-            "/rest/insight/1.0/object/${id.value}",
+            "/rest/insight/1.0/object/${id.raw}",
             emptyMap(),
             null,
             "application/json"
@@ -217,7 +217,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 this@toValues.totalFilterCount,
                 this@toValues.objectEntries
                     .map { it.toValue().bind() }
-                    .map { mapper(it) }
+                    .map { mapper(it).bind() }
             )
         }
 
@@ -342,17 +342,17 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             DefaultType.INTEGER -> ObjectAttributeValue.Integer(singleValue() as Int?)
             DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(singleValue() as Boolean?)
             DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(singleValue() as Double?)
-            DefaultType.DATE -> { // TODO: test
+            DefaultType.DATE -> {
                 val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
             }
-            DefaultType.TIME -> { // TODO: test
+            DefaultType.TIME -> {
                 val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+                ObjectAttributeValue.Time(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
             }
-            DefaultType.DATE_TIME -> { // TODO: test
+            DefaultType.DATE_TIME -> {
                 val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as String?)
+                ObjectAttributeValue.DateTime(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
             }
             DefaultType.URL -> ObjectAttributeValue.Url(singleValue() as String?)
             DefaultType.EMAIL -> ObjectAttributeValue.Email(singleValue() as String?)
