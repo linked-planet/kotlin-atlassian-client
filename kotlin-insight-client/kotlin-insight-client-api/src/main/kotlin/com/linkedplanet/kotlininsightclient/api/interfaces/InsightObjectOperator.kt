@@ -28,8 +28,12 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 
-typealias MapToDomain<T> = suspend (InsightObject) -> Either<InsightClientError, T>
+typealias MapToDomain<DomainType> = suspend (InsightObject) -> Either<InsightClientError, DomainType>
 
+/**
+ * Function that does not change the input object
+ * Pass this as MapToDomain if you want to work directly with InsightObject instead of a specific DomainObject
+ */
 fun <T> identity(obj: T): Either<InsightClientError, T> = obj.right()
 
 /**
