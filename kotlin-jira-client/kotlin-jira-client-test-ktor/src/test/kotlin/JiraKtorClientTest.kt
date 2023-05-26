@@ -24,7 +24,9 @@ import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.http.*
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraField
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraFieldFactory
+import org.junit.runner.RunWith
 
+@RunWith(PrintlnTestRunner::class)
 class JiraKtorClientTest : JiraClientTest<HttpJiraField>() {
 
     override val issueOperator: JiraIssueOperator<HttpJiraField> get() = HttpJiraIssueOperator(clientContext)
