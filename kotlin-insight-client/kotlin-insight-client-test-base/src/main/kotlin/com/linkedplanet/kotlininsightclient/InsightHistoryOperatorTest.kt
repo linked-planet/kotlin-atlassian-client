@@ -34,8 +34,6 @@ interface InsightHistoryOperatorTest {
 
     @Test
     fun testHistory() {
-        println("### START history_testHistory")
-
         runBlocking {
             val country = insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", ::identity).orNull()!!
             val history = insightHistoryOperator.getHistory(country.id).orNull()!!
@@ -43,7 +41,5 @@ interface InsightHistoryOperatorTest {
             assertThat(history.historyItems.last().actor.key, equalTo("admin"))
             assertThat(history.historyItems.last().created, endsWith("Z"))
         }
-
-        println("### END history_testHistory")
     }
 }

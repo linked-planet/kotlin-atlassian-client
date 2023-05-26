@@ -47,9 +47,7 @@ class InsightApplinkClientTest constructor(
     override val insightHistoryOperator get() = HttpInsightHistoryOperator(clientContext)
 
     init {
-        println("### Starting InsightApplinkClientTest")
-
-        println("### AppLinkUrl: ${applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java).displayUrl}")
+        println("AppLinkUrl: ${applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java).displayUrl}")
         val serviceUser = userAccessor.getUserByName("admin")
         AuthenticatedUserThreadLocal.asUser(serviceUser)
         val appLink = applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java)
@@ -62,7 +60,6 @@ class InsightApplinkClientTest constructor(
         GenericInsightObjectOperatorImpl.insightObjectOperator = insightObjectOperator
         GenericInsightObjectOperatorImpl.insightObjectTypeOperator = insightObjectTypeOperator
         GenericInsightObjectOperatorImpl.insightSchemaOperator = insightSchemaOperator
-        println("### Starting InsightApplinkClientTest")
     }
 
     @Before

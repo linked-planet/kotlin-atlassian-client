@@ -30,30 +30,20 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
 
     @Test
     fun issueTypes_01GetIssueTypes() {
-        println("### START issueTypes_01GetIssueTypes")
-
         val issueTypeNames = listOf("Bug", "Epic", "Story", "Sub-task", "Task")
         val issueTypes = runBlocking { issueTypeOperator.getIssueTypes(projectId) }.rightAssertedJiraClientError()
         assertThat(issueTypes.map { it.name }.toSet(), equalTo(issueTypeNames.toSet()))
-
-        println("### END issueTypes_01GetIssueTypes")
     }
 
     @Test
     fun issueTypes_02GetIssueType() {
-        println("### START issueTypes_02GetIssueType")
-
         val issueType = runBlocking { issueTypeOperator.getIssueType(issueTypeId) }.rightAssertedJiraClientError()
         assertThat(issueType.id, equalTo(issueTypeId.toString()))
         assertThat(issueType.name, equalTo("Story"))
-
-        println("### START issueTypes_02GetIssueType")
     }
 
     @Test
     fun issueTypes_03GetAttributesOfIssueType() {
-        println("### START issueTypes_03GetAttributesOfIssueType")
-
         val attributes =
             runBlocking {
                 issueTypeOperator.getAttributesOfIssueType(
@@ -72,7 +62,5 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         expectedAttributes.forEach {
             assertThat("Attributes does not contain: $it", attributeNames.contains(it), equalTo(true))
         }
-
-        println("### START issueTypes_03GetAttributesOfIssueType")
     }
 }

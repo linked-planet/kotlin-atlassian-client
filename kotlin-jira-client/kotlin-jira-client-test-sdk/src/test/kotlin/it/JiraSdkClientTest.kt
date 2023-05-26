@@ -20,7 +20,6 @@
 package it
 
 import com.atlassian.jira.component.ComponentAccessor
-import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlinjiraclient.JiraClientTest
 import com.linkedplanet.kotlinjiraclient.api.field.JiraFieldFactory
 import com.linkedplanet.kotlinjiraclient.api.interfaces.*
@@ -54,7 +53,6 @@ class JiraSdkClientTest : JiraClientTest<SdkJiraField>() {
 
     @Before
     fun initTest() {
-        println("### JiraSdkClientTest.initTest")
         val admin = userManager.getUserByName("admin")
         jiraAuthenticationContext.loggedInUser = admin
     }

@@ -32,8 +32,6 @@ interface InsightObjectTypeOperatorTest {
 
     @Test
     fun testGetObjectType() {
-        println("### START testGetObjectType")
-
         val objectType = runBlocking {
             insightObjectTypeOperator.getObjectType(InsightObjectType.Company.id).orFail()
         }
@@ -54,7 +52,5 @@ interface InsightObjectTypeOperatorTest {
         assertThat(countryAttribute?.referenceObjectTypeId, equalTo(InsightObjectType.Country.id))
         assertThat(countryAttribute?.minimumCardinality, equalTo(0))
         assertThat(countryAttribute?.maximumCardinality, equalTo(1))
-
-        println("### END testGetObjectType")
     }
 }

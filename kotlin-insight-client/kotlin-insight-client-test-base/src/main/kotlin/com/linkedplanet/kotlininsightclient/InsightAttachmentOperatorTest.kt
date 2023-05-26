@@ -42,8 +42,7 @@ interface InsightAttachmentOperatorTest {
 
     @Test
     fun attachmentTestGetAttachments() = runBlocking {
-        println("### START attachment_testGetAndDownloadAttachments")
-        println("### TimeZone.getDefault().displayName=${TimeZone.getDefault().displayName}")
+        println("TimeZone.getDefault().displayName=${TimeZone.getDefault().displayName}")
 
         val country = insightObjectOperator.getObjectByName(Country.id, "Germany", ::identity).orFail()!!
         val attachments = insightAttachmentOperator.getAttachments(country.id).orFail()
@@ -61,7 +60,6 @@ interface InsightAttachmentOperatorTest {
         val downloadContent = insightAttachmentOperator.downloadAttachment(attachments.first().url).orNull()!!
         val sha256HashIS = calculateSha256(downloadContent.readBytes())
         assertThat(sha256HashIS, equalTo("fd411837a51c43670e8d7367e64f72dbbcda5016f59988547c12d067505ef75b"))
-        println("### END attachment_testGetAndDownloadAttachments")
     }
 
     private fun calculateSha256(bytes: ByteArray): String =
@@ -69,7 +67,6 @@ interface InsightAttachmentOperatorTest {
 
     @Test
     fun attachmentTestAttachmentCRUD() = runBlocking {
-        println("### START attachment_testDownloadAttachment")
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
         try {
             val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
@@ -95,23 +92,17 @@ interface InsightAttachmentOperatorTest {
         } finally {
             insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
         }
-        println("### END attachment_testDownloadAttachment")
     }
 
 
     @Test
     fun attachmentTestGetAttachmentsForNotExistingObject() = runBlocking {
-        println("### Integration Test Start: testGetAttachmentsForNotExistingObject")
-
         val responseError = insightAttachmentOperator.getAttachments(InsightObjectId.notPersistedObjectId).asError()
         assertThat(responseError.message, containsString("-1"))
-
-        println("### Integration Test End: testGetAttachmentsForNotExistingObject")
     }
 
     @Test
     fun attachmentTestDownloadNonExistingAttachment() = runBlocking {
-        println("### Integration Test Start: testDownloadNonExistingAttachment")
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "NoAttachment")
 
         val disclaimer = "'NoAttachment' created by Test and should only exist during test run."
@@ -126,12 +117,10 @@ interface InsightAttachmentOperatorTest {
         assertThat(emptyList, equalTo(emptyList()))
 
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "NoAttachment")
-        println("### Integration Test End: testDownloadNonExistingAttachment")
     }
 
     @Test
     fun attachmentTestDownloadZip() = runBlocking {
-        println("### Integration Test Start: testDownloadZip")
         insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
         try {
             val disclaimer = "'Zipistan' created by Test and should only exist during test run."
@@ -168,17 +157,12 @@ interface InsightAttachmentOperatorTest {
         } finally {
             insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Zipistan")
         }
-        println("### Integration Test End: testDownloadZip")
     }
 
     @Test
     fun attachmentTestDownloadZipForNotExistingObject() = runBlocking {
-        println("### Integration Test Start: testDownloadZipForNotExistingObject")
-
         val responseError = insightAttachmentOperator.downloadAttachmentZip(InsightObjectId.notPersistedObjectId).asError()
         assertThat(responseError.message, containsString("-1"))
-
-        println("### Integration Test End: testDownloadZipForNotExistingObject")
     }
 
 }

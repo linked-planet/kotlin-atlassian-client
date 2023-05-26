@@ -23,7 +23,6 @@ import com.atlassian.applinks.api.ApplicationLinkService
 import com.atlassian.applinks.api.application.jira.JiraApplicationType
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal
 import com.atlassian.confluence.user.UserAccessor
-import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlinhttpclient.atlas.AtlasHttpClient
 import com.linkedplanet.kotlinjiraclient.JiraClientTest
 import com.linkedplanet.kotlinjiraclient.api.field.JiraFieldFactory
@@ -59,16 +58,13 @@ class JiraApplinkClientTest constructor(
     override val projectKey: String get() = "TEST"
 
     init {
-        println("### Starting JiraApplinkClientTest")
         val primaryApplicationLink = applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java)
 
-        println("### AppLinkUrl: ${primaryApplicationLink.displayUrl}")
         val serviceUser = userAccessor.getUserByName("admin")
         AuthenticatedUserThreadLocal.asUser(serviceUser)
 
         val httpClient = AtlasHttpClient(primaryApplicationLink)
         clientContext = HttpJiraClientContext(primaryApplicationLink.rpcUrl.toString(), httpClient)
-        println("### Finishing JiraApplinkClientTest")
     }
 
     @Before

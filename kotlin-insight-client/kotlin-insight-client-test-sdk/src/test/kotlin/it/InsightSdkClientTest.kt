@@ -50,7 +50,6 @@ class InsightSdkClientTest : InsightClientTest() {
         GenericInsightObjectOperatorImpl.insightObjectTypeOperator = insightObjectTypeOperator
         GenericInsightObjectOperatorImpl.insightSchemaOperator = insightSchemaOperator
 
-        println("### InsightSdkClientTest.initTest")
         val admin = userManager.getUserByName("admin")
         jiraAuthenticationContext.loggedInUser = admin
     }
