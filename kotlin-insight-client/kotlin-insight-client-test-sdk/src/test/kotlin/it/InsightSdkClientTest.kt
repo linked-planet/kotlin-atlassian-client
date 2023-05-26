@@ -20,7 +20,6 @@
 package it
 
 import com.atlassian.jira.component.ComponentAccessor
-import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlininsightclient.InsightClientTest
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.*
@@ -29,10 +28,11 @@ import com.linkedplanet.kotlininsightclient.sdk.SdkInsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightSchemaOperator
+import com.linkedplanet.plugin.jira.it.PrintlnAtlassianPluginsTestRunner
 import org.junit.Before
 import org.junit.runner.RunWith
 
-@RunWith(AtlassianPluginsTestRunner::class)
+@RunWith(PrintlnAtlassianPluginsTestRunner::class)
 class InsightSdkClientTest : InsightClientTest() {
 
     private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }

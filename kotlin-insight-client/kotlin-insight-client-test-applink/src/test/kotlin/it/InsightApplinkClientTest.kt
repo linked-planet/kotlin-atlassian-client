@@ -23,16 +23,16 @@ import com.atlassian.applinks.api.ApplicationLinkService
 import com.atlassian.applinks.api.application.jira.JiraApplicationType
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal
 import com.atlassian.confluence.user.UserAccessor
-import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlinhttpclient.atlas.AtlasHttpClient
 import com.linkedplanet.kotlininsightclient.InsightClientTest
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.*
 import com.linkedplanet.kotlininsightclient.http.*
+import com.linkedplanet.plugin.confluence.insightclient.test.it.PrintlnAtlassianPluginsTestRunner
 import org.junit.Before
 import org.junit.runner.RunWith
 
-@RunWith(AtlassianPluginsTestRunner::class)
+@RunWith(PrintlnAtlassianPluginsTestRunner::class)
 class InsightApplinkClientTest constructor(
     private var userAccessor: UserAccessor,
     applicationLinkService: ApplicationLinkService

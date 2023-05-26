@@ -21,8 +21,9 @@ import com.linkedplanet.kotlinhttpclient.ktor.KtorHttpClient
 import com.linkedplanet.kotlininsightclient.InsightClientTest
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.http.*
+import org.junit.runner.RunWith
 
-
+@RunWith(PrintlnTestRunner::class)
 class InsightKtorClientTest : InsightClientTest() {
 
     override val insightObjectOperator get() = HttpInsightObjectOperator(clientContext)
