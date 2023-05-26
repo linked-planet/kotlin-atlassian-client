@@ -88,7 +88,7 @@ data class InsightReference(
  */
 data class InsightAttribute(
     val attributeId: InsightAttributeId,
-    var value: ObjectAttributeValue,
+    val value: ObjectAttributeValue,
     val schema: ObjectTypeSchemaAttribute?
 ) {
     fun isValueAttribute(): Boolean = when(value){
