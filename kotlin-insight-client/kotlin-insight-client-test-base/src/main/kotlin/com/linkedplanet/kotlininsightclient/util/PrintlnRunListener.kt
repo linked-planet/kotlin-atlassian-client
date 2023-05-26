@@ -17,13 +17,13 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlinjiraclient.util
+package com.linkedplanet.kotlininsightclient.util
 
 import org.junit.runner.Description
 import org.junit.runner.notification.Failure
 import org.junit.runner.notification.RunListener
 
-class PrintlnTestRunner : RunListener() {
+class PrintlnRunListener : RunListener() {
 
     override fun testStarted(description: Description) {
         println("Test Started: ${description.displayName}")

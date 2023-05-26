@@ -28,7 +28,6 @@ import com.linkedplanet.kotlininsightclient.sdk.SdkInsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightSchemaOperator
-import com.linkedplanet.plugin.jira.it.PrintlnAtlassianPluginsTestRunner
 import org.junit.Before
 import org.junit.runner.RunWith
 

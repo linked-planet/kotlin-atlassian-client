@@ -17,17 +17,17 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.plugin.confluence.insightclient.test.it
+package it
 
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
-import com.linkedplanet.kotlininsightclient.util.PrintlnTestRunner
+import com.linkedplanet.kotlininsightclient.util.PrintlnRunListener
 import org.junit.runner.notification.RunNotifier
 
 class PrintlnAtlassianPluginsTestRunner(klass: Class<*>?) : AtlassianPluginsTestRunner(klass) {
 
     @Override
     override fun run(notifier: RunNotifier?) {
-        notifier?.addListener(PrintlnTestRunner())
+        notifier?.addListener(PrintlnRunListener())
 
         super.run(notifier)
     }

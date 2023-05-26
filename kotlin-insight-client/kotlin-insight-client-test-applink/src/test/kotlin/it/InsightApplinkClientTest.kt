@@ -28,7 +28,6 @@ import com.linkedplanet.kotlininsightclient.InsightClientTest
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.*
 import com.linkedplanet.kotlininsightclient.http.*
-import com.linkedplanet.plugin.confluence.insightclient.test.it.PrintlnAtlassianPluginsTestRunner
 import org.junit.Before
 import org.junit.runner.RunWith
 

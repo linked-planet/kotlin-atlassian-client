@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-import com.linkedplanet.kotlininsightclient.util.PrintlnTestRunner
+import com.linkedplanet.kotlininsightclient.util.PrintlnRunListener
 import org.junit.runner.notification.RunNotifier
 import org.junit.runners.BlockJUnit4ClassRunner
 
@@ -25,7 +25,7 @@ class PrintlnTestRunner(klass: Class<*>?) : BlockJUnit4ClassRunner(klass) {
 
     @Override
     override fun run(notifier: RunNotifier?) {
-        notifier?.addListener(PrintlnTestRunner())
+        notifier?.addListener(PrintlnRunListener())
 
         super.run(notifier)
     }

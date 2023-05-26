@@ -30,7 +30,6 @@ import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.http.*
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraField
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraFieldFactory
-import com.linkedplanet.plugin.confluence.jiraclient.test.it.PrintlnAtlassianPluginsTestRunner
 import org.junit.Before
 import org.junit.runner.RunWith
 

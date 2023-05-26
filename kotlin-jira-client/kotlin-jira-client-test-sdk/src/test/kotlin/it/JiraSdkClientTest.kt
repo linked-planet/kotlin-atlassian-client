@@ -26,7 +26,6 @@ import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.sdk.*
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraField
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraFieldFactory
-import com.linkedplanet.plugin.jira.it.PrintlnAtlassianPluginsTestRunner
 import org.junit.Before
 import org.junit.runner.RunWith
 
