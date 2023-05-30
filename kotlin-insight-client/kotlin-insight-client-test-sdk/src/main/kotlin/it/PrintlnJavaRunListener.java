@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.plugin.jira.insightclient.test.impl;
+package it;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;
