@@ -118,25 +118,42 @@ data class InsightAttribute(
     fun isReference() : Boolean = value is ObjectAttributeValue.Reference
 
     companion object {
-        infix fun InsightAttributeId.toValue(text: String) = InsightAttribute(
-            this,
+        infix fun InsightAttributeId.toValue(text: String) = InsightAttribute(this,
             value = ObjectAttributeValue.Text(text),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toValue(value: Int) = InsightAttribute(
-            this,
+        infix fun InsightAttributeId.toValue(value: Int) = InsightAttribute(this,
             value = ObjectAttributeValue.Integer(value),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toValue(referencedObjectId: InsightObjectId?) = InsightAttribute(
-            this,
+        infix fun InsightAttributeId.toValue(value: Boolean) = InsightAttribute(this,
+            value = ObjectAttributeValue.Bool(value),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: Double) = InsightAttribute(this,
+            value = ObjectAttributeValue.DoubleNumber(value),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: ZonedDateTime) = InsightAttribute(this,
+            value = ObjectAttributeValue.DateTime(value, ""),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: List<String>) = InsightAttribute(this,
+            value = ObjectAttributeValue.Select(value),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) = InsightAttribute(this,
             value = ObjectAttributeValue.Reference(listOfNotNull(referencedObjectId?.let {
                 ReferencedObject(it, "", "", null)
             })),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) = toValue(referencedObjectId)
-
+        infix fun InsightAttributeId.toReferences(referencedObjectIds: List<InsightObjectId>) = InsightAttribute(this,
+            value = ObjectAttributeValue.Reference(referencedObjectIds.map {referencedObjectId ->
+                    ReferencedObject(referencedObjectId, "", "", null)
+            }),
+            schema = null, // null during creation
+        )
     }
 
 }

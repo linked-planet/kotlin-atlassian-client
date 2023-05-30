@@ -21,27 +21,24 @@ package com.linkedplanet.kotlininsightclient.api.experimental
 
 import arrow.core.Either
 import arrow.core.computations.either
-import com.linkedplanet.kotlininsightclient.api.interfaces.identity
+import arrow.core.right
+import arrow.core.sequenceEither
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.invalidArgumentError
-import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
+import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReferences
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
-import com.linkedplanet.kotlininsightclient.api.model.Page
-import com.linkedplanet.kotlininsightclient.api.model.addReference
-import com.linkedplanet.kotlininsightclient.api.model.clearReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttribute
-import com.linkedplanet.kotlininsightclient.api.model.setSingleReference
-import com.linkedplanet.kotlininsightclient.api.model.setValue
-import com.linkedplanet.kotlininsightclient.api.model.setSelectValues
 import jdk.jfr.Experimental
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
@@ -69,12 +66,54 @@ class NameMappedRepository<DomainType : Any>(
     private val insightObjectForDomainObject: suspend (objectTypeId: InsightObjectTypeId, domainObject: DomainType) -> Either<InsightClientError, InsightObject?>,
     private val referenceAttributeToValue: suspend (attribute: InsightAttribute) -> Any? = { null },
     private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<InsightObjectId> = { _, _ -> emptyList() },
-) : InsightObjectRepository<DomainType> {
+) : AbstractInsightObjectRepository<DomainType>() {
     override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
-    var objectTypeSchema: ObjectTypeSchema // this is public, so clients could use it to add missing functionality
+    override val insightObjectOperator: InsightObjectOperator = NameMappedRepository.insightObjectOperator
+    override val objectTypeId: InsightObjectTypeId get() = objectTypeSchema.id
+    @Suppress("MemberVisibilityCanBePrivate") // this is public, so clients could use it to add missing functionality
+    var objectTypeSchema: ObjectTypeSchema
 
     private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
     private var attrsMap: Map<String, ObjectTypeSchemaAttribute>
+
+    override suspend fun loadExistingInsightObject(domainObject: DomainType): Either<InsightClientError, InsightObject?> =
+        insightObjectForDomainObject(objectTypeId, domainObject)
+
+    override suspend fun toDomain(insightObject: InsightObject): Either<InsightClientError, DomainType> =
+        domainObjectByInsightObject(insightObject)
+
+    override suspend fun attributesFromDomain(domainObject: DomainType): Either<InsightClientError, List<InsightAttribute>> {
+        val attrs: List<Either<InsightClientError, InsightAttribute>> = props.map { prop ->
+            val attributeType: ObjectTypeSchemaAttribute = attrsMap[prop.name.lowercase()]!!
+            val value = prop.get(domainObject)
+            when {
+                attributeType.isValueAttribute() -> mapValueAttribute(value, attributeType)
+
+                attributeType is ObjectTypeSchemaAttribute.Reference -> {
+                    val referencedObjectIds = attributeToReferencedObjectId(attributeType, value)
+                    (attributeType.id toReferences referencedObjectIds).right()
+                }
+
+                else -> invalidArgumentError("Attribute.type ${attributeType.name} is not supported")
+            }
+        }
+        return attrs.sequenceEither()
+    }
+
+    private fun mapValueAttribute(
+        value: Any?,
+        attributeType: ObjectTypeSchemaAttribute
+    ): Either<InsightClientError, InsightAttribute> =
+        when (value) {
+            is String -> (attributeType.id toValue value).right()
+            is Int -> (attributeType.id toValue value).right()
+            is Boolean -> (attributeType.id toValue value).right()
+            is Double -> (attributeType.id toValue value).right()
+            is Float -> (attributeType.id toValue value.toDouble()).right()
+            is ZonedDateTime -> (attributeType.id toValue value).right()
+            is List<Any?> -> (attributeType.id toValue ((value as? List<*>)?.map(Any?::toString)?: emptyList())).right()
+            else -> invalidArgumentError("Attribute.type ${attributeType.name} is not supported")
+        }
 
     companion object {
         // maybe we can use injection to gain access to the other operators
@@ -91,78 +130,6 @@ class NameMappedRepository<DomainType : Any>(
         }
     }
 
-    override suspend fun delete(domainObject: DomainType): Either<InsightClientError, Unit> = either {
-        val insightObject = insightObjectForDomainObject(objectTypeSchema.id, domainObject).bind() ?: return@either
-        insightObjectOperator.deleteObject(insightObject.id).bind()
-    }
-
-    override suspend fun create(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
-        val insightObject = createEmptyObject(objectTypeSchema.id)
-        setAttributesFromDomainObject(insightObject, domainObject)
-        val createdObject = insightObjectOperator.createObject(
-            objectTypeSchema.id,
-            *insightObject.attributes.toTypedArray(),
-            toDomain = ::identity
-        ).bind()
-        domainObjectByInsightObject(createdObject).bind()
-    }
-
-    private fun createEmptyObject(objectTypeId: InsightObjectTypeId): InsightObject {
-        return InsightObject(
-            objectTypeId,
-            InsightObjectId.notPersistedObjectId,
-            "",
-            "",
-            "",
-            emptyList(),
-            false,
-            ""
-        )
-    }
-
-    override suspend fun update(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
-        val insightObject = insightObjectForDomainObject(objectTypeSchema.id, domainObject).bind()!!
-        setAttributesFromDomainObject(insightObject, domainObject)
-        insightObjectOperator.updateObject(insightObject).bind()
-        domainObjectByInsightObject(insightObject).bind()
-    }
-
-    private suspend fun setAttributesFromDomainObject(insightObject: InsightObject, domainObject: DomainType) {
-        props.forEach { prop ->
-            val attributeType: ObjectTypeSchemaAttribute = attrsMap[prop.name.lowercase()]!!
-            val value = prop.get(domainObject)
-            when  {
-                attributeType.isValueAttribute() -> {
-                    when (value) {
-                        is String -> insightObject.setValue(attributeType.id, value)
-                        is Int -> insightObject.setValue(attributeType.id, value)
-                        is Boolean -> insightObject.setValue(attributeType.id, value)
-                        is Double -> insightObject.setValue(attributeType.id, value)
-                        is Float -> insightObject.setValue(attributeType.id, value.toDouble())
-                        is ZonedDateTime -> insightObject.setValue(attributeType.id, value, value.toString())
-                        is List<Any?> -> insightObject.setSelectValues(attributeType.id,
-                            (value as? List<*>)?.map(Any?::toString) ?: emptyList())
-                        else -> TODO()
-                    }
-                }
-                attributeType is ObjectTypeSchemaAttribute.Reference -> {
-                    val referencedObjectIds = attributeToReferencedObjectId(attributeType, value)
-                    insightObject.clearReferenceValue(attributeType.id)
-                    if (value is List<Any?>) {
-                        referencedObjectIds.forEach {
-                            insightObject.addReference(attributeType.id, it)
-                        }
-                    } else {
-                        if (referencedObjectIds.isNotEmpty()) {
-                            insightObject.setSingleReference(attributeType.id, referencedObjectIds.first())
-                        }
-                    }
-                }
-                else -> invalidArgumentError<DomainType>("Attribute.type ${attributeType.name} is not supported")
-            }
-        }
-    }
-
     private suspend fun objectTypeSchemaFromKClass(): Either<InsightClientError, ObjectTypeSchema> =
         either {
             val klassName = klass.simpleName
@@ -172,38 +139,6 @@ class NameMappedRepository<DomainType : Any>(
             val objectTypeSchema: ObjectTypeSchema = objectTypeSchemas.first { it.name == klassName }
             objectTypeSchema
         }
-
-    override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> = either {
-        val insightObject = insightObjectOperator.getObjectByName(objectTypeSchema.id, name, ::identity).bind()
-            ?: return@either null
-        domainObjectByInsightObject(insightObject).bind()
-    }
-
-    override suspend fun getByIQL(
-        iql: String,
-        withChildren: Boolean,
-        pageIndex: Int,
-        pageSize: Int
-    ): Either<InsightClientError, Page<DomainType>> = either {
-        val page = insightObjectOperator.getObjectsByIQL(
-            objectTypeSchema.id, iql, withChildren, pageIndex, pageSize, ::identity).bind()
-        val domainObjects = page.objects.map { domainObjectByInsightObject(it).bind() }
-        @Suppress("MemberVisibilityCanBePrivate")
-        Page(
-            domainObjects,
-            page.totalFilterCount,
-            page.totalFilterCount / pageSize,
-            pageIndex,
-            pageSize
-        )
-    }
-
-
-    override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
-        val insightObject = insightObjectOperator.getObjectById(objectId, ::identity).bind()
-            ?: return@either null
-        domainObjectByInsightObject(insightObject).bind()
-    }
 
     private suspend fun domainObjectByInsightObject(
         insightObject: InsightObject,
