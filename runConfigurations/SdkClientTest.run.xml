@@ -3,7 +3,7 @@
     <module name="kotlin-jira-client-test-sdk" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="it.*" />
+        <option name="PATTERN" value="com.atlassian.plugins.osgi.test.BlubPluginsTestRunner" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

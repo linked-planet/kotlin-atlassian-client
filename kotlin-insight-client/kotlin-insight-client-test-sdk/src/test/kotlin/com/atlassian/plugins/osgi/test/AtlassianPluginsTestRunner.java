@@ -17,8 +17,10 @@
  * limitations under the License.
  * #L%
  */
-package it;
+package com.atlassian.plugins.osgi.test;
 
+import com.atlassian.plugins.osgi.test.rest.GsonFactory;
+import com.atlassian.plugins.osgi.test.rest.TestResultDetailRepresentation;
 import com.google.gson.Gson;
 import org.apache.wink.client.ClientConfig;
 import org.apache.wink.client.ClientResponse;
@@ -43,7 +45,7 @@ import java.util.Map;
 /**
  * @since version
  */
-public class MyAtlassianPluginsTestRunner extends BlockJUnit4ClassRunner
+public class AtlassianPluginsTestRunner extends BlockJUnit4ClassRunner
 {
     // Visible for testing
     static final String BASE_URL = "baseurl";
@@ -68,10 +70,10 @@ public class MyAtlassianPluginsTestRunner extends BlockJUnit4ClassRunner
     /**
      * Creates a BlockJUnit4ClassRunner to run {@code klass}
      *
-     * @throws org.junit.runners.model.InitializationError
+     * @throws InitializationError
      *          if the test class is malformed.
      */
-    public MyAtlassianPluginsTestRunner(Class<?> klass) throws InitializationError
+    public AtlassianPluginsTestRunner(Class<?> klass) throws InitializationError
     {
         super(klass);
     }
@@ -80,17 +82,18 @@ public class MyAtlassianPluginsTestRunner extends BlockJUnit4ClassRunner
     public void run(final RunNotifier notifier)
     {
         notifier.addListener(new PrintlnJavaRunListener());
+        
         EachTestNotifier testNotifier = new EachTestNotifier(notifier, getDescription());
         try
         {
             String[] packageParts = getTestClass().getJavaClass().getPackage().getName().split("\\.");
-
+            
             if(null == packageParts || packageParts.length < 1 || !packageParts[0].equals("it"))
             {
                 throw new Exception("the class [" + getTestClass().getJavaClass().getName() + "] is annotated with @RunWith(AtlassianPluginsTestRunner.class) but it is not in the 'it.' package." +
-                        "\nPlease move the class into the 'it.' package or remove the @RunWith annotation");
+                        "\nPlease move the class into the 'it.' package or remove the @RunWith annotation");    
             }
-
+            
             runViaRestCall(getDescription(), notifier);
         }
         catch (AssumptionViolatedException e)
@@ -119,7 +122,7 @@ public class MyAtlassianPluginsTestRunner extends BlockJUnit4ClassRunner
         Resource resource = client.resource(resourceUrl);
 
         ClientResponse clientResponse = resource.accept(MediaType.APPLICATION_JSON).get();
-
+        
         if(clientResponse.getStatusCode() >= 300)
         {
             throw new IllegalStateException("Could not find resource for test [" + resourceUrl + "]. Status: " + clientResponse.getStatusCode() + " - " + clientResponse.getMessage());
@@ -127,19 +130,19 @@ public class MyAtlassianPluginsTestRunner extends BlockJUnit4ClassRunner
 
         String response = clientResponse.getEntity(String.class);
 
-        Gson gson = MyGsonFactory.getGson();
+        Gson gson = GsonFactory.getGson();
 
-        MyTestResultDetailRepresentation osgiResult = gson.fromJson(response, MyTestResultDetailRepresentation.class);
-
+        TestResultDetailRepresentation osgiResult = gson.fromJson(response, TestResultDetailRepresentation.class);
+        
         int totalCount = osgiResult.getFailedMethods().size() + osgiResult.getIgnoredMethods().size() + osgiResult.getPassedMethods().size();
-
+        
         if(totalCount < 1)
         {
             Description desc = Description.createSuiteDescription("No tests found in class [" + description.getClassName() + "]", new Annotation[0]);
             Failure classNotFoundFail = new Failure(desc, new Exception("No tests found in class [" + description.getClassName() + "]"));
             notifier.fireTestFailure(classNotFoundFail);
         }
-
+        
         for(String pMethodName : osgiResult.getPassedMethods())
         {
             EachTestNotifier testNotifier = new EachTestNotifier(notifier, Description.createTestDescription(getTestClass().getJavaClass(),pMethodName));

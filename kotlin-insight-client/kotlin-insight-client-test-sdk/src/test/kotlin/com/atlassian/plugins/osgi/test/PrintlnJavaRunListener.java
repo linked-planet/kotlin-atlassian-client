@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package it;
+package com.atlassian.plugins.osgi.test;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;

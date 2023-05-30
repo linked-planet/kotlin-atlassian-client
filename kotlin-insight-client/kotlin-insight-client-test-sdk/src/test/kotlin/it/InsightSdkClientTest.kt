@@ -20,6 +20,7 @@
 package it
 
 import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlininsightclient.InsightClientTest
 import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.*
@@ -32,7 +33,8 @@ import org.junit.Before
 import org.junit.runner.JUnitCore
 import org.junit.runner.RunWith
 
-@RunWith(MyAtlassianPluginsTestRunner::class)
+
+@RunWith(AtlassianPluginsTestRunner::class)
 class InsightSdkClientTest : InsightClientTest() {
 
     private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
@@ -55,5 +57,12 @@ class InsightSdkClientTest : InsightClientTest() {
         jiraAuthenticationContext.loggedInUser = admin
 
         JUnitCore()
+    }
+
+    fun main(args: Array<String>) {
+        val thirdPartyTestRunner = AtlassianPluginsTestRunner(InsightSdkClientTest::class.java)
+
+        val core = JUnitCore()
+        core.run(thirdPartyTestRunner)
     }
 }
