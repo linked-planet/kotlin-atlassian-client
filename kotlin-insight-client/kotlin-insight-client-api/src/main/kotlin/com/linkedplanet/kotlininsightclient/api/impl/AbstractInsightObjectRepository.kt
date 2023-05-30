@@ -23,7 +23,7 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.rightIfNotNull
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
@@ -31,7 +31,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.Page
 
-abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectOperator<DomainType> {
+abstract class AbstractInsightObjectRepository<DomainType> : InsightObjectRepository<DomainType> {
 
     abstract val insightObjectOperator: InsightObjectOperator
     abstract val objectTypeId: InsightObjectTypeId

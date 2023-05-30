@@ -27,11 +27,14 @@ import com.linkedplanet.kotlininsightclient.api.model.Page
 /**
  * Generic Interface to CRUD one type of domain object, like a customer, to Insight.
  *
+ * The Repository pattern is a Domain-Driven Design pattern intended to
+ * keep persistence concerns outside of the system's domain model.
+ *
  * The idea is that the DomainObject itself is completely unaware of insight,
  * but it is also possible to use a DomainObject that stores the InsightObjectId,
  * which has some performance benefits, but leaks the insight ID into the domain.
  */
-interface GenericInsightObjectOperator<DomainType> {
+interface InsightObjectRepository<DomainType> {
 
     /**
      * The number of results to be returned per page when requesting a paginated list of Insight objects.

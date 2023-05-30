@@ -23,49 +23,38 @@ import arrow.core.Either
 import arrow.core.computations.either
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReference
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 
-class CompanyTestOperatorBasedOnAbstractImpl(
-    override val insightObjectOperator: InsightObjectOperator,
-    private val countryOperator: CountryTestOperatorBasedOnAbstractImpl
-) : AbstractInsightObjectOperator<Company>() {
+class CountryTestRepositoryBasedOnAbstractImpl(
+    override val insightObjectOperator: InsightObjectOperator
+) : AbstractInsightObjectRepository<Country>() {
 
     override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
-    override val objectTypeId = InsightObjectType.Company.id
-    private val countryRef = TestAttributes.CompanyCountry.attributeId
-    private val name = TestAttributes.CompanyName.attributeId
+    override val objectTypeId = InsightObjectType.Country.id
+    private val shortName = TestAttributes.CountryShortName.attributeId
+    private val name = TestAttributes.CountryName.attributeId
 
-    override suspend fun loadExistingInsightObject(domainObject: Company): Either<InsightClientError, InsightObject?> {
+    override suspend fun loadExistingInsightObject(domainObject: Country): Either<InsightClientError, InsightObject?> {
         return insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
     }
 
-    override suspend fun toDomain(insightObject: InsightObject): Either<InsightClientError, Company> = either {
-        Company(
+    override suspend fun toDomain(insightObject: InsightObject): Either<InsightClientError, Country> = either {
+        Country(
             name = insightObject.getStringValue(name)!!,
-            country = insightObject.getSingleReferenceValue(countryRef)?.objectId?.let {
-                countryOperator.getById(it).bind()
-            },
+            shortName = insightObject.getStringValue(shortName)!!,
         )
     }
 
-    override suspend fun attributesFromDomain(domainObject: Company): Either<InsightClientError, List<InsightAttribute>> =
+    override suspend fun attributesFromDomain(domainObject: Country): Either<InsightClientError, List<InsightAttribute>> =
         either {
             listOf(
                 name toValue domainObject.name,
-                countryRef toReference domainObject.country?.name?.let { countryName ->
-                    insightObjectOperator.getObjectByName(
-                        countryOperator.objectTypeId,
-                        countryName,
-                        ::identity
-                    ).bind()?.id
-                }
+                shortName toValue domainObject.shortName
             )
         }
 

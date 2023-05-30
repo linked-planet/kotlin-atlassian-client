@@ -24,7 +24,7 @@ import arrow.core.computations.either
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.invalidArgumentError
-import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -52,6 +52,9 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
 /**
+ * This is an experimental implementation that maps DomainObjects to InsightObjects automatically by name of the
+ * class/type and attribute names
+ *
  * idea: check type safety when operator is initialized
  * idea: automatically create insight object types when they do not exist already
  * idea: Semi-Automatic but overridable manual mapping
@@ -60,13 +63,13 @@ import kotlin.reflect.full.primaryConstructor
  * optional: attribute name to id map in case one wants to manually specify everything
  */
 @Experimental
-class GenericInsightObjectOperatorImpl<DomainType : Any>(
+class NameMappedRepository<DomainType : Any>(
     private val klass: KClass<DomainType>,
     // having InsightObject as return type will prevent us to change the internal implementation later on
     private val insightObjectForDomainObject: suspend (objectTypeId: InsightObjectTypeId, domainObject: DomainType) -> Either<InsightClientError, InsightObject?>,
     private val referenceAttributeToValue: suspend (attribute: InsightAttribute) -> Any? = { null },
     private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<InsightObjectId> = { _, _ -> emptyList() },
-) : GenericInsightObjectOperator<DomainType> {
+) : InsightObjectRepository<DomainType> {
     override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     var objectTypeSchema: ObjectTypeSchema // this is public, so clients could use it to add missing functionality
 

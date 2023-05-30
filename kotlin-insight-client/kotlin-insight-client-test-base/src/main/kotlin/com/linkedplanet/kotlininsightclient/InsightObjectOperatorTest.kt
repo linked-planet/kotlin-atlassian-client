@@ -22,8 +22,8 @@ package com.linkedplanet.kotlininsightclient
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
 import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
-import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
-import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.experimental.NameMappedRepository
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -57,14 +57,14 @@ interface InsightObjectOperatorTest {
     val insightObjectTypeOperator: InsightObjectTypeOperator
     val insightSchemaOperator: InsightSchemaOperator
 
-    fun countryOperatorFromGeneric() = GenericInsightObjectOperatorImpl(Country::class,
+    fun countryOperatorFromGeneric() = NameMappedRepository(Country::class,
         insightObjectForDomainObject = { objectTypeId, domainObject: Country ->
             insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
         }
     )
 
-    fun companyOperatorFromGeneric(countryOperator: GenericInsightObjectOperator<Country>) =
-        GenericInsightObjectOperatorImpl(Company::class,
+    fun companyOperatorFromGeneric(countryOperator: InsightObjectRepository<Country>) =
+        NameMappedRepository(Company::class,
             insightObjectForDomainObject = { objectTypeId, domainObject: Company ->
                 insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
             },
@@ -90,10 +90,10 @@ interface InsightObjectOperatorTest {
     fun testGenericInsightObjectOperatorCrud() = runBlocking {
         val countryOperatorFromGeneric = countryOperatorFromGeneric()
         val companyOperatorFromGeneric = companyOperatorFromGeneric(countryOperatorFromGeneric)
-        val countryManualImpl = CountryTestOperatorManualImpl(insightObjectOperator)
-        val companyManualImpl = CompanyTestOperatorManualImpl(insightObjectOperator, countryManualImpl)
-        val countryFromAbstract = CountryTestOperatorBasedOnAbstractImpl(insightObjectOperator)
-        val companyFromAbstract = CompanyTestOperatorBasedOnAbstractImpl(insightObjectOperator, countryFromAbstract)
+        val countryManualImpl = CountryTestRepositoryManualImpl(insightObjectOperator)
+        val companyManualImpl = CompanyTestRepositoryManualImpl(insightObjectOperator, countryManualImpl)
+        val countryFromAbstract = CountryTestRepositoryBasedOnAbstractImpl(insightObjectOperator)
+        val companyFromAbstract = CompanyTestRepositoryBasedOnAbstractImpl(insightObjectOperator, countryFromAbstract)
         // maybe use a parameter based testing framework
         listOf(
             Pair(countryOperatorFromGeneric, companyOperatorFromGeneric),
@@ -123,12 +123,12 @@ interface InsightObjectOperatorTest {
     fun testGenericInsightObjectOperatorCrudWithListAttribute() = runBlocking {
         println("### START object_testGenericInsightObjectOperatorCrudWithListAttribute")
 
-        val simpleObjectOperator = GenericInsightObjectOperatorImpl(SimpleObject::class,
+        val simpleObjectOperator = NameMappedRepository(SimpleObject::class,
             insightObjectForDomainObject = { objectTypeId, domainObject: SimpleObject ->
                 insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
             }
         )
-        val testWithListsOperator = GenericInsightObjectOperatorImpl(TestWithLists::class,
+        val testWithListsOperator = NameMappedRepository(TestWithLists::class,
             insightObjectForDomainObject = { objectTypeId, domainObject: TestWithLists ->
                 insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
             },
