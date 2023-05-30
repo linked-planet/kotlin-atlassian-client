@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package it;
+package com.linkedplanet.plugin.jira.insightclient.test.impl;
 
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner;
 import org.junit.runner.notification.RunListener;
