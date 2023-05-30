@@ -56,7 +56,6 @@ import kotlin.reflect.full.primaryConstructor
  * idea: automatically create insight object types when they do not exist already
  * idea: Semi-Automatic but overridable manual mapping
  * idea: class to id map (for automatic child object parsing)
- * optional: insightObjectTypeId
  * optional: attribute name to id map in case one wants to manually specify everything
  */
 @Experimental
@@ -76,16 +75,30 @@ class NameMappedRepository<DomainType : Any>(
     private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
     private var attrsMap: Map<String, ObjectTypeSchemaAttribute>
 
+    init {
+        runBlocking {
+            objectTypeSchema = objectTypeSchemaFromKClass().orNull()!!
+            attrsMap = objectTypeSchema.attributes.associateBy { it.name.lowercase() }
+        }
+    }
+
+    companion object {
+        // maybe we can use injection to gain access to the other operators
+        lateinit var insightObjectOperator: InsightObjectOperator
+        lateinit var insightObjectTypeOperator: InsightObjectTypeOperator
+        lateinit var insightSchemaOperator: InsightSchemaOperator
+    }
+
     override suspend fun loadExistingInsightObject(domainObject: DomainType): Either<InsightClientError, InsightObject?> =
         insightObjectForDomainObject(objectTypeId, domainObject)
 
     override suspend fun toDomain(insightObject: InsightObject): Either<InsightClientError, DomainType> =
         domainObjectByInsightObject(insightObject)
 
-    override suspend fun attributesFromDomain(domainObject: DomainType): Either<InsightClientError, List<InsightAttribute>> {
-        val attrs: List<Either<InsightClientError, InsightAttribute>> = props.map { prop ->
+    override suspend fun attributesFromDomain(domainObject: DomainType): Either<InsightClientError, List<InsightAttribute>> =
+        props.map { prop ->
             val attributeType: ObjectTypeSchemaAttribute = attrsMap[prop.name.lowercase()]!!
-            val value = prop.get(domainObject)
+            val value: Any? = prop.get(domainObject)
             when {
                 attributeType.isValueAttribute() -> mapValueAttribute(value, attributeType)
 
@@ -94,11 +107,11 @@ class NameMappedRepository<DomainType : Any>(
                     (attributeType.id toReferences referencedObjectIds).right()
                 }
 
+                // User, Group, Version ...
+
                 else -> invalidArgumentError("Attribute.type ${attributeType.name} is not supported")
             }
-        }
-        return attrs.sequenceEither()
-    }
+        }.sequenceEither()
 
     private fun mapValueAttribute(
         value: Any?,
@@ -114,21 +127,6 @@ class NameMappedRepository<DomainType : Any>(
             is List<Any?> -> (attributeType.id toValue ((value as? List<*>)?.map(Any?::toString)?: emptyList())).right()
             else -> invalidArgumentError("Attribute.type ${attributeType.name} is not supported")
         }
-
-    companion object {
-        // maybe we can use injection to gain access to the other operators
-        // a more optimal version would skip the intermediate InsightObject anyway and create domain objects directly
-        lateinit var insightObjectOperator: InsightObjectOperator
-        lateinit var insightObjectTypeOperator: InsightObjectTypeOperator
-        lateinit var insightSchemaOperator: InsightSchemaOperator
-    }
-
-    init {
-        runBlocking {
-            objectTypeSchema = objectTypeSchemaFromKClass().orNull()!!
-            attrsMap = objectTypeSchema.attributes.associateBy { it.name.lowercase() }
-        }
-    }
 
     private suspend fun objectTypeSchemaFromKClass(): Either<InsightClientError, ObjectTypeSchema> =
         either {
