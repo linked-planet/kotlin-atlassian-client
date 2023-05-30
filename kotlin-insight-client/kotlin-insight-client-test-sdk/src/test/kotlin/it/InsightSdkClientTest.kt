@@ -29,9 +29,10 @@ import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightSchemaOperator
 import org.junit.Before
+import org.junit.runner.JUnitCore
 import org.junit.runner.RunWith
 
-@RunWith(BlubPluginsTestRunner::class)
+@RunWith(MyAtlassianPluginsTestRunner::class)
 class InsightSdkClientTest : InsightClientTest() {
 
     private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
@@ -52,5 +53,7 @@ class InsightSdkClientTest : InsightClientTest() {
         println("### InsightSdkClientTest.initTest")
         val admin = userManager.getUserByName("admin")
         jiraAuthenticationContext.loggedInUser = admin
+
+        JUnitCore()
     }
 }
