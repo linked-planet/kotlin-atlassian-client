@@ -60,7 +60,7 @@ class CountryTestRepositoryManualImpl(private val insightObjectOperator: Insight
         if (objectByName == null){
             create(domainObject).bind()
         } else {
-            val udpatedObject = insightObjectOperator.updateObject(
+            val udpatedObject = insightObjectOperator.updateInsightObject(
                 objectByName.id,
                 name toValue domainObject.name,
                 shortName toValue domainObject.name,

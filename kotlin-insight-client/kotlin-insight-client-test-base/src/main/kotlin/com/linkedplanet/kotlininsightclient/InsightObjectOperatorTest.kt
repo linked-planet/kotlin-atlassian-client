@@ -309,7 +309,7 @@ interface InsightObjectOperatorTest {
         assertThat(results, equalTo(emptyList()))
         obj.addSelectValue(TestWithListsStringList.attributeId, "A")
         obj.addSelectValue(TestWithListsStringList.attributeId, "B")
-        runBlocking { insightObjectOperator.updateObject(obj).orNull() }
+        runBlocking { insightObjectOperator.updateInsightObject(obj).orNull() }
 
         val obj2 = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
@@ -317,7 +317,7 @@ interface InsightObjectOperatorTest {
         val results2 = obj2.getSelectValues(TestWithListsStringList.attributeId)
         assertThat(results2, containsInAnyOrder("A", "B"))
         obj2.removeSelectValue(TestWithListsStringList.attributeId, "B")
-        runBlocking { insightObjectOperator.updateObject(obj2).orNull() }
+        runBlocking { insightObjectOperator.updateInsightObject(obj2).orNull() }
 
         val obj3 = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
@@ -325,7 +325,7 @@ interface InsightObjectOperatorTest {
         val results3 = obj3.getSelectValues(TestWithListsStringList.attributeId)
         assertThat(results3, equalTo(listOf("A")))
         obj3.removeSelectValue(TestWithListsStringList.attributeId, "A")
-        runBlocking { insightObjectOperator.updateObject(obj3).orNull() }
+        runBlocking { insightObjectOperator.updateInsightObject(obj3).orNull() }
 
         val obj4 = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
@@ -426,18 +426,18 @@ interface InsightObjectOperatorTest {
         if (country.getStringValue(CountryShortName.attributeId) == "ED") {
             //likely an old test run failed, try to fix it:
             country.setValue(CountryShortName.attributeId, "DE")
-            insightObjectOperator.updateObject(country).orFail()
+            insightObjectOperator.updateInsightObject(country).orFail()
             country = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
         }
         assertThat(country.getStringValue(CountryShortName.attributeId), equalTo("DE"))
         country.setValue(CountryShortName.attributeId, "ED")
-        insightObjectOperator.updateObject(country).orFail()
+        insightObjectOperator.updateInsightObject(country).orFail()
 
         val updatedCountry = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
         assertThat(updatedCountry.getStringValue(CountryName.attributeId), equalTo("Germany"))
         assertThat(updatedCountry.getStringValue(CountryShortName.attributeId), equalTo("ED"))
         updatedCountry.setValue(CountryShortName.attributeId, "DE")
-        insightObjectOperator.updateObject(updatedCountry).orFail()
+        insightObjectOperator.updateInsightObject(updatedCountry).orFail()
 
         val restoredCountry = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
         assertThat(restoredCountry.getStringValue(CountryName.attributeId), equalTo("Germany"))

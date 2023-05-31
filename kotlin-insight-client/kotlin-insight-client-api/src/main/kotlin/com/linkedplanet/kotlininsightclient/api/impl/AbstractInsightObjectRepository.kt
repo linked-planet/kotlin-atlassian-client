@@ -63,7 +63,7 @@ abstract class AbstractInsightObjectRepository<DomainType> : InsightObjectReposi
         }.bind()
         val attributes: List<InsightAttribute> = attributesFromDomain(domainObject).bind()
         val insightObjectWithAttributes = insightObject.copy(attributes = attributes)
-        val updatedObject = insightObjectOperator.updateObject(insightObjectWithAttributes).bind()
+        val updatedObject = insightObjectOperator.updateInsightObject(insightObjectWithAttributes).bind()
         toDomain(updatedObject).bind()
     }
 

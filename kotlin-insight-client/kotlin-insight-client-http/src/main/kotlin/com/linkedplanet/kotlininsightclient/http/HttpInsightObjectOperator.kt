@@ -124,7 +124,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         objects ?: InsightObjectPage(getObjectCount(iql).bind(), emptyList())
     }
 
-    override suspend fun updateObject(
+    override suspend fun updateInsightObject(
         obj: InsightObject,
     ): Either<InsightClientError, InsightObject> = either {
         val body = GSON.toJson(obj.toEditObjectItem())
@@ -142,7 +142,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .bind()
     }
 
-    override suspend fun <T> updateObject(
+    override suspend fun <T> updateInsightObject(
         objectId: InsightObjectId,
         vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
@@ -159,7 +159,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             attributeMap[it.attributeId] = it
         }
         obj.attributes = attributeMap.values.toList()
-        val updatedObject = updateObject(obj).bind()
+        val updatedObject = updateInsightObject(obj).bind()
         toDomain(updatedObject).bind()
     }
 
@@ -174,7 +174,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             .mapLeft { it.toInsightClientError() }
             .map { /*to Unit*/ }
 
-    override suspend fun createObject(
+    override suspend fun createInsightObject(
         objectTypeId: InsightObjectTypeId,
         vararg insightAttributes: InsightAttribute
     ): Either<InsightClientError, InsightObjectId> = either {
@@ -201,7 +201,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> = either {
-        val insightObjectId = createObject(objectTypeId, *insightAttributes).bind()
+        val insightObjectId = createInsightObject(objectTypeId, *insightAttributes).bind()
         getObjectById(insightObjectId, toDomain).bind().rightIfNotNull {
             InsightClientError(
                 "InsightObject create failed.",

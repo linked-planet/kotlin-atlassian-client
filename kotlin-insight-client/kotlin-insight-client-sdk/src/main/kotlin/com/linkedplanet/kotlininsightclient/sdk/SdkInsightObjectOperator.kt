@@ -157,7 +157,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         }
 
     @Suppress("DEPRECATION")
-    override suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject> =
+    override suspend fun updateInsightObject(obj: InsightObject): Either<InsightClientError, InsightObject> =
         catchAsInsightClientError {
             val objectBean = objectFacade.loadObjectBean(obj.id.raw).createMutable()
             setAttributesForObjectBean(obj, objectBean)
@@ -175,10 +175,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             attributeMap[it.attributeId] = it
         }
         obj.attributes = attributeMap.values.toList()
-        updateObject(obj).bind()
+        updateInsightObject(obj).bind()
     }
 
-    override suspend fun <T> updateObject(
+    override suspend fun <T> updateInsightObject(
         objectId: InsightObjectId,
         vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
@@ -248,7 +248,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectFacade.deleteObjectBean(id.raw)
         }
 
-    override suspend fun createObject(
+    override suspend fun createInsightObject(
         objectTypeId: InsightObjectTypeId,
         vararg insightAttributes: InsightAttribute
     ): Either<InsightClientError, InsightObjectId> =
@@ -267,7 +267,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> = either {
-        val insightObjectId = createObject(objectTypeId, *insightAttributes).bind()
+        val insightObjectId = createInsightObject(objectTypeId, *insightAttributes).bind()
         getObjectById(insightObjectId, toDomain).bind().rightIfNotNull {
             InsightClientError(
                 "InsightObject create failed.",

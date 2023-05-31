@@ -72,7 +72,7 @@ class CompanyTestRepositoryManualImpl(
         if (objectByName == null){
             create(domainObject).bind()
         } else {
-            val udpatedObject = insightObjectOperator.updateObject(
+            val udpatedObject = insightObjectOperator.updateInsightObject(
                 objectByName.id,
                 name toValue domainObject.name,
                 countryRef toValue domainObject.name,
