@@ -24,7 +24,8 @@ import arrow.core.computations.either
 import arrow.core.right
 import arrow.core.sequenceEither
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.invalidArgumentError
+import com.linkedplanet.kotlininsightclient.api.error.InvalidArgumentInsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.asEither
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
@@ -94,7 +95,9 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
 
                 // User, Group, Version ...
 
-                else -> invalidArgumentError("Attribute.type ${attributeType.name} is not supported")
+                else -> InvalidArgumentInsightClientError(
+                    "Attribute.type ${attributeType.name} is not supported"
+                ).asEither()
             }
         }.sequenceEither()
 
@@ -109,8 +112,11 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             is Double -> (attributeType.id toValue value).right()
             is Float -> (attributeType.id toValue value.toDouble()).right()
             is ZonedDateTime -> (attributeType.id toValue value).right()
-            is List<Any?> -> (attributeType.id toValue ((value as? List<*>)?.map(Any?::toString)?: emptyList())).right()
-            else -> invalidArgumentError("Attribute.type ${attributeType.name} is not supported")
+            is List<Any?> -> (attributeType.id toValue ((value as? List<*>)?.map(Any?::toString)
+                ?: emptyList())).right()
+            else -> InvalidArgumentInsightClientError(
+                "Attribute.type ${attributeType.name} is not supported"
+            ).asEither()
         }
 
     private fun objectTypeSchemaFromKClass(): Either<InsightClientError, ObjectTypeSchema> =
@@ -147,7 +153,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
         value: ObjectAttributeValue,
         kType: KType
     ): Either<InsightClientError, Any?> = either {
-        when(value) {
+        when (value) {
             is ObjectAttributeValue.Bool -> value.value
             is ObjectAttributeValue.Date -> value.value
             is ObjectAttributeValue.DateTime -> value.value
@@ -160,8 +166,9 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             is ObjectAttributeValue.Time -> value.value
             is ObjectAttributeValue.Url -> value.value
             is ObjectAttributeValue.Select -> value.values// List<String>
-            else -> invalidArgumentError<DomainType?>(
+            else -> InvalidArgumentInsightClientError(
                 "kType.classifier ${kType.classifier} is not supported."
+            ).asEither<DomainType?>(
             ).bind()
         }
     }

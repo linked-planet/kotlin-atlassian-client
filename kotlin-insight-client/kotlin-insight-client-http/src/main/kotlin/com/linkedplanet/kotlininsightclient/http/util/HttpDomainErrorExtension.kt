@@ -19,8 +19,9 @@
  */
 package com.linkedplanet.kotlininsightclient.http.util
 
-import com.linkedplanet.kotlinhttpclient.error.DomainError
+import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
+import com.linkedplanet.kotlininsightclient.api.error.HttpInsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 
-fun DomainError.toInsightClientError(): InsightClientError =
-    InsightClientError(error, message)
+fun HttpDomainError.toInsightClientError(): InsightClientError =
+    HttpInsightClientError(statusCode, error, message)

@@ -21,10 +21,10 @@ package com.linkedplanet.kotlininsightclient.http
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.left
 import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
+import com.linkedplanet.kotlininsightclient.api.error.asEither
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
@@ -68,7 +68,7 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
             ?.let { rootObject ->
                 listOf(rootObject).plus(findObjectTypeChildren(allObjectTypes, rootObjectTypeId))
             }
-            ?: ObjectTypeNotFoundError().left().bind()
+            ?: ObjectTypeNotFoundError(rootObjectTypeId).asEither<List<ObjectTypeSchema>>().bind()
     }
 
     override suspend fun getObjectTypesBySchema(schemaId: InsightSchemaId): Either<InsightClientError, List<ObjectTypeSchema>> =

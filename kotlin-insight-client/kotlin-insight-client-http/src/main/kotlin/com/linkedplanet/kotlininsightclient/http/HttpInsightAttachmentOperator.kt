@@ -23,7 +23,8 @@ import arrow.core.Either
 import arrow.core.computations.either
 import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.notFoundError
+import com.linkedplanet.kotlininsightclient.api.error.OtherNotFoundError
+import com.linkedplanet.kotlininsightclient.api.error.asEither
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
@@ -81,8 +82,10 @@ class HttpInsightAttachmentOperator(private val context: HttpInsightClientContex
 
         getAttachments(objectId).bind()
             .firstOrNull { it.filename == filename }
-            ?: notFoundError<InsightAttachment>("Attachment with Filename ($filename) for " +
-                    "object (id=$objectId) was created but could not be retrieved.").bind()
+            ?: OtherNotFoundError(
+                "Attachment with Filename ($filename) for " +
+                        "object (id=$objectId) was created but could not be retrieved."
+            ).asEither<InsightAttachment>().bind()
     }
 
     override suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit> =

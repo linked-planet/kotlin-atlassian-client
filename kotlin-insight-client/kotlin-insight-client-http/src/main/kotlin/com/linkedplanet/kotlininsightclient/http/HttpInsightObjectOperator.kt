@@ -22,19 +22,20 @@ package com.linkedplanet.kotlininsightclient.http
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatten
-import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import arrow.core.rightIfNotNull
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
+import com.linkedplanet.kotlininsightclient.api.error.ObjectNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.http.model.DefaultType
-import com.linkedplanet.kotlininsightclient.http.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.http.model.InsightAttributeApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
+import com.linkedplanet.kotlininsightclient.http.model.InsightObjectAttributeType
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectAttributeValueApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectEditItem
@@ -147,12 +148,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> = either {
-        val obj = getObjectById(objectId, ::identity).bind().rightIfNotNull {
-            InsightClientError(
-                "InsightObject update failed.",
-                "Could not retrieve the object."
-            )
-        }.bind()
+        val obj = getObjectById(objectId, ::identity).bind()
+            .rightIfNotNull { ObjectNotFoundError(objectId) }.bind()
 
         val attributeMap = obj.attributes.associateBy { it.attributeId }.toMutableMap()
         insightAttributes.forEach {
@@ -202,12 +199,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> = either {
         val insightObjectId = createInsightObject(objectTypeId, *insightAttributes).bind()
-        getObjectById(insightObjectId, toDomain).bind().rightIfNotNull {
-            InsightClientError(
-                "InsightObject create failed.",
-                "Could not retrieve the object after seemingly successful creation."
-            )
-        }.bind()
+        getObjectById(insightObjectId, toDomain).bind()
+            .rightIfNotNull { ObjectNotFoundError(insightObjectId) }.bind()
     }
 
     // PRIVATE DOWN HERE

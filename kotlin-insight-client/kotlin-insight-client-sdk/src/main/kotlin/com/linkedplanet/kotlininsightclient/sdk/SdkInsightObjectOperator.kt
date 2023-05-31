@@ -22,7 +22,6 @@ package com.linkedplanet.kotlininsightclient.sdk
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.flatMap
-import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import arrow.core.left
 import arrow.core.right
 import arrow.core.rightIfNotNull
@@ -33,9 +32,11 @@ import com.atlassian.jira.timezone.TimeZoneManager
 import com.atlassian.jira.user.util.UserManager
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
+import com.linkedplanet.kotlininsightclient.api.error.ObjectNotFoundError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
@@ -184,12 +185,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> =
         either {
-            val obj = getObjectById(objectId, ::identity).bind().rightIfNotNull {
-                InsightClientError(
-                    "InsightObject update failed.",
-                    "Could not retrieve the object."
-                )
-            }.bind()
+            val obj = getObjectById(objectId, ::identity).bind()
+                .rightIfNotNull { ObjectNotFoundError(objectId) }.bind()
             val updated = updateObject(obj, *insightAttributes).bind()
             toDomain(updated).bind()
         }
@@ -268,12 +265,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> = either {
         val insightObjectId = createInsightObject(objectTypeId, *insightAttributes).bind()
-        getObjectById(insightObjectId, toDomain).bind().rightIfNotNull {
-            InsightClientError(
-                "InsightObject create failed.",
-                "Could not retrieve the object after seemingly successful creation."
-            )
-        }.bind()
+        getObjectById(insightObjectId, toDomain).bind()
+            .rightIfNotNull { ObjectNotFoundError(insightObjectId) }.bind()
     }
 
     private fun createEmptyDomainObject(
@@ -349,7 +342,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     ): Either<InsightClientError, ObjectTypeAttributeBean> =
         singleOrNull { it.id == objAttributeBean.objectTypeAttributeId }
             ?.right()
-            ?: ObjectTypeNotFoundError().left()
+            ?: ObjectTypeNotFoundError(InsightObjectTypeId(objAttributeBean.objectTypeAttributeId)).left()
 
     private suspend fun mapAttributeBeanToInsightAttribute(
         objectAttributeBean: ObjectAttributeBean,

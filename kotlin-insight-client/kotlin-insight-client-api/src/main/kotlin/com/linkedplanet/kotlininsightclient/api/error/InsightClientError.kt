@@ -17,13 +17,17 @@
  * limitations under the License.
  * #L%
  */
+@file:Suppress("CanBeParameter", "unused") // we want clients to access the additional information
+
 package com.linkedplanet.kotlininsightclient.api.error
 
 import arrow.core.Either
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 
 @Suppress("unused")
-open class InsightClientError(
+sealed class InsightClientError(
     val error: String,
     val message: String
 ) {
@@ -32,31 +36,37 @@ open class InsightClientError(
     companion object {
         private const val internalErrorString = "Jira/Insight hat ein internes Problem festgestellt"
         fun fromException(e: Exception): InsightClientError =
-            InsightClientError(e.message ?: internalErrorString, e.stackTraceToString())
+            ExceptionInsightClientError(e.message ?: internalErrorString, e.stackTraceToString())
         fun fromException(e: Throwable): InsightClientError =
-            InsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+            ExceptionInsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
 
-        fun internalError(message: String): Either<InsightClientError, ObjectAttributeValue> = Either.Left(
-            InsightClientError("InternalError", message)
-        )
+        fun internalError(message: String): Either<InsightClientError, ObjectAttributeValue> =
+            InternalInsightClientError("Interner Fehler", message).asEither()
 
-        fun <T> invalidArgumentError(message: String): Either<InsightClientError, T> = Either.Left(
-            InsightClientError(
-                "InvalidArgumentError",
-                message
-            )
-        )
-
-        fun <T> notFoundError(message: String): Either<InsightClientError, T> = Either.Left(
-            InsightClientError(
-                "Object not found",
-                message
-            )
-        )
     }
 }
+fun <T> InsightClientError.asEither(): Either<InsightClientError, T> = Either.Left(this)
 
+class InvalidArgumentInsightClientError(message: String) : InsightClientError("InvalidArgumentError", message)
 
+class InternalInsightClientError(error: String, message: String) : InsightClientError(error, message)
+class ExceptionInsightClientError(error: String, message: String) : InsightClientError(error, message)
 
-class ObjectTypeNotFoundError :
-    InsightClientError("Nicht gefunden", "Der ObjectType mit der angegebenen Id wurde nicht gefunden.")
+class AuthenticationError(message: String) : InsightClientError("Authentifizierung fehlgeschlagen", message)
+
+class ObjectNotFoundError(val objectId: InsightObjectId):
+    InsightClientError("Objekt nicht gefunden", "Das Objekt mit der InsightObjectId=$objectId wurde nicht gefunden.")
+
+class ObjectTypeNotFoundError(val rootObjectTypeId: InsightObjectTypeId) :
+    InsightClientError("ObjektTyp unbekannt", "Der ObjectType mit der angegebenen InsightObjectTypeId=$rootObjectTypeId wurde nicht gefunden.")
+
+class OtherNotFoundError(message: String) : InsightClientError("Night gefunden.", message)
+
+open class OtherInsightClientError(error: String, message: String) : InsightClientError(error, message)
+
+/**
+ * Somewhere inside an HTTP connection failed.
+ */
+class HttpInsightClientError(val statusCode: Int, error: String, message: String) : InsightClientError(error,
+    "$message StatusCode:$statusCode"
+)
