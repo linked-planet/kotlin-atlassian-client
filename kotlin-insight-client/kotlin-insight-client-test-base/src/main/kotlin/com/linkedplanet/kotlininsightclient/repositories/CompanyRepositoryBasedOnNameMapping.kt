@@ -23,7 +23,7 @@ import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.Company
 import com.linkedplanet.kotlininsightclient.Country
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.impl.NameMappedRepository
+import com.linkedplanet.kotlininsightclient.api.impl.AbstractNameMappedRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -38,7 +38,7 @@ class CompanyRepositoryBasedOnNameMapping(
     override val insightObjectOperator: InsightObjectOperator,
     override val insightObjectTypeOperator: InsightObjectTypeOperator,
     override val insightSchemaOperator: InsightSchemaOperator
-) : NameMappedRepository<Company>(Company::class) {
+) : AbstractNameMappedRepository<Company>(Company::class) {
 
     private val countryOperator = CountryRepositoryBasedOnNameMapping(
         insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator

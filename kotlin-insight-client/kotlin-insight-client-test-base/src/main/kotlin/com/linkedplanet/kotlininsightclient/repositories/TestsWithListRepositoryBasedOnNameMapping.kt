@@ -23,7 +23,7 @@ import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.SimpleObject
 import com.linkedplanet.kotlininsightclient.TestWithLists
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.impl.NameMappedRepository
+import com.linkedplanet.kotlininsightclient.api.impl.AbstractNameMappedRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -39,7 +39,7 @@ class TestsWithListRepositoryBasedOnNameMapping(
     override val insightObjectOperator: InsightObjectOperator,
     override val insightObjectTypeOperator: InsightObjectTypeOperator,
     override val insightSchemaOperator: InsightSchemaOperator
-) : NameMappedRepository<TestWithLists>(TestWithLists::class) {
+) : AbstractNameMappedRepository<TestWithLists>(TestWithLists::class) {
 
     private val simpleObjectRepository = SimpleObjectRepositoryBasedOnNameMapping(
         insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator

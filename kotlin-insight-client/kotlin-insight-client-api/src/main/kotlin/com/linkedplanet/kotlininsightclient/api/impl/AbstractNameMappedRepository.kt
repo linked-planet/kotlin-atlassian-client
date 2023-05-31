@@ -57,7 +57,7 @@ import kotlin.reflect.full.primaryConstructor
  * optional: attribute name to id map in case one wants to manually specify everything
  */
 @Experimental
-abstract class NameMappedRepository<DomainType : Any>(
+abstract class AbstractNameMappedRepository<DomainType : Any>(
     private val klass: KClass<DomainType>
 ) : AbstractInsightObjectRepository<DomainType>() {
 

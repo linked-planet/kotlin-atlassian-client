@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient.repositories
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.SimpleObject
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.impl.NameMappedRepository
+import com.linkedplanet.kotlininsightclient.api.impl.AbstractNameMappedRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -36,7 +36,7 @@ class SimpleObjectRepositoryBasedOnNameMapping(
     override val insightObjectOperator: InsightObjectOperator,
     override val insightObjectTypeOperator: InsightObjectTypeOperator,
     override val insightSchemaOperator: InsightSchemaOperator
-) : NameMappedRepository<SimpleObject>(SimpleObject::class) {
+) : AbstractNameMappedRepository<SimpleObject>(SimpleObject::class) {
 
     override suspend fun loadExistingInsightObject(domainObject: SimpleObject): Either<InsightClientError, InsightObject?> =
         insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)

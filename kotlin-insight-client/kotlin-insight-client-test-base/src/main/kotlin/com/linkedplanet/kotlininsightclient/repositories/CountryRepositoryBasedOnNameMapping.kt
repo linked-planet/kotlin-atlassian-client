@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient.repositories
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.Country
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.impl.NameMappedRepository
+import com.linkedplanet.kotlininsightclient.api.impl.AbstractNameMappedRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -36,7 +36,7 @@ class CountryRepositoryBasedOnNameMapping(
     override val insightObjectOperator: InsightObjectOperator,
     override val insightObjectTypeOperator: InsightObjectTypeOperator,
     override val insightSchemaOperator: InsightSchemaOperator
-) : NameMappedRepository<Country>(Country::class) {
+) : AbstractNameMappedRepository<Country>(Country::class) {
 
     override suspend fun loadExistingInsightObject(domainObject: Country): Either<InsightClientError, InsightObject?> =
         insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
