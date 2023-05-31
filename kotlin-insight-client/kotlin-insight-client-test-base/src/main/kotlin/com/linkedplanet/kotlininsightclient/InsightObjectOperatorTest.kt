@@ -43,6 +43,10 @@ import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 import com.linkedplanet.kotlininsightclient.api.model.getUserList
 import com.linkedplanet.kotlininsightclient.api.model.removeSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.setValue
+import com.linkedplanet.kotlininsightclient.repositories.CompanyTestRepositoryBasedOnAbstractImpl
+import com.linkedplanet.kotlininsightclient.repositories.CompanyTestRepositoryManualImpl
+import com.linkedplanet.kotlininsightclient.repositories.CountryTestRepositoryBasedOnAbstractImpl
+import com.linkedplanet.kotlininsightclient.repositories.CountryTestRepositoryManualImpl
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat

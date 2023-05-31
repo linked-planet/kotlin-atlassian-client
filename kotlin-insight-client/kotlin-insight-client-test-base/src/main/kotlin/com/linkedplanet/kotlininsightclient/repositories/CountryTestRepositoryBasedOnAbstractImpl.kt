@@ -17,10 +17,13 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient
+package com.linkedplanet.kotlininsightclient.repositories
 
 import arrow.core.Either
 import arrow.core.computations.either
+import com.linkedplanet.kotlininsightclient.Country
+import com.linkedplanet.kotlininsightclient.InsightObjectType
+import com.linkedplanet.kotlininsightclient.TestAttributes
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectRepository
