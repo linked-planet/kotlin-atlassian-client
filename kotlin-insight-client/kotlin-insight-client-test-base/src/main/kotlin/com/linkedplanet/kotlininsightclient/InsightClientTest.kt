@@ -35,19 +35,19 @@ abstract class InsightClientTest :
     @get:Rule
     val watchman: TestRule = object : TestWatcher() {
         override fun starting(desciption: Description) {
-            println("Starting test: ${desciption.methodName}")
+            println("## Starting test: ${desciption.methodName}")
         }
 
         override fun failed(e: Throwable?, description: Description) {
-            println("failed test: ${description.methodName} message:${e?.message}")
+            println("### Failed test: ${description.methodName} message:${e?.message}")
         }
 
         override fun skipped(e: AssumptionViolatedException?, description: Description) {
-            println("skipped test: ${description.methodName} message:${e?.message}")
+            println("## Skipped test: ${description.methodName} message:${e?.message}")
         }
 
         override fun succeeded(description: Description) {
-            println("Succeeded test: ${description.methodName}")
+            println("## Succeeded test: ${description.methodName}")
         }
     }
 }
