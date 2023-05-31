@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient.repositories
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.Country
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.experimental.NameMappedRepository
+import com.linkedplanet.kotlininsightclient.api.impl.NameMappedRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
