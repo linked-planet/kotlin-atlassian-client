@@ -100,8 +100,6 @@ interface InsightObjectOperatorTest {
 
     @Test
     fun testGenericInsightObjectOperatorCrudWithListAttribute() = runBlocking {
-        println("### START object_testGenericInsightObjectOperatorCrudWithListAttribute")
-
         val simpleObjectOperator = SimpleObjectRepositoryBasedOnNameMapping(
             insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
 
