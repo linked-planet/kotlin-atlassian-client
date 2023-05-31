@@ -19,9 +19,35 @@
  */
 package com.linkedplanet.kotlininsightclient
 
+import org.junit.AssumptionViolatedException
+import org.junit.Rule
+import org.junit.rules.TestRule
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
+
 abstract class InsightClientTest :
     InsightObjectOperatorTest,
     InsightObjectTypeOperatorTest,
     InsightAttachmentOperatorTest,
     InsightSchemaOperatorTest,
-    InsightHistoryOperatorTest
+    InsightHistoryOperatorTest {
+
+    @get:Rule
+    val watchman: TestRule = object : TestWatcher() {
+        override fun starting(desciption: Description) {
+            println("Starting test: ${desciption.methodName}")
+        }
+
+        override fun failed(e: Throwable?, description: Description) {
+            println("failed test: ${description.methodName} message:${e?.message}")
+        }
+
+        override fun skipped(e: AssumptionViolatedException?, description: Description) {
+            println("skipped test: ${description.methodName} message:${e?.message}")
+        }
+
+        override fun succeeded(description: Description) {
+            println("Succeeded test: ${description.methodName}")
+        }
+    }
+}
