@@ -22,7 +22,6 @@ package it
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlininsightclient.InsightClientTest
-import com.linkedplanet.kotlininsightclient.api.experimental.NameMappedRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.*
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightHistoryOperator
@@ -46,10 +45,6 @@ class InsightSdkClientTest : InsightClientTest() {
 
     @Before
     fun initTest() {
-        NameMappedRepository.insightObjectOperator = insightObjectOperator
-        NameMappedRepository.insightObjectTypeOperator = insightObjectTypeOperator
-        NameMappedRepository.insightSchemaOperator = insightSchemaOperator
-
         println("### InsightSdkClientTest.initTest")
         val admin = userManager.getUserByName("admin")
         jiraAuthenticationContext.loggedInUser = admin

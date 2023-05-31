@@ -1,4 +1,4 @@
 /**
- * Contains example implementations of a Repository for the Country and Company domain objects
+ * Contains example implementations of different Repositories
  */
 package com.linkedplanet.kotlininsightclient.repositories;

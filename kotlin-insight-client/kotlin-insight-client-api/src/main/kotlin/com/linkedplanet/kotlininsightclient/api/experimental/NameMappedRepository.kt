@@ -26,7 +26,6 @@ import arrow.core.sequenceEither
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.invalidArgumentError
 import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectRepository
-import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
@@ -59,38 +58,25 @@ import kotlin.reflect.full.primaryConstructor
  * optional: attribute name to id map in case one wants to manually specify everything
  */
 @Experimental
-class NameMappedRepository<DomainType : Any>(
-    private val klass: KClass<DomainType>,
-    // having InsightObject as return type will prevent us to change the internal implementation later on
-    private val insightObjectForDomainObject: suspend (objectTypeId: InsightObjectTypeId, domainObject: DomainType) -> Either<InsightClientError, InsightObject?>,
-    private val referenceAttributeToValue: suspend (attribute: InsightAttribute) -> Any? = { null },
-    private val attributeToReferencedObjectId: suspend (attribute: ObjectTypeSchemaAttribute, Any?) -> List<InsightObjectId> = { _, _ -> emptyList() },
+abstract class NameMappedRepository<DomainType : Any>(
+    private val klass: KClass<DomainType>
 ) : AbstractInsightObjectRepository<DomainType>() {
+
+    abstract val insightObjectTypeOperator: InsightObjectTypeOperator
+    abstract val insightSchemaOperator: InsightSchemaOperator
     override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
-    override val insightObjectOperator: InsightObjectOperator = NameMappedRepository.insightObjectOperator
     override val objectTypeId: InsightObjectTypeId get() = objectTypeSchema.id
     @Suppress("MemberVisibilityCanBePrivate") // this is public, so clients could use it to add missing functionality
-    var objectTypeSchema: ObjectTypeSchema
+    protected val objectTypeSchema: ObjectTypeSchema by lazy { objectTypeSchemaFromKClass().orNull()!! }
 
     private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
-    private var attrsMap: Map<String, ObjectTypeSchemaAttribute>
-
-    init {
-        runBlocking {
-            objectTypeSchema = objectTypeSchemaFromKClass().orNull()!!
-            attrsMap = objectTypeSchema.attributes.associateBy { it.name.lowercase() }
-        }
+    private val attrsMap: Map<String, ObjectTypeSchemaAttribute> by lazy {
+        objectTypeSchema.attributes.associateBy { it.name.lowercase() }
     }
 
-    companion object {
-        // maybe we can use injection to gain access to the other operators
-        lateinit var insightObjectOperator: InsightObjectOperator
-        lateinit var insightObjectTypeOperator: InsightObjectTypeOperator
-        lateinit var insightSchemaOperator: InsightSchemaOperator
-    }
+    abstract suspend fun referenceAttributeToValue(attribute: InsightAttribute) : Any?
 
-    override suspend fun loadExistingInsightObject(domainObject: DomainType): Either<InsightClientError, InsightObject?> =
-        insightObjectForDomainObject(objectTypeId, domainObject)
+    abstract suspend fun attributeToReferencedObjectId(schemaAttribute: ObjectTypeSchemaAttribute, value: Any?): List<InsightObjectId>
 
     override suspend fun toDomain(insightObject: InsightObject): Either<InsightClientError, DomainType> =
         domainObjectByInsightObject(insightObject)
@@ -128,14 +114,15 @@ class NameMappedRepository<DomainType : Any>(
             else -> invalidArgumentError("Attribute.type ${attributeType.name} is not supported")
         }
 
-    private suspend fun objectTypeSchemaFromKClass(): Either<InsightClientError, ObjectTypeSchema> =
-        either {
-            val klassName = klass.simpleName
-            val insightSchemas = insightSchemaOperator.getSchemas().bind()
-            val objectTypeSchemas = insightSchemas
-                .flatMap { schema -> insightObjectTypeOperator.getObjectTypesBySchema(schema.id).bind() }
-            val objectTypeSchema: ObjectTypeSchema = objectTypeSchemas.first { it.name == klassName }
-            objectTypeSchema
+    private fun objectTypeSchemaFromKClass(): Either<InsightClientError, ObjectTypeSchema> =
+        runBlocking {
+            either {
+                val klassName = klass.simpleName
+                val insightSchemas = insightSchemaOperator.getSchemas().bind()
+                val objectTypeSchemas = insightSchemas
+                    .flatMap { schema -> insightObjectTypeOperator.getObjectTypesBySchema(schema.id).bind() }
+                objectTypeSchemas.first { it.name == klassName }
+            }
         }
 
     private suspend fun domainObjectByInsightObject(

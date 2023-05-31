@@ -22,8 +22,6 @@ package com.linkedplanet.kotlininsightclient
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
 import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
-import com.linkedplanet.kotlininsightclient.api.experimental.NameMappedRepository
-import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -43,10 +41,14 @@ import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 import com.linkedplanet.kotlininsightclient.api.model.getUserList
 import com.linkedplanet.kotlininsightclient.api.model.removeSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.setValue
+import com.linkedplanet.kotlininsightclient.repositories.CompanyRepositoryBasedOnNameMapping
 import com.linkedplanet.kotlininsightclient.repositories.CompanyTestRepositoryBasedOnAbstractImpl
 import com.linkedplanet.kotlininsightclient.repositories.CompanyTestRepositoryManualImpl
+import com.linkedplanet.kotlininsightclient.repositories.CountryRepositoryBasedOnNameMapping
 import com.linkedplanet.kotlininsightclient.repositories.CountryTestRepositoryBasedOnAbstractImpl
 import com.linkedplanet.kotlininsightclient.repositories.CountryTestRepositoryManualImpl
+import com.linkedplanet.kotlininsightclient.repositories.SimpleObjectRepositoryBasedOnNameMapping
+import com.linkedplanet.kotlininsightclient.repositories.TestsWithListRepositoryBasedOnNameMapping
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -61,39 +63,12 @@ interface InsightObjectOperatorTest {
     val insightObjectTypeOperator: InsightObjectTypeOperator
     val insightSchemaOperator: InsightSchemaOperator
 
-    fun countryOperatorFromGeneric() = NameMappedRepository(Country::class,
-        insightObjectForDomainObject = { objectTypeId, domainObject: Country ->
-            insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
-        }
-    )
-
-    fun companyOperatorFromGeneric(countryOperator: InsightObjectRepository<Country>) =
-        NameMappedRepository(Company::class,
-            insightObjectForDomainObject = { objectTypeId, domainObject: Company ->
-                insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
-            },
-            referenceAttributeToValue = { insightAttribute ->
-                val movie = (insightAttribute.value as ObjectAttributeValue.Reference).referencedObjects.first().id
-                val eitherMovie = countryOperator.getById(movie)
-                eitherMovie.orNull()!!
-            },
-            attributeToReferencedObjectId = { schema: ObjectTypeSchemaAttribute, obj: Any? ->
-                val country = obj as Country
-                listOfNotNull(
-                    insightObjectOperator.getObjectByName(
-                        objectTypeId = (schema as ObjectTypeSchemaAttribute.Reference).referenceObjectTypeId,
-                        name = country.name,
-                        toDomain = ::identity
-                    )
-                        .orNull()?.id
-                )
-            }
-        )
-
     @Test
     fun testGenericInsightObjectOperatorCrud() = runBlocking {
-        val countryOperatorFromGeneric = countryOperatorFromGeneric()
-        val companyOperatorFromGeneric = companyOperatorFromGeneric(countryOperatorFromGeneric)
+        val countryOperatorFromGeneric = CountryRepositoryBasedOnNameMapping(
+            insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
+        val companyOperatorFromGeneric = CompanyRepositoryBasedOnNameMapping(
+            insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
         val countryManualImpl = CountryTestRepositoryManualImpl(insightObjectOperator)
         val companyManualImpl = CompanyTestRepositoryManualImpl(insightObjectOperator, countryManualImpl)
         val countryFromAbstract = CountryTestRepositoryBasedOnAbstractImpl(insightObjectOperator)
@@ -127,33 +102,11 @@ interface InsightObjectOperatorTest {
     fun testGenericInsightObjectOperatorCrudWithListAttribute() = runBlocking {
         println("### START object_testGenericInsightObjectOperatorCrudWithListAttribute")
 
-        val simpleObjectOperator = NameMappedRepository(SimpleObject::class,
-            insightObjectForDomainObject = { objectTypeId, domainObject: SimpleObject ->
-                insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
-            }
-        )
-        val testWithListsOperator = NameMappedRepository(TestWithLists::class,
-            insightObjectForDomainObject = { objectTypeId, domainObject: TestWithLists ->
-                insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
-            },
-            referenceAttributeToValue = { insightAttribute ->
-                val listOfObjects = (insightAttribute.value as? ObjectAttributeValue.Reference)?.referencedObjects
-                    ?.mapNotNull { simpleObjectOperator.getById(it.id).orNull() }
-                listOfObjects
-            },
-            attributeToReferencedObjectId = { schema: ObjectTypeSchemaAttribute, domainObjects ->
-                (domainObjects as List<*>)
-                    .mapNotNull { it as? SimpleObject }
-                    .mapNotNull {
-                        insightObjectOperator.getObjectByName(
-                            objectTypeId = (schema as ObjectTypeSchemaAttribute.Reference).referenceObjectTypeId,
-                            name = it.name,
-                            toDomain = ::identity
-                        )
-                            .orFail()?.id
-                    }
-            }
-        )
+        val simpleObjectOperator = SimpleObjectRepositoryBasedOnNameMapping(
+            insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
+
+        val testWithListsOperator = TestsWithListRepositoryBasedOnNameMapping(
+            insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
 
         val simpleObjects = simpleObjectOperator.getByIQL("Name in (Object2, Object3)").orFail()
         val objWithLists = TestWithLists(
