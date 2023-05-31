@@ -64,7 +64,7 @@ interface InsightObjectOperatorTest {
     val insightSchemaOperator: InsightSchemaOperator
 
     @Test
-    fun testGenericInsightObjectOperatorCrud() = runBlocking {
+    fun testVariousInsightObjectRepositories() = runBlocking {
         val countryOperatorFromGeneric = CountryRepositoryBasedOnNameMapping(
             insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
         val companyOperatorFromGeneric = CompanyRepositoryBasedOnNameMapping(
@@ -99,7 +99,7 @@ interface InsightObjectOperatorTest {
     }
 
     @Test
-    fun testGenericInsightObjectOperatorCrudWithListAttribute() = runBlocking {
+    fun testInsightObjectOperatorCrudWithListAttribute() = runBlocking {
         val simpleObjectOperator = SimpleObjectRepositoryBasedOnNameMapping(
             insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
 
