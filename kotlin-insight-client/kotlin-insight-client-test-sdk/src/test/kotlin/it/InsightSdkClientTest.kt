@@ -45,7 +45,6 @@ class InsightSdkClientTest : InsightClientTest() {
 
     @Before
     fun initTest() {
-        println("### InsightSdkClientTest.initTest")
         val admin = userManager.getUserByName("admin")
         jiraAuthenticationContext.loggedInUser = admin
     }
