@@ -103,7 +103,7 @@ data class ObjectWithAllDefaultTypes(
     val testFloat: Float?,
     val testDate: LocalDate?,
     val testDateTime: ZonedDateTime?,
-    val testUrl: List<String>,
+    val testUrl: Set<String>,
     val testEmail: String?,
     val testTextArea: String?,
     val testSelect: List<String>,

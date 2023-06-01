@@ -249,7 +249,7 @@ interface InsightObjectOperatorTest {
             testFloat = 3.3334f,
             testDate = LocalDate.parse("1984-04-01"),
             testDateTime = ZonedDateTime.parse("1983-12-07T14:55:24Z"),
-            testUrl = listOf("http://localhost"),
+            testUrl = setOf("http://localhost", "http://127.0.0.1"),
             testEmail = "awesome@linked-planet.com",
             testTextArea = "text area text",
             testSelect = listOf("Test Option 2"),

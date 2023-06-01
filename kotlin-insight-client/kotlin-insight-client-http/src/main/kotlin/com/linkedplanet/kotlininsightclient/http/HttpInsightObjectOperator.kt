@@ -349,10 +349,11 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 val zonedDateTime = singleValue()?.let { ZonedDateTime.parse(it) }
                 ObjectAttributeValue.DateTime(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
             }
-            DefaultType.URL -> ObjectAttributeValue.Url(singleValue())
             DefaultType.EMAIL -> ObjectAttributeValue.Email(singleValue())
             DefaultType.TEXTAREA -> ObjectAttributeValue.Textarea(singleValue())
             DefaultType.IPADDRESS -> ObjectAttributeValue.Ipaddress(singleValue())
+            // cardinality > 1
+            DefaultType.URL -> ObjectAttributeValue.Url(values.mapNotNull { it.value as String? })
             DefaultType.SELECT -> ObjectAttributeValue.Select(values.mapNotNull { it.value as String? })
             else -> internalError("Unsupported DefaultType (${defaultType})").bind()
         }

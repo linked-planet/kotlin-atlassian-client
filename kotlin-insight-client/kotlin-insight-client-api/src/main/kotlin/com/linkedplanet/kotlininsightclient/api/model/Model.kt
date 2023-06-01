@@ -164,8 +164,12 @@ data class InsightAttribute(
             value = ObjectAttributeValue.Ipaddress(text),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toValue(value: List<String>) = InsightAttribute(this,
+        infix fun InsightAttributeId.toSelectValues(value: List<String>) = InsightAttribute(this,
             value = ObjectAttributeValue.Select(value),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toUrlValues(value: List<String>) = InsightAttribute(this,
+            value = ObjectAttributeValue.Url(value),
             schema = null, // null during creation
         )
         infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) = InsightAttribute(this,
@@ -427,13 +431,15 @@ sealed class ObjectAttributeValue{
      */
     class Time(val value: LocalTime?, val displayValue: String?) : ObjectAttributeValue()
     class DateTime(val value: ZonedDateTime?, val displayValue: String?) : ObjectAttributeValue()
-    class Url(val value: String?) : ObjectAttributeValue()
     class Email(val value: String?) : ObjectAttributeValue()
     class Textarea(val value: String?) : ObjectAttributeValue()
     class Ipaddress(val value: String?) : ObjectAttributeValue()
-    class Select(val values: List<String>) : ObjectAttributeValue() // only default value with cardinality > 1
 
+    //  cardinality > 1
+    class Url(val values: List<String>) : ObjectAttributeValue()
+    class Select(val values: List<String>) : ObjectAttributeValue()
 
+    // non default types
     class Reference(val referencedObjects: List<ReferencedObject>) : ObjectAttributeValue()
     class User(val users: List<InsightUser>) : ObjectAttributeValue()
     class Confluence : ObjectAttributeValue() // A value that describes a page in Confluence
@@ -450,11 +456,12 @@ sealed class ObjectAttributeValue{
         is Date -> value?.toString() ?: ""
         is DoubleNumber -> value?.toString() ?: ""
         is Email -> value ?: ""
-        is Url -> value ?: ""
         is Ipaddress -> value ?: ""
         is Textarea -> value ?: ""
         is DateTime -> value?.toString() ?: ""
         is Time -> value?.toString() ?: ""
+
+        is Url ->  values.joinToString(",")
         is Select -> values.joinToString(",")
 
         is Reference -> referencedObjects.joinToString(",") { it.objectKey }

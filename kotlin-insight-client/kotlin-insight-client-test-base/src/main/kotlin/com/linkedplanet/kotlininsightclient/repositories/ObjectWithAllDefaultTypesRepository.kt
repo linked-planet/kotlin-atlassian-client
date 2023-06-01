@@ -32,7 +32,9 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toEmailValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toIpaddressValue
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toSelectValues
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toTextareaValue
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toUrlValues
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
@@ -60,7 +62,7 @@ class ObjectWithAllDefaultTypesRepository(
                 testFloat = insightObject.getAttributeValue<ObjectAttributeValue.DoubleNumber>(TestFloat.attributeId)?.value?.toFloat(),
                 testDate = insightObject.getAttributeValue<ObjectAttributeValue.Date>(TestDate.attributeId)?.value,
                 testDateTime = insightObject.getAttributeValue<ObjectAttributeValue.DateTime>(TestDateTime.attributeId)?.value,
-                testUrl = listOfNotNull(insightObject.getAttributeValue<ObjectAttributeValue.Url>(TestUrl.attributeId)?.value),
+                testUrl = insightObject.getAttributeValue<ObjectAttributeValue.Url>(TestUrl.attributeId)?.values?.toSet() ?: emptySet(),
                 testEmail = insightObject.getAttributeValue<ObjectAttributeValue.Email>(TestEmail.attributeId)?.value,
                 testTextArea = insightObject.getAttributeValue<ObjectAttributeValue.Textarea>(TestTextArea.attributeId)?.value,
                 testSelect = insightObject.getAttributeValue<ObjectAttributeValue.Select>(TestSelect.attributeId)?.values
@@ -78,10 +80,10 @@ class ObjectWithAllDefaultTypesRepository(
             TestFloat.attributeId toValue domainObject.testFloat,
             TestDate.attributeId toValue domainObject.testDate,
             TestDateTime.attributeId toValue domainObject.testDateTime,
-            TestUrl.attributeId toValue domainObject.testUrl,
+            TestUrl.attributeId toUrlValues domainObject.testUrl.toList(),
             TestEmail.attributeId toEmailValue domainObject.testEmail,
             TestTextArea.attributeId toTextareaValue domainObject.testTextArea,
-            TestSelect.attributeId toValue domainObject.testSelect,
+            TestSelect.attributeId toSelectValues domainObject.testSelect,
             TestIpAddress.attributeId toIpaddressValue domainObject.testIpAddress,
         ).right()
 }

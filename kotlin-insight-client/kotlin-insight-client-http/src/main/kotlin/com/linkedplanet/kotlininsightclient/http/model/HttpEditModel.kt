@@ -48,8 +48,8 @@ internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
             is ObjectAttributeValue.Email -> listOf(attr.value)
             is ObjectAttributeValue.Ipaddress -> listOf(attr.value)
             is ObjectAttributeValue.Textarea -> listOf(attr.value)
-            is ObjectAttributeValue.Url -> listOf(attr.value)
 
+            is ObjectAttributeValue.Url -> attr.values
             is ObjectAttributeValue.Select -> attr.values
 
             is ObjectAttributeValue.Reference -> attr.referencedObjects.map { it.id.raw }
