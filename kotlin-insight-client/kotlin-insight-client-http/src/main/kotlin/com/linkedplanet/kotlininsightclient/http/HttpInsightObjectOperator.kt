@@ -44,6 +44,8 @@ import com.linkedplanet.kotlininsightclient.http.model.ObjectUpdateApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.getEditAttributes
 import com.linkedplanet.kotlininsightclient.http.model.toEditObjectItem
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -329,28 +331,28 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 ?.let { type -> DefaultType.parse(type.id) }
 
         val values = apiAttribute.objectAttributeValues
-        fun singleValue() = values.firstOrNull()?.value
+        fun singleValue() = values.firstOrNull()?.value as String?
         when (defaultType) {
-            DefaultType.TEXT -> ObjectAttributeValue.Text(singleValue() as String?)
-            DefaultType.INTEGER -> ObjectAttributeValue.Integer(singleValue() as Int?)
-            DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(singleValue() as Boolean?)
-            DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(singleValue() as Double?)
+            DefaultType.TEXT -> ObjectAttributeValue.Text(singleValue())
+            DefaultType.INTEGER -> ObjectAttributeValue.Integer(singleValue()?.toInt())
+            DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(singleValue()?.toBoolean())
+            DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(singleValue()?.toDouble())
             DefaultType.DATE -> {
-                val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.Date(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
+                val localDate = singleValue()?.let { LocalDate.parse(it) }
+                ObjectAttributeValue.Date(localDate, values.firstOrNull()?.displayValue as? String?)
             }
             DefaultType.TIME -> {
-                val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.Time(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
+                val localTime = singleValue()?.let { LocalTime.parse(it) }
+                ObjectAttributeValue.Time(localTime, values.firstOrNull()?.displayValue as? String?)
             }
             DefaultType.DATE_TIME -> {
-                val zonedDateTime = (singleValue() as String?)?.let { ZonedDateTime.parse(it) }
+                val zonedDateTime = singleValue()?.let { ZonedDateTime.parse(it) }
                 ObjectAttributeValue.DateTime(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
             }
-            DefaultType.URL -> ObjectAttributeValue.Url(singleValue() as String?)
-            DefaultType.EMAIL -> ObjectAttributeValue.Email(singleValue() as String?)
-            DefaultType.TEXTAREA -> ObjectAttributeValue.Textarea(singleValue() as String?)
-            DefaultType.IPADDRESS -> ObjectAttributeValue.Ipaddress(singleValue() as String?)
+            DefaultType.URL -> ObjectAttributeValue.Url(singleValue())
+            DefaultType.EMAIL -> ObjectAttributeValue.Email(singleValue())
+            DefaultType.TEXTAREA -> ObjectAttributeValue.Textarea(singleValue())
+            DefaultType.IPADDRESS -> ObjectAttributeValue.Ipaddress(singleValue())
             DefaultType.SELECT -> ObjectAttributeValue.Select(values.mapNotNull { it.value as String? })
             else -> internalError("Unsupported DefaultType (${defaultType})").bind()
         }

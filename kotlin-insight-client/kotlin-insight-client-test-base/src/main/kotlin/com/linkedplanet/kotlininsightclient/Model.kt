@@ -20,8 +20,11 @@
 package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
+import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
+import java.time.LocalDate
+import java.time.ZonedDateTime
 
 enum class SchemaObject(val id: InsightSchemaId) {
     ITest(InsightSchemaId(1))
@@ -34,7 +37,8 @@ enum class InsightObjectType(val id: InsightObjectTypeId) {
     SimpleObject(InsightObjectTypeId(3)),
     Many(InsightObjectTypeId(5)),
     Abstract(InsightObjectTypeId(6)),
-    User(InsightObjectTypeId(9))
+    User(InsightObjectTypeId(9)),
+    ObjectWithAllDefaultTypes(InsightObjectTypeId(40))
 }
 
 enum class TestAttributes(val attributeId: InsightAttributeId, val attributeName: String) {
@@ -53,6 +57,20 @@ enum class TestAttributes(val attributeId: InsightAttributeId, val attributeName
 
     UserTestUser(InsightAttributeId(43), "User"),
     UserTestUsers(InsightAttributeId(44), "Users"),
+}
+
+enum class ObjectWithAllDefaultTypesAttributeIds(val attributeId: InsightAttributeId) {
+    Name(InsightAttributeId(68)),
+    TestBoolean(InsightAttributeId(71)),
+    TestInteger(InsightAttributeId(72)),
+    TestFloat(InsightAttributeId(73)),
+    TestDate(InsightAttributeId(74)),
+    TestDateTime(InsightAttributeId(75)),
+    TestUrl(InsightAttributeId(76)),
+    TestEmail(InsightAttributeId(77)),
+    TestTextArea(InsightAttributeId(78)),
+    TestSelect(InsightAttributeId(79)),
+    TestIpAddress(InsightAttributeId(80)),
 }
 
 data class Company(
@@ -75,4 +93,19 @@ data class TestWithLists(
     val name: String,
     val itemList: List<SimpleObject>,
     val stringList: List<String>,
+)
+
+data class ObjectWithAllDefaultTypes(
+    val id: InsightObjectId?,
+    val name: String,
+    val testBoolean: Boolean?,
+    val testInteger: Int?,
+    val testFloat: Float?,
+    val testDate: LocalDate?,
+    val testDateTime: ZonedDateTime?,
+    val testUrl: List<String>,
+    val testEmail: String?,
+    val testTextArea: String?,
+    val testSelect: List<String>,
+    val testIpAddress: String?,
 )

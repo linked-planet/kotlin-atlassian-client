@@ -19,6 +19,8 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.Collections.emptyList
 
@@ -118,24 +120,48 @@ data class InsightAttribute(
     fun isReference() : Boolean = value is ObjectAttributeValue.Reference
 
     companion object {
-        infix fun InsightAttributeId.toValue(text: String) = InsightAttribute(this,
+        infix fun InsightAttributeId.toValue(text: String?) = InsightAttribute(this,
             value = ObjectAttributeValue.Text(text),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toValue(value: Int) = InsightAttribute(this,
+        infix fun InsightAttributeId.toValue(value: Int?) = InsightAttribute(this,
             value = ObjectAttributeValue.Integer(value),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toValue(value: Boolean) = InsightAttribute(this,
+        infix fun InsightAttributeId.toValue(value: Boolean?) = InsightAttribute(this,
             value = ObjectAttributeValue.Bool(value),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toValue(value: Double) = InsightAttribute(this,
+        infix fun InsightAttributeId.toValue(value: Float?) = InsightAttribute(this,
+            value = ObjectAttributeValue.DoubleNumber(value?.toDouble()),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: Double?) = InsightAttribute(this,
             value = ObjectAttributeValue.DoubleNumber(value),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toValue(value: ZonedDateTime) = InsightAttribute(this,
-            value = ObjectAttributeValue.DateTime(value, ""),
+        infix fun InsightAttributeId.toValue(value: LocalDate?) = InsightAttribute(this,
+            value = ObjectAttributeValue.Date(value, null),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: LocalTime?) = InsightAttribute(this,
+            value = ObjectAttributeValue.Time(value, null),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: ZonedDateTime?) = InsightAttribute(this,
+            value = ObjectAttributeValue.DateTime(value, null),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toEmailValue(text: String?) = InsightAttribute(this,
+            value = ObjectAttributeValue.Email(text),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toTextareaValue(text: String?) = InsightAttribute(this,
+            value = ObjectAttributeValue.Textarea(text),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toIpaddressValue(text: String?) = InsightAttribute(this,
+            value = ObjectAttributeValue.Ipaddress(text),
             schema = null, // null during creation
         )
         infix fun InsightAttributeId.toValue(value: List<String>) = InsightAttribute(this,
@@ -394,8 +420,12 @@ sealed class ObjectAttributeValue{
     class Integer(val value: Int?) : ObjectAttributeValue()
     class Bool(val value: Boolean?) : ObjectAttributeValue()
     class DoubleNumber(val value: Double?) : ObjectAttributeValue()
-    class Date(val value: ZonedDateTime?, val displayValue: String?) : ObjectAttributeValue()
-    class Time(val value: ZonedDateTime?, val displayValue: String?) : ObjectAttributeValue()
+    class Date(val value: LocalDate?, val displayValue: String?) : ObjectAttributeValue()
+
+    /**
+     * Note that time is part of the Enum inside the SDK, but is not selectable through the Insight GUI
+     */
+    class Time(val value: LocalTime?, val displayValue: String?) : ObjectAttributeValue()
     class DateTime(val value: ZonedDateTime?, val displayValue: String?) : ObjectAttributeValue()
     class Url(val value: String?) : ObjectAttributeValue()
     class Email(val value: String?) : ObjectAttributeValue()

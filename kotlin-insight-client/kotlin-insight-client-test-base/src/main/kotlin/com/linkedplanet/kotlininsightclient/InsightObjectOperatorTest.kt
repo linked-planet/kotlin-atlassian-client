@@ -19,12 +19,12 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-import com.linkedplanet.kotlininsightclient.api.interfaces.identity
-import com.linkedplanet.kotlininsightclient.TestAttributes.*
 import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
+import com.linkedplanet.kotlininsightclient.TestAttributes.*
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReference
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
@@ -47,6 +47,7 @@ import com.linkedplanet.kotlininsightclient.repositories.CompanyTestRepositoryMa
 import com.linkedplanet.kotlininsightclient.repositories.CountryRepositoryBasedOnNameMapping
 import com.linkedplanet.kotlininsightclient.repositories.CountryTestRepositoryBasedOnAbstractImpl
 import com.linkedplanet.kotlininsightclient.repositories.CountryTestRepositoryManualImpl
+import com.linkedplanet.kotlininsightclient.repositories.ObjectWithAllDefaultTypesRepository
 import com.linkedplanet.kotlininsightclient.repositories.SimpleObjectRepositoryBasedOnNameMapping
 import com.linkedplanet.kotlininsightclient.repositories.TestsWithListRepositoryBasedOnNameMapping
 import kotlinx.coroutines.runBlocking
@@ -57,6 +58,8 @@ import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
 import org.junit.Test
 import java.net.URI
+import java.time.LocalDate
+import java.time.ZonedDateTime
 
 interface InsightObjectOperatorTest {
     val insightObjectOperator: InsightObjectOperator
@@ -232,6 +235,42 @@ interface InsightObjectOperatorTest {
         assertThat(updated.displayValue, equalTo("21/Feb/23 8:10 AM"))
 
         assertThat(company.attachmentsExist, equalTo(false))
+    }
+
+    @Test
+    fun testObjectWithAllDefaultTypes() = runBlocking {
+        val repository = ObjectWithAllDefaultTypesRepository(insightObjectOperator)
+
+        val original = ObjectWithAllDefaultTypes(
+            id = InsightObjectId.notPersistedObjectId,
+            name = "testObjectWithAllDefaultTypes",
+            testBoolean = false,
+            testInteger = 72,
+            testFloat = 3.3334f,
+            testDate = LocalDate.parse("1984-04-01"),
+            testDateTime = ZonedDateTime.parse("1983-12-07T14:55:24Z"),
+            testUrl = listOf("http://localhost"),
+            testEmail = "awesome@linked-planet.com",
+            testTextArea = "text area text",
+            testSelect = listOf("Test Option 2"),
+            testIpAddress = "192.168.0.2",
+        )
+        deleteAllObjectsWithType(repository.objectTypeId)
+        try {
+            val created = repository.create(original).orFail()
+            assertThat(created, not(equalTo(null)))
+            assertThat(created, equalTo(original.copy(id = created.id)))
+
+            val byId = repository.getById(created.id!!).orFail()
+            assertThat(byId, equalTo(original.copy(id = created.id)))
+        } finally {
+            deleteAllObjectsWithType(repository.objectTypeId)
+        }
+    }
+
+    suspend fun deleteAllObjectsWithType(objectTypeId: InsightObjectTypeId) {
+        val byIQL = insightObjectOperator.getObjectsByIQL(objectTypeId, "Key!=null", toDomain = ::identity).orFail()
+        byIQL.objects.forEach { insightObjectOperator.deleteObject(it.id) }
     }
 
     @Test
