@@ -132,10 +132,6 @@ data class InsightAttribute(
             value = ObjectAttributeValue.Bool(value),
             schema = null, // null during creation
         )
-        infix fun InsightAttributeId.toValue(value: Float?) = InsightAttribute(this,
-            value = ObjectAttributeValue.DoubleNumber(value?.toDouble()),
-            schema = null, // null during creation
-        )
         infix fun InsightAttributeId.toValue(value: Double?) = InsightAttribute(this,
             value = ObjectAttributeValue.DoubleNumber(value),
             schema = null, // null during creation
