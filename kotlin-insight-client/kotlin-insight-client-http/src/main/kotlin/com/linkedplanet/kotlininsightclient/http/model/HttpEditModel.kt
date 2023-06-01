@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlininsightclient.http.model
 
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import java.time.format.DateTimeFormatter
 
 // this is serialized and sent to insight, so it is not part of the model we control
@@ -36,35 +36,35 @@ internal fun InsightObject.toEditObjectItem() =
     )
 
 internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
-    this.attributes.map { insightAttr ->
-        val values : List<Any?> = when (val attr = insightAttr.value) {
-            is ObjectAttributeValue.Text -> listOf(attr.value)
-            is ObjectAttributeValue.Integer -> listOf(attr.value)
-            is ObjectAttributeValue.Bool -> listOf(attr.value.toString())
-            is ObjectAttributeValue.Time -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_TIME))
-            is ObjectAttributeValue.Date -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_DATE))
-            is ObjectAttributeValue.DateTime -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_ZONED_DATE_TIME))
-            is ObjectAttributeValue.DoubleNumber -> listOf(attr.value)
-            is ObjectAttributeValue.Email -> listOf(attr.value)
-            is ObjectAttributeValue.Ipaddress -> listOf(attr.value)
-            is ObjectAttributeValue.Textarea -> listOf(attr.value)
+    this.attributes.map { attr ->
+        val values : List<Any?> = when (attr) {
+            is InsightAttribute.Text -> listOf(attr.value)
+            is InsightAttribute.Integer -> listOf(attr.value)
+            is InsightAttribute.Bool -> listOf(attr.value.toString())
+            is InsightAttribute.Time -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_TIME))
+            is InsightAttribute.Date -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_DATE))
+            is InsightAttribute.DateTime -> listOfNotNull(attr.value?.format(DateTimeFormatter.ISO_ZONED_DATE_TIME))
+            is InsightAttribute.DoubleNumber -> listOf(attr.value)
+            is InsightAttribute.Email -> listOf(attr.value)
+            is InsightAttribute.Ipaddress -> listOf(attr.value)
+            is InsightAttribute.Textarea -> listOf(attr.value)
 
-            is ObjectAttributeValue.Url -> attr.values
-            is ObjectAttributeValue.Select -> attr.values
+            is InsightAttribute.Url -> attr.values
+            is InsightAttribute.Select -> attr.values
 
-            is ObjectAttributeValue.Reference -> attr.referencedObjects.map { it.id.raw }
-            is ObjectAttributeValue.User -> attr.users.map { it.key } //TODO: needs a test
+            is InsightAttribute.Reference -> attr.referencedObjects.map { it.id.raw }
+            is InsightAttribute.User -> attr.users.map { it.key } //TODO: needs a test
 
-            is ObjectAttributeValue.Group -> TODO()
-            is ObjectAttributeValue.Project -> TODO()
-            is ObjectAttributeValue.Status -> TODO()
-            is ObjectAttributeValue.Version -> TODO()
-            is ObjectAttributeValue.Confluence -> TODO()
-            is ObjectAttributeValue.Unknown -> TODO()
+            is InsightAttribute.Group -> TODO()
+            is InsightAttribute.Project -> TODO()
+            is InsightAttribute.Status -> TODO()
+            is InsightAttribute.Version -> TODO()
+            is InsightAttribute.Confluence -> TODO()
+            is InsightAttribute.Unknown -> TODO()
         }
 
         ObjectEditItemAttribute(
-            insightAttr.attributeId.raw,
+            attr.attributeId.raw,
             values.map { ObjectEditItemAttributeValue(it) }
         )
     }

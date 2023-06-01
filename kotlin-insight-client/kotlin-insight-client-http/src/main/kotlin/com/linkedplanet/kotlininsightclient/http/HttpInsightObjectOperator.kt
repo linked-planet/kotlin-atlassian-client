@@ -282,12 +282,14 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
 
     private suspend fun insightAttribute(apiAttribute: InsightAttributeApiResponse): Either<InsightClientError, InsightAttribute> =
         either {
+            val attributeId = InsightAttributeId(apiAttribute.objectTypeAttributeId)
+            val schema = apiAttribute.objectTypeAttribute?.let(::mapToObjectTypeSchemaAttribute)
             val attributeType: InsightObjectAttributeType =
                 apiAttribute.objectTypeAttribute?.type
                     ?.let { type -> InsightObjectAttributeType.parse(type) }
                     ?: InsightObjectAttributeType.DEFAULT
-            val value: ObjectAttributeValue = when (attributeType) {
-                InsightObjectAttributeType.DEFAULT -> handleDefaultValue(apiAttribute).bind()
+            when (attributeType) {
+                InsightObjectAttributeType.DEFAULT -> handleDefaultValue(attributeId, apiAttribute, schema).bind()
                 InsightObjectAttributeType.REFERENCE -> {
                     val referencedObjects =
                         apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
@@ -301,13 +303,13 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                                     })
                             }
                         }
-                    ObjectAttributeValue.Reference(referencedObjects)
+                    InsightAttribute.Reference(attributeId, referencedObjects, schema)
                 }
                 InsightObjectAttributeType.USER -> {
                     val users = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
                         av.user?.run { InsightUser(displayName, name, emailAddress ?: "", key) }
                     }
-                    ObjectAttributeValue.User(users)
+                    InsightAttribute.User(attributeId, users, schema)
                 }
                 InsightObjectAttributeType.CONFLUENCE -> TODO()
                 InsightObjectAttributeType.GROUP -> TODO()
@@ -316,16 +318,13 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 InsightObjectAttributeType.STATUS -> TODO()
                 else -> internalError("Unsupported objectTypeAttributeBean.type (${attributeType})").bind()
             }
-            InsightAttribute(
-                attributeId = InsightAttributeId(apiAttribute.objectTypeAttributeId),
-                value = value,
-                schema = apiAttribute.objectTypeAttribute?.let(::mapToObjectTypeSchemaAttribute)
-            )
         }
 
     private suspend fun handleDefaultValue(
+        attributeId: InsightAttributeId,
         apiAttribute: InsightAttributeApiResponse,
-    ): Either<InsightClientError, ObjectAttributeValue> = either {
+        schema: ObjectTypeSchemaAttribute?,
+    ): Either<InsightClientError, InsightAttribute> = either {
         val defaultType: DefaultType? =
             apiAttribute.objectTypeAttribute?.defaultType
                 ?.let { type -> DefaultType.parse(type.id) }
@@ -333,28 +332,28 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         val values = apiAttribute.objectAttributeValues
         fun singleValue() = values.firstOrNull()?.value as String?
         when (defaultType) {
-            DefaultType.TEXT -> ObjectAttributeValue.Text(singleValue())
-            DefaultType.INTEGER -> ObjectAttributeValue.Integer(singleValue()?.toInt())
-            DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(singleValue()?.toBoolean())
-            DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(singleValue()?.toDouble())
+            DefaultType.TEXT -> InsightAttribute.Text(attributeId, singleValue(), schema)
+            DefaultType.INTEGER -> InsightAttribute.Integer(attributeId, singleValue()?.toInt(), schema)
+            DefaultType.BOOLEAN -> InsightAttribute.Bool(attributeId, singleValue()?.toBoolean(), schema)
+            DefaultType.DOUBLE -> InsightAttribute.DoubleNumber(attributeId, singleValue()?.toDouble(), schema)
             DefaultType.DATE -> {
                 val localDate = singleValue()?.let { LocalDate.parse(it) }
-                ObjectAttributeValue.Date(localDate, values.firstOrNull()?.displayValue as? String?)
+                InsightAttribute.Date(attributeId, localDate, values.firstOrNull()?.displayValue as? String?, schema)
             }
             DefaultType.TIME -> {
                 val localTime = singleValue()?.let { LocalTime.parse(it) }
-                ObjectAttributeValue.Time(localTime, values.firstOrNull()?.displayValue as? String?)
+                InsightAttribute.Time(attributeId, localTime, values.firstOrNull()?.displayValue as? String?, schema)
             }
             DefaultType.DATE_TIME -> {
                 val zonedDateTime = singleValue()?.let { ZonedDateTime.parse(it) }
-                ObjectAttributeValue.DateTime(zonedDateTime, values.firstOrNull()?.displayValue as? String?)
+                InsightAttribute.DateTime(attributeId, zonedDateTime, values.firstOrNull()?.displayValue as? String?, schema)
             }
-            DefaultType.EMAIL -> ObjectAttributeValue.Email(singleValue())
-            DefaultType.TEXTAREA -> ObjectAttributeValue.Textarea(singleValue())
-            DefaultType.IPADDRESS -> ObjectAttributeValue.Ipaddress(singleValue())
+            DefaultType.EMAIL -> InsightAttribute.Email(attributeId, singleValue(), schema)
+            DefaultType.TEXTAREA -> InsightAttribute.Textarea(attributeId, singleValue(), schema)
+            DefaultType.IPADDRESS -> InsightAttribute.Ipaddress(attributeId, singleValue(), schema)
             // cardinality > 1
-            DefaultType.URL -> ObjectAttributeValue.Url(values.mapNotNull { it.value as String? })
-            DefaultType.SELECT -> ObjectAttributeValue.Select(values.mapNotNull { it.value as String? })
+            DefaultType.URL -> InsightAttribute.Url(attributeId, values.mapNotNull { it.value as String? }, schema)
+            DefaultType.SELECT -> InsightAttribute.Select(attributeId, values.mapNotNull { it.value as String? }, schema)
             else -> internalError("Unsupported DefaultType (${defaultType})").bind()
         }
     }

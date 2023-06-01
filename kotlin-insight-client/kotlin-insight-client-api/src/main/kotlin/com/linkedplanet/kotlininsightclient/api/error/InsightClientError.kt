@@ -24,7 +24,7 @@ package com.linkedplanet.kotlininsightclient.api.error
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 
 @Suppress("unused")
 sealed class InsightClientError(
@@ -40,7 +40,7 @@ sealed class InsightClientError(
         fun fromException(e: Throwable): InsightClientError =
             ExceptionInsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
 
-        fun internalError(message: String): Either<InsightClientError, ObjectAttributeValue> =
+        fun internalError(message: String): Either<InsightClientError, InsightAttribute> =
             InternalInsightClientError("Interner Fehler", message).asEither()
 
     }

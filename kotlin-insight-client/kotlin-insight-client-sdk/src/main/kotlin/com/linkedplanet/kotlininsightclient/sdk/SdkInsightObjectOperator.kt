@@ -42,7 +42,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightUser
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
@@ -195,42 +195,42 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         obj: InsightObject,
         bean: MutableObjectBean
     ) {
-        val attributeBeans = obj.attributes.map { insightAttr ->
-            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(insightAttr.attributeId.raw).createMutable()
-            when (val value = insightAttr.value) {
-                is ObjectAttributeValue.Bool -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.Date -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.DateTime -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.DoubleNumber -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.Email -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.Integer -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.Ipaddress -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.Text -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.Textarea -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.Time -> beanFromString(bean, ota, value.value.toString())
+        val attributeBeans = obj.attributes.map { attr ->
+            val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(attr.attributeId.raw).createMutable()
+            when (attr) {
+                is InsightAttribute.Bool -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.Date -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.DateTime -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.DoubleNumber -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.Email -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.Integer -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.Ipaddress -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.Text -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.Textarea -> beanFromString(bean, ota, attr.value.toString())
+                is InsightAttribute.Time -> beanFromString(bean, ota, attr.value.toString())
 
-                is ObjectAttributeValue.Url -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(
-                    bean, ota, *value.values.toTypedArray()
+                is InsightAttribute.Url -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(
+                    bean, ota, *attr.values.toTypedArray()
                 )
-                is ObjectAttributeValue.Select -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(
-                    bean, ota, *value.values.toTypedArray()
+                is InsightAttribute.Select -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(
+                    bean, ota, *attr.values.toTypedArray()
                 )
 
-                is ObjectAttributeValue.Reference -> {
-                    val referenceIds = value.referencedObjects.map { it.id.raw }.toTypedArray()
+                is InsightAttribute.Reference -> {
+                    val referenceIds = attr.referencedObjects.map { it.id.raw }.toTypedArray()
                     objectAttributeBeanFactory.createReferenceAttributeValue(ota) { referenceIds.contains(it.id) }
                 }
-                is ObjectAttributeValue.User -> {
-                    val userKeys = value.users.map { it.key }
+                is InsightAttribute.User -> {
+                    val userKeys = attr.users.map { it.key }
                     objectAttributeBeanFactory.createUserAttributeValueByKey(ota, *userKeys.toTypedArray())
                 }
 
-                is ObjectAttributeValue.Group -> TODO()
-                is ObjectAttributeValue.Project -> TODO()
-                is ObjectAttributeValue.Status -> TODO()
-                is ObjectAttributeValue.Version -> TODO()
-                is ObjectAttributeValue.Confluence -> TODO()
-                is ObjectAttributeValue.Unknown -> TODO()
+                is InsightAttribute.Group -> TODO()
+                is InsightAttribute.Project -> TODO()
+                is InsightAttribute.Status -> TODO()
+                is InsightAttribute.Version -> TODO()
+                is InsightAttribute.Confluence -> TODO()
+                is InsightAttribute.Unknown -> TODO()
             }
         }
         bean.setObjectAttributeBeans(attributeBeans)
@@ -351,19 +351,21 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         objectAttributeBean: ObjectAttributeBean,
         objectTypeAttributeBean: ObjectTypeAttributeBean
     ): Either<InsightClientError, InsightAttribute> = either {
-        val value: ObjectAttributeValue = when (objectTypeAttributeBean.type) {
-            Type.DEFAULT -> handleDefaultValue(objectAttributeBean, objectTypeAttributeBean).bind()
+        val attributeId = InsightAttributeId(objectTypeAttributeBean.id)
+        val schema = typeAttributeBeanToSchema(objectTypeAttributeBean)
+        when (objectTypeAttributeBean.type) {
+            Type.DEFAULT -> handleDefaultValue(attributeId, schema, objectAttributeBean, objectTypeAttributeBean).bind()
             Type.REFERENCED_OBJECT -> {
                 val referencedObjects = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
                     loadReferencedObject(attribute, objectTypeAttributeBean).bind()
                 }
-                ObjectAttributeValue.Reference(referencedObjects)
+                InsightAttribute.Reference(attributeId, referencedObjects, schema)
             }
             Type.USER -> {
                 val users = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
                     loadInsightUserByKey(attribute.textValue).bind()
                 }
-                ObjectAttributeValue.User(users)
+                InsightAttribute.User(attributeId, users, schema)
             }
             Type.CONFLUENCE -> TODO()
             Type.GROUP -> TODO()
@@ -372,48 +374,45 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             Type.STATUS -> TODO()
             else -> internalError("Unsupported objectTypeAttributeBean.type (${objectTypeAttributeBean.type})").bind()
         }
-        InsightAttribute(
-            InsightAttributeId(objectTypeAttributeBean.id),
-            value = value,
-            typeAttributeBeanToSchema(objectTypeAttributeBean)
-        )
     }
 
     private suspend fun handleDefaultValue(
+        id: InsightAttributeId,
+        schema: ObjectTypeSchemaAttribute,
         objectAttributeBean: ObjectAttributeBean,
         objectTypeAttributeBean: ObjectTypeAttributeBean
-    ): Either<InsightClientError, ObjectAttributeValue> = either {
+    ): Either<InsightClientError, InsightAttribute> = either {
         val values = objectAttributeBean.objectAttributeValueBeans
         when (objectTypeAttributeBean.defaultType) {
-            DefaultType.TEXT -> ObjectAttributeValue.Text(values.firstOrNull()?.textValue)
-            DefaultType.INTEGER -> ObjectAttributeValue.Integer(values.firstOrNull()?.integerValue)
-            DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(values.firstOrNull()?.booleanValue)
-            DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(values.firstOrNull()?.doubleValue)
+            DefaultType.TEXT -> InsightAttribute.Text(id, values.firstOrNull()?.textValue, schema)
+            DefaultType.INTEGER -> InsightAttribute.Integer(id,values.firstOrNull()?.integerValue, schema)
+            DefaultType.BOOLEAN -> InsightAttribute.Bool(id,values.firstOrNull()?.booleanValue, schema)
+            DefaultType.DOUBLE -> InsightAttribute.DoubleNumber(id,values.firstOrNull()?.doubleValue, schema)
             DefaultType.DATE -> {
                 val date = values.firstOrNull()?.dateValue
                 val localDate = date?.toInstant()?.atZone(zoneId)?.toLocalDate()
                 val displayValue = date?.let { dateTimeFormatter.formatDateToString(it) }
-                ObjectAttributeValue.Date(localDate, displayValue)
+                InsightAttribute.Date(id,localDate, displayValue, schema)
             }
             DefaultType.TIME -> {
                 val date = values.firstOrNull()?.dateValue
                 val localTime = date?.toInstant()?.atZone(zoneId)?.toLocalTime()
                 val displayValue = null // Insights original ObjectAssembler does not handle this case at all.
-                ObjectAttributeValue.Time(localTime, displayValue)
+                InsightAttribute.Time(id,localTime, displayValue, schema)
             }
             DefaultType.DATE_TIME -> {
                 val date = values.firstOrNull()?.dateValue
                 val zonedDateTime = date?.toInstant()?.atZone(zoneId)
                 val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateTimeToString(Date.from(it.toInstant())) }
-                ObjectAttributeValue.DateTime(zonedDateTime, displayValue)
+                InsightAttribute.DateTime(id,zonedDateTime, displayValue, schema)
             }
-            DefaultType.EMAIL -> ObjectAttributeValue.Email(values.firstOrNull()?.textValue)
-            DefaultType.TEXTAREA -> ObjectAttributeValue.Textarea(values.firstOrNull()?.textValue)
-            DefaultType.IPADDRESS -> ObjectAttributeValue.Ipaddress(values.firstOrNull()?.textValue)
+            DefaultType.EMAIL -> InsightAttribute.Email(id,values.firstOrNull()?.textValue, schema)
+            DefaultType.TEXTAREA -> InsightAttribute.Textarea(id,values.firstOrNull()?.textValue, schema)
+            DefaultType.IPADDRESS -> InsightAttribute.Ipaddress(id,values.firstOrNull()?.textValue, schema)
 
             // cardinality > 1
-            DefaultType.URL -> ObjectAttributeValue.Url(values.map { it.textValue })
-            DefaultType.SELECT -> ObjectAttributeValue.Select(values.map { it.textValue })
+            DefaultType.URL -> InsightAttribute.Url(id,values.map { it.textValue }, schema)
+            DefaultType.SELECT -> InsightAttribute.Select(id,values.map { it.textValue }, schema)
             else -> internalError("Unsupported DefaultType (${objectTypeAttributeBean.defaultType})").bind()
         }
     }
