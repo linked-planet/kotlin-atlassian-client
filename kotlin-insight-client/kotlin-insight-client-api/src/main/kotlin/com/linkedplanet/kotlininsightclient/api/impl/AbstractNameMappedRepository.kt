@@ -88,7 +88,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             when {
                 attributeType.isValueAttribute() -> mapValueAttribute(value, attributeType)
 
-                attributeType is ObjectTypeSchemaAttribute.Reference -> {
+                attributeType is ObjectTypeSchemaAttribute.ReferenceSchema -> {
                     val referencedObjectIds = attributeToReferencedObjectId(attributeType, value)
                     (attributeType.id toReferences referencedObjectIds).right()
                 }

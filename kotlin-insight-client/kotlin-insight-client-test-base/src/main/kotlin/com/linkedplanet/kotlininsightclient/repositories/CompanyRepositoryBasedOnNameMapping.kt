@@ -59,7 +59,7 @@ class CompanyRepositoryBasedOnNameMapping(
         val country = value as Country
         return listOfNotNull(
             insightObjectOperator.getObjectByName(
-                objectTypeId = (schemaAttribute as ObjectTypeSchemaAttribute.Reference).referenceObjectTypeId,
+                objectTypeId = (schemaAttribute as ObjectTypeSchemaAttribute.ReferenceSchema).referenceObjectTypeId,
                 name = country.name,
                 toDomain = ::identity
             )

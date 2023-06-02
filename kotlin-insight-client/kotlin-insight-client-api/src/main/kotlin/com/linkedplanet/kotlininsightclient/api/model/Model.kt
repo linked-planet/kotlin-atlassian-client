@@ -239,32 +239,32 @@ sealed class ObjectTypeSchemaAttribute {
     abstract val includeChildObjectTypes: Boolean
 
     fun isValueAttribute(): Boolean = when(this){
-        is Text -> true
-        is Integer -> true
-        is Bool -> true
-        is DoubleNumber -> true
-        is Select -> true
-        is Date -> true
-        is Time -> true
-        is DateTime -> true
-        is Url -> true
-        is Email -> true
-        is Textarea -> true
-        is Ipaddress -> true
+        is TextSchema -> true
+        is IntegerSchema -> true
+        is BoolSchema -> true
+        is DoubleNumberSchema -> true
+        is SelectSchema -> true
+        is DateSchema -> true
+        is TimeSchema -> true
+        is DateTimeSchema -> true
+        is UrlSchema -> true
+        is EmailSchema -> true
+        is TextareaSchema -> true
+        is IpaddressSchema -> true
 
-        is Unknown -> false
-        is Reference -> false
-        is User -> false
-        is Confluence -> false
-        is Group -> false
-        is Version -> false
-        is Project -> false
-        is Status -> false
+        is UnknownSchema -> false
+        is ReferenceSchema -> false
+        is UserSchema -> false
+        is ConfluenceSchema -> false
+        is GroupSchema -> false
+        is VersionSchema -> false
+        is ProjectSchema -> false
+        is StatusSchema -> false
     }
 
-    fun isReference() : Boolean = this is Reference
+    fun isReference() : Boolean = this is ReferenceSchema
 
-    class Select(
+    class SelectSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -273,7 +273,7 @@ sealed class ObjectTypeSchemaAttribute {
         val options: List<String>,
     ) : ObjectTypeSchemaAttribute() // Select is the only DefaultType with maximumCardinality > 1
 
-    class Reference(
+    class ReferenceSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -283,7 +283,7 @@ sealed class ObjectTypeSchemaAttribute {
         val referenceKind: ReferenceKind
     ) : ObjectTypeSchemaAttribute()
 
-    class Unknown(
+    class UnknownSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -293,77 +293,77 @@ sealed class ObjectTypeSchemaAttribute {
     ) : ObjectTypeSchemaAttribute()
 
     // region types having just the superclass attributes
-    data class Text(
+    data class TextSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Integer(
+    class IntegerSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Bool(
+    class BoolSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class DoubleNumber(
+    class DoubleNumberSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Date(
+    class DateSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Time(
+    class TimeSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class DateTime(
+    class DateTimeSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Url(
+    class UrlSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Email(
+    class EmailSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Textarea(
+    class TextareaSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Ipaddress(
+    class IpaddressSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -371,42 +371,42 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
 
-    class User(
+    class UserSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Confluence(
+    class ConfluenceSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Group(
+    class GroupSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Version(
+    class VersionSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Project(
+    class ProjectSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
-    class Status(
+    class StatusSchema(
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,

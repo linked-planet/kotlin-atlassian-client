@@ -83,32 +83,32 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
             when(type){
                 ObjectTypeAttributeBean.Type.DEFAULT -> mapDefaultType(iId)
 
-                ObjectTypeAttributeBean.Type.REFERENCED_OBJECT -> ObjectTypeSchemaAttribute.Reference(
+                ObjectTypeAttributeBean.Type.REFERENCED_OBJECT -> ObjectTypeSchemaAttribute.ReferenceSchema(
                     iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
                     InsightObjectTypeId(referenceObjectTypeId ?: -1),
                     ReferenceKind.parse(referenceTypeBean.id)
                 )
 
-                ObjectTypeAttributeBean.Type.USER -> ObjectTypeSchemaAttribute.User(
+                ObjectTypeAttributeBean.Type.USER -> ObjectTypeSchemaAttribute.UserSchema(
                     iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
                 )
 
-                ObjectTypeAttributeBean.Type.CONFLUENCE -> ObjectTypeSchemaAttribute.Confluence(
+                ObjectTypeAttributeBean.Type.CONFLUENCE -> ObjectTypeSchemaAttribute.ConfluenceSchema(
                     iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
                 )
-                ObjectTypeAttributeBean.Type.GROUP -> ObjectTypeSchemaAttribute.Group(
+                ObjectTypeAttributeBean.Type.GROUP -> ObjectTypeSchemaAttribute.GroupSchema(
                     iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
                 )
-                ObjectTypeAttributeBean.Type.VERSION -> ObjectTypeSchemaAttribute.Version(
+                ObjectTypeAttributeBean.Type.VERSION -> ObjectTypeSchemaAttribute.VersionSchema(
                     iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
                 )
-                ObjectTypeAttributeBean.Type.PROJECT -> ObjectTypeSchemaAttribute.Project(
+                ObjectTypeAttributeBean.Type.PROJECT -> ObjectTypeSchemaAttribute.ProjectSchema(
                     iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
                 )
-                ObjectTypeAttributeBean.Type.STATUS -> ObjectTypeSchemaAttribute.Status(
+                ObjectTypeAttributeBean.Type.STATUS -> ObjectTypeSchemaAttribute.StatusSchema(
                     iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
                 )
-                else -> ObjectTypeSchemaAttribute.Unknown(
+                else -> ObjectTypeSchemaAttribute.UnknownSchema(
                     iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
                     "SdkInsightObjectOperator: got type $type for Attribute with ID: $iId"
                 )
@@ -117,48 +117,48 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
 
     private fun ObjectTypeAttributeBean.mapDefaultType(iId: InsightAttributeId) =
         when (defaultType) {
-            ObjectTypeAttributeBean.DefaultType.TEXT -> ObjectTypeSchemaAttribute.Text(
+            ObjectTypeAttributeBean.DefaultType.TEXT -> ObjectTypeSchemaAttribute.TextSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.INTEGER -> ObjectTypeSchemaAttribute.Integer(
+            ObjectTypeAttributeBean.DefaultType.INTEGER -> ObjectTypeSchemaAttribute.IntegerSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.BOOLEAN -> ObjectTypeSchemaAttribute.Bool(
+            ObjectTypeAttributeBean.DefaultType.BOOLEAN -> ObjectTypeSchemaAttribute.BoolSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.DOUBLE -> ObjectTypeSchemaAttribute.DoubleNumber(
+            ObjectTypeAttributeBean.DefaultType.DOUBLE -> ObjectTypeSchemaAttribute.DoubleNumberSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.DATE -> ObjectTypeSchemaAttribute.Date(
+            ObjectTypeAttributeBean.DefaultType.DATE -> ObjectTypeSchemaAttribute.DateSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.TIME -> ObjectTypeSchemaAttribute.Time(
+            ObjectTypeAttributeBean.DefaultType.TIME -> ObjectTypeSchemaAttribute.TimeSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.DATE_TIME -> ObjectTypeSchemaAttribute.DateTime(
+            ObjectTypeAttributeBean.DefaultType.DATE_TIME -> ObjectTypeSchemaAttribute.DateTimeSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.URL -> ObjectTypeSchemaAttribute.Url(
+            ObjectTypeAttributeBean.DefaultType.URL -> ObjectTypeSchemaAttribute.UrlSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.EMAIL -> ObjectTypeSchemaAttribute.Email(
+            ObjectTypeAttributeBean.DefaultType.EMAIL -> ObjectTypeSchemaAttribute.EmailSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.TEXTAREA -> ObjectTypeSchemaAttribute.Textarea(
+            ObjectTypeAttributeBean.DefaultType.TEXTAREA -> ObjectTypeSchemaAttribute.TextareaSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.Textarea(
+            ObjectTypeAttributeBean.DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.TextareaSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.SELECT -> ObjectTypeSchemaAttribute.Select(
+            ObjectTypeAttributeBean.DefaultType.SELECT -> ObjectTypeSchemaAttribute.SelectSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
                 options.split(",")
             )
-            ObjectTypeAttributeBean.DefaultType.NONE -> ObjectTypeSchemaAttribute.Unknown(
+            ObjectTypeAttributeBean.DefaultType.NONE -> ObjectTypeSchemaAttribute.UnknownSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
                 "SdkInsightObjectOperator: got DefaultType with DefaultType.None for Attribute with ID: $iId"
             )
-            else -> ObjectTypeSchemaAttribute.Unknown(
+            else -> ObjectTypeSchemaAttribute.UnknownSchema(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes,
                 "SdkInsightObjectOperator: got unknown DefaultType $defaultType for Attribute with ID: $iId"
             )

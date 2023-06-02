@@ -326,7 +326,7 @@ interface InsightObjectOperatorTest {
         // check if options are A B C
         val selectSchema = runBlocking {
                 insightObjectTypeOperator.getObjectType(InsightObjectType.TestWithLists.id).orFail()
-        }.attributes.firstOrNull { it.id == TestWithListsStringList.attributeId } as? ObjectTypeSchemaAttribute.Select
+        }.attributes.firstOrNull { it.id == TestWithListsStringList.attributeId } as? ObjectTypeSchemaAttribute.SelectSchema
         assertThat(selectSchema?.options, containsInAnyOrder("A", "B", "C"))
 
         val results = obj.getSelectValues(TestWithListsStringList.attributeId)
