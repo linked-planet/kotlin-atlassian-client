@@ -164,7 +164,8 @@ sealed class InsightAttribute(
         is Reference -> referencedObjects.joinToString(",") { it.objectKey }
         is User -> users.joinToString(",") { it.key }
 
-        is Group -> "" // TODO
+        // TODO support additional attribute types
+        is Group -> ""
         is Project -> ""
         is Status -> ""
         is Version -> ""
@@ -200,6 +201,12 @@ sealed class InsightAttribute(
 
         infix fun InsightAttributeId.toUrlValues(values: List<String>) =
             Url(this, values = values, schema = null)
+
+        infix fun InsightAttributeId.toUser(user: InsightUser?) =
+            User(this, listOfNotNull(user), schema = null)
+
+        infix fun InsightAttributeId.toUsers(users: List<InsightUser>) =
+            User(this, users, schema = null)
 
         infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) =
             Reference(

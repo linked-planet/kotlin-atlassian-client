@@ -225,12 +225,13 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     objectAttributeBeanFactory.createUserAttributeValueByKey(ota, *userKeys.toTypedArray())
                 }
 
-                is InsightAttribute.Group -> TODO()
-                is InsightAttribute.Project -> TODO()
-                is InsightAttribute.Status -> TODO()
-                is InsightAttribute.Version -> TODO()
-                is InsightAttribute.Confluence -> TODO()
-                is InsightAttribute.Unknown -> TODO()
+                // TODO support additional attribute types
+                is InsightAttribute.Group -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
+                is InsightAttribute.Project -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
+                is InsightAttribute.Status -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
+                is InsightAttribute.Version -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
+                is InsightAttribute.Confluence -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
+                is InsightAttribute.Unknown -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
             }
         }
         bean.setObjectAttributeBeans(attributeBeans)
@@ -367,11 +368,12 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 }
                 InsightAttribute.User(attributeId, users, schema)
             }
-            Type.CONFLUENCE -> TODO()
-            Type.GROUP -> TODO()
-            Type.VERSION -> TODO()
-            Type.PROJECT -> TODO()
-            Type.STATUS -> TODO()
+            // TODO support additional attribute types
+            Type.CONFLUENCE -> InsightAttribute.Confluence(attributeId, schema)
+            Type.GROUP -> InsightAttribute.Group(attributeId, schema)
+            Type.VERSION -> InsightAttribute.Version(attributeId, schema)
+            Type.PROJECT -> InsightAttribute.Project(attributeId, schema)
+            Type.STATUS -> InsightAttribute.Status(attributeId, schema)
             else -> internalError("Unsupported objectTypeAttributeBean.type (${objectTypeAttributeBean.type})").bind()
         }
     }

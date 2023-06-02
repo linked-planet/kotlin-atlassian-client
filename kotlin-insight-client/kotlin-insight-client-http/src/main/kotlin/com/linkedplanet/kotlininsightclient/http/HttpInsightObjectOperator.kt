@@ -311,11 +311,11 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                     }
                     InsightAttribute.User(attributeId, users, schema)
                 }
-                InsightObjectAttributeType.CONFLUENCE -> TODO()
-                InsightObjectAttributeType.GROUP -> TODO()
-                InsightObjectAttributeType.VERSION -> TODO()
-                InsightObjectAttributeType.PROJECT -> TODO()
-                InsightObjectAttributeType.STATUS -> TODO()
+                InsightObjectAttributeType.CONFLUENCE -> InsightAttribute.Confluence(attributeId, schema)
+                InsightObjectAttributeType.GROUP -> InsightAttribute.Group(attributeId, schema)
+                InsightObjectAttributeType.VERSION -> InsightAttribute.Version(attributeId, schema)
+                InsightObjectAttributeType.PROJECT -> InsightAttribute.Project(attributeId, schema)
+                InsightObjectAttributeType.STATUS -> InsightAttribute.Status(attributeId, schema)
                 else -> internalError("Unsupported objectTypeAttributeBean.type (${attributeType})").bind()
             }
         }

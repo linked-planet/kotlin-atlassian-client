@@ -53,14 +53,16 @@ internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
             is InsightAttribute.Select -> attr.values
 
             is InsightAttribute.Reference -> attr.referencedObjects.map { it.id.raw }
-            is InsightAttribute.User -> attr.users.map { it.key } //TODO: needs a test
+            is InsightAttribute.User -> attr.users.map { it.key }
 
-            is InsightAttribute.Group -> TODO()
-            is InsightAttribute.Project -> TODO()
-            is InsightAttribute.Status -> TODO()
-            is InsightAttribute.Version -> TODO()
-            is InsightAttribute.Confluence -> TODO()
-            is InsightAttribute.Unknown -> TODO()
+            // TODO support additional attribute types
+            is InsightAttribute.Group -> emptyList()
+            is InsightAttribute.Project -> emptyList()
+            is InsightAttribute.Status -> emptyList()
+            is InsightAttribute.Version -> emptyList()
+            is InsightAttribute.Confluence -> emptyList()
+
+            is InsightAttribute.Unknown -> emptyList()
         }
 
         ObjectEditItemAttribute(

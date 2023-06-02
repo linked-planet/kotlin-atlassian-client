@@ -40,7 +40,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Integer
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Text
-import com.linkedplanet.kotlininsightclient.api.model.getAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.getAttributeAs
 
 class ObjectWithAllDefaultTypesRepository(
     override val insightObjectOperator: InsightObjectOperator
@@ -55,18 +55,18 @@ class ObjectWithAllDefaultTypesRepository(
         either {
             ObjectWithAllDefaultTypes(
                 id = insightObject.id,
-                name = insightObject.getAttributeValue<Text>(Name.attributeId)?.value!!,
-                testBoolean = insightObject.getAttributeValue<InsightAttribute.Bool>(TestBoolean.attributeId)?.value,
-                testInteger = insightObject.getAttributeValue<Integer>(TestInteger.attributeId)?.value,
-                testFloat = insightObject.getAttributeValue<InsightAttribute.DoubleNumber>(TestFloat.attributeId)?.value,
-                testDate = insightObject.getAttributeValue<InsightAttribute.Date>(TestDate.attributeId)?.value,
-                testDateTime = insightObject.getAttributeValue<InsightAttribute.DateTime>(TestDateTime.attributeId)?.value,
-                testUrl = insightObject.getAttributeValue<InsightAttribute.Url>(TestUrl.attributeId)?.values?.toSet() ?: emptySet(),
-                testEmail = insightObject.getAttributeValue<InsightAttribute.Email>(TestEmail.attributeId)?.value,
-                testTextArea = insightObject.getAttributeValue<InsightAttribute.Textarea>(TestTextArea.attributeId)?.value,
-                testSelect = insightObject.getAttributeValue<InsightAttribute.Select>(TestSelect.attributeId)?.values
+                name = insightObject.getAttributeAs<Text>(Name.attributeId)?.value!!,
+                testBoolean = insightObject.getAttributeAs<InsightAttribute.Bool>(TestBoolean.attributeId)?.value,
+                testInteger = insightObject.getAttributeAs<Integer>(TestInteger.attributeId)?.value,
+                testFloat = insightObject.getAttributeAs<InsightAttribute.DoubleNumber>(TestFloat.attributeId)?.value,
+                testDate = insightObject.getAttributeAs<InsightAttribute.Date>(TestDate.attributeId)?.value,
+                testDateTime = insightObject.getAttributeAs<InsightAttribute.DateTime>(TestDateTime.attributeId)?.value,
+                testUrl = insightObject.getAttributeAs<InsightAttribute.Url>(TestUrl.attributeId)?.values?.toSet() ?: emptySet(),
+                testEmail = insightObject.getAttributeAs<InsightAttribute.Email>(TestEmail.attributeId)?.value,
+                testTextArea = insightObject.getAttributeAs<InsightAttribute.Textarea>(TestTextArea.attributeId)?.value,
+                testSelect = insightObject.getAttributeAs<InsightAttribute.Select>(TestSelect.attributeId)?.values
                     ?: emptyList(),
-                testIpAddress = insightObject.getAttributeValue<InsightAttribute.Ipaddress>(TestIpAddress.attributeId)?.value,
+                testIpAddress = insightObject.getAttributeAs<InsightAttribute.Ipaddress>(TestIpAddress.attributeId)?.value,
             )
         }
 
