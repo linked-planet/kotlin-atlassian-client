@@ -208,7 +208,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 is ObjectAttributeValue.Text -> beanFromString(bean, ota, value.value.toString())
                 is ObjectAttributeValue.Textarea -> beanFromString(bean, ota, value.value.toString())
                 is ObjectAttributeValue.Time -> beanFromString(bean, ota, value.value.toString())
-                is ObjectAttributeValue.Url -> beanFromString(bean, ota, value.value.toString())
+
+                is ObjectAttributeValue.Url -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(
+                    bean, ota, *value.values.toTypedArray()
+                )
                 is ObjectAttributeValue.Select -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(
                     bean, ota, *value.values.toTypedArray()
                 )
@@ -405,10 +408,12 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateTimeToString(Date.from(it.toInstant())) }
                 ObjectAttributeValue.DateTime(zonedDateTime, displayValue)
             }
-            DefaultType.URL -> ObjectAttributeValue.Url(values.firstOrNull()?.textValue)
             DefaultType.EMAIL -> ObjectAttributeValue.Email(values.firstOrNull()?.textValue)
             DefaultType.TEXTAREA -> ObjectAttributeValue.Textarea(values.firstOrNull()?.textValue)
             DefaultType.IPADDRESS -> ObjectAttributeValue.Ipaddress(values.firstOrNull()?.textValue)
+
+            // cardinality > 1
+            DefaultType.URL -> ObjectAttributeValue.Url(values.map { it.textValue })
             DefaultType.SELECT -> ObjectAttributeValue.Select(values.map { it.textValue })
             else -> internalError("Unsupported DefaultType (${objectTypeAttributeBean.defaultType})").bind()
         }

@@ -30,6 +30,7 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOper
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReferences
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toSelectValues
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
@@ -112,7 +113,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             is Double -> (attributeType.id toValue value).right()
             is Float -> (attributeType.id toValue value.toDouble()).right()
             is ZonedDateTime -> (attributeType.id toValue value).right()
-            is List<Any?> -> (attributeType.id toValue ((value as? List<*>)?.map(Any?::toString)
+            is List<Any?> -> (attributeType.id toSelectValues ((value as? List<*>)?.map(Any?::toString)
                 ?: emptyList())).right()
             else -> InvalidArgumentInsightClientError(
                 "Attribute.type ${attributeType.name} is not supported"
@@ -164,7 +165,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             is ObjectAttributeValue.Text -> value.value
             is ObjectAttributeValue.Textarea -> value.value
             is ObjectAttributeValue.Time -> value.value
-            is ObjectAttributeValue.Url -> value.value
+            is ObjectAttributeValue.Url -> value.values
             is ObjectAttributeValue.Select -> value.values// List<String>
             else -> InvalidArgumentInsightClientError(
                 "kType.classifier ${kType.classifier} is not supported."
