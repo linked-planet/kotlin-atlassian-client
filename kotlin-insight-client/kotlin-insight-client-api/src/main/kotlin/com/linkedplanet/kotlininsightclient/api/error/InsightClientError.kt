@@ -47,7 +47,7 @@ sealed class InsightClientError(
 }
 fun <T> InsightClientError.asEither(): Either<InsightClientError, T> = Either.Left(this)
 
-class InvalidArgumentInsightClientError(message: String) : InsightClientError("InvalidArgumentError", message)
+class InvalidArgumentInsightClientError(message: String) : InsightClientError("Unerwarteter Parameter", message)
 
 class InternalInsightClientError(error: String, message: String) : InsightClientError(error, message)
 class ExceptionInsightClientError(error: String, message: String) : InsightClientError(error, message)
@@ -58,9 +58,9 @@ class ObjectNotFoundError(val objectId: InsightObjectId):
     InsightClientError("Objekt nicht gefunden", "Das Objekt mit der InsightObjectId=$objectId wurde nicht gefunden.")
 
 class ObjectTypeNotFoundError(val rootObjectTypeId: InsightObjectTypeId) :
-    InsightClientError("ObjektTyp unbekannt", "Der ObjectType mit der angegebenen InsightObjectTypeId=$rootObjectTypeId wurde nicht gefunden.")
+    InsightClientError("Objekttyp unbekannt", "Der Objekttyp mit der angegebenen InsightObjectTypeId=$rootObjectTypeId wurde nicht gefunden.")
 
-class OtherNotFoundError(message: String) : InsightClientError("Night gefunden.", message)
+class OtherNotFoundError(message: String) : InsightClientError("Nicht gefunden.", message)
 
 open class OtherInsightClientError(error: String, message: String) : InsightClientError(error, message)
 
