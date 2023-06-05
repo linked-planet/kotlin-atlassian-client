@@ -29,15 +29,12 @@ import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
 
     @Test
     fun issues_01DeleteAllIssuesAndCreateTenTestIssues() {
-        println("### START issues_01DeleteAllIssuesAndCreateTenTestIssues")
-
         val success = runBlocking {
             val existingIssueIds = issueOperator.getIssuesByJQL("") { jsonObject, _ ->
                 Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
@@ -63,14 +60,11 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
             createResult.isRight()
         }
-        assertTrue(success)
-
-        println("### END issues_01DeleteAllIssuesAndCreateTenTestIssues")
+        assertThat(success, equalTo(true))
     }
 
     @Test
     fun issues_02GetIssuesByIssueType() {
-        println("### START issues_02GetIssuesByIssueType")
         val issues: List<Story> = runBlocking {
             issueOperator.getIssuesByIssueType(projectId, issueTypeId, parser = ::issueParser).orNull() ?: emptyList()
         }
@@ -82,12 +76,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
-        println("### END issues_02GetIssuesByIssueType")
     }
 
     @Test
     fun issues_03GetIssuesByJQL() {
-        println("### START issues_03GetIssuesByJQL")
         val issues: List<Story> = runBlocking {
             issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).orNull() ?: emptyList()
         }
@@ -98,12 +90,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             assertThat(issue.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
-        println("### END issues_03GetIssuesByJQL")
     }
 
     @Test
     fun issues_04GetIssuesByJQLPaginated() {
-        println("### START issues_04GetIssuesByJQLPaginated")
         // 10 items with page size 1 -> 10 pages
         val pageNumbers = 1..10
         val pages = pageNumbers.map { pageNumber ->
@@ -130,12 +120,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
-        println("### END issues_04GetIssuesByJQLPaginated")
     }
 
     @Test
     fun issues_05GetIssuesByJQLPaginated() {
-        println("### START issues_05GetIssuesByJQLPaginated")
         // 10 items with page size 2 -> 5 pages
         val pageNumbers = 1..5
         val pages = pageNumbers.map { pageNumber ->
@@ -163,12 +151,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
-        println("### END issues_05GetIssuesByJQLPaginated")
     }
 
     @Test
     fun issues_06GetIssuesByIssueTypePaginated() {
-        println("### START issues_06GetIssuesByIssueTypePaginated")
         // 10 items with page size 3 -> 4 pages
         val pageNumbers = 1..4
         val pages = pageNumbers.map { pageNumber ->
@@ -197,13 +183,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
-        println("### END issues_06GetIssuesByIssueTypePaginated")
     }
 
     @Test
     fun issues_07CreateIssue() {
-        println("### START issues_07CreateIssue")
-
         val summary = "MyNewSummary"
         val description = "MyDescription"
         val assignee = "test1"
@@ -240,7 +223,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                 fields
             )
         }.rightAssertedJiraClientError()
-        assertTrue(creationResponse.self.endsWith("/rest/api/2/issue/${creationResponse.id}"))
+        assertThat(creationResponse.self.endsWith("/rest/api/2/issue/${creationResponse.id}"), equalTo(true))
 
         val createdIssue = runBlocking {
             issueOperator.getIssueByJQL("key = \"${creationResponse.key}\"", ::issueParser)
@@ -270,16 +253,13 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         )
 
         val transitions = createdIssue.transitions
-        assertTrue(transitions.isNotEmpty())
-        assertTrue(transitions.singleOrNull { it.name == "Do it" }?.let { true } ?: false)
-        assertTrue(transitions.singleOrNull { it.name == "To Do" }?.let { true } ?: false)
-
-        println("### END issues_07CreateIssue")
+        assertThat(transitions.isNotEmpty(), equalTo(true))
+        assertThat(transitions.singleOrNull { it.name == "Do it" }?.let { true } ?: false, equalTo(true))
+        assertThat(transitions.singleOrNull { it.name == "To Do" }?.let { true } ?: false, equalTo(true))
     }
 
     @Test
     fun issues_08UpdateIssue() {
-        println("### START issues_08UpdateIssue")
 
         val issue = runBlocking {
             issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser)
@@ -341,13 +321,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertThat(issueAfterUpdate.insightObjectsKeys, equalTo(insightObjectsKeys))
         assertThat(issueAfterUpdate.status.statusCategory, equalTo("new"))
         assertThat(issueAfterUpdate.epicKey, equalTo(null))
-
-        println("### END issues_08UpdateIssue")
     }
 
     @Test
     fun issues_09DeleteIssue() {
-        println("### START issues_09DeleteIssue")
 
         val searchNewIssue = runBlocking {
             issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", ::issueParser)
@@ -361,51 +338,37 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).orNull()
         }
         assertThat(issuesAfterDeletion, equalTo(null))
-
-        println("### END issues_09DeleteIssue")
     }
 
     @Test
     fun issues_10GetNonExistingIssue() {
-        println("### START issues_10GetNonExistingIssue")
-
         val response = runBlocking {
             issueOperator.getIssueByKey("BLAAAA") { _, _ -> Either.Right(null) }
         }
-        assertTrue(response.isRight())
+        assertThat(response.isRight(), equalTo(true))
         assertThat(response.getOrElse { -1 }, equalTo(null))
-
-        println("### END issues_10GetNonExistingIssue")
     }
 
     @Test
     fun issues_11GetIssuesByIQLError() {
-        println("### START issues_11GetIssuesByIQLError")
-
         val response = runBlocking {
             issueOperator.getIssueByJQL("key = BLAAAA") { _, _ -> Either.Right(null) }
         }
-        assertTrue(response.isLeft())
-
-        println("### END issues_11GetIssuesByIQLError")
+        assertThat(response.isLeft(), equalTo(true))
     }
 
     @Test
     fun issues_12GetIssuesByJQLEmpty() {
-        println("### START issues_12GetIssuesByJQLEmpty")
         val issues: List<Story>? = runBlocking {
             issueOperator.getIssuesByJQL("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
         }
 
         assertThat(issues, notNullValue())
-        assertTrue(issues!!.isEmpty())
-
-        println("### END issues_12GetIssuesByJQLEmpty")
+        assertThat(issues!!.isEmpty(), equalTo(true))
     }
 
     @Test
     fun issues_13GetIssuesByJQLPaginatedEmpty() {
-        println("### START issues_13GetIssuesByJQLPaginatedEmpty")
         val page = runBlocking {
             issueOperator.getIssuesByJQLPaginated("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
         }
@@ -414,8 +377,6 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertThat(page!!.totalItems, equalTo(0))
         assertThat(page.totalPages, equalTo(0))
         assertThat(page.currentPageIndex, equalTo(0))
-        assertTrue(page.items.isEmpty())
-
-        println("### END issues_13GetIssuesByJQLPaginatedEmpty")
+        assertThat(page.items.isEmpty(), equalTo(true))
     }
 }

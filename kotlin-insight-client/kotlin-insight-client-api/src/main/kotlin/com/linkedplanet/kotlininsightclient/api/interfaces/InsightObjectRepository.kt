@@ -22,15 +22,24 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.Page
 
 /**
  * Generic Interface to CRUD one type of domain object, like a customer, to Insight.
+ *
+ * The Repository pattern is a Domain-Driven Design pattern intended to
+ * keep persistence concerns outside of the system's domain model.
  *
  * The idea is that the DomainObject itself is completely unaware of insight,
  * but it is also possible to use a DomainObject that stores the InsightObjectId,
  * which has some performance benefits, but leaks the insight ID into the domain.
  */
-interface GenericInsightObjectOperator<DomainType> {
+interface InsightObjectRepository<DomainType> {
+
+    /**
+     * The number of results to be returned per page when requesting a paginated list of Insight objects.
+     */
+    var RESULTS_PER_PAGE: Int
 
     /**
      * Create a new domain object in insight.
@@ -79,15 +88,15 @@ interface GenericInsightObjectOperator<DomainType> {
      *
      * @param iql A string containing a valid IQL (Insight Query Language)
      * @param withChildren Modifies the iql to contain all subtypes.
-     * @param pageFrom: The first page that should be retrieved. Starting from 0.
-     * @param perPage: The maximum number of objects that should be returned.
+     * @param pageIndex: The first page that should be retrieved. Starting from 0.
+     * @param pageSize: The maximum number of objects that should be returned.
      * @return Either the desired object, null if it is not found or an InsightClientError.
      */
     suspend fun getByIQL(
         iql: String,
         withChildren: Boolean = false,
-        pageFrom: Int = 1,
-        perPage: Int = Int.MAX_VALUE
-    ): Either<InsightClientError, List<DomainType>> // TODO: Move from List to PagedResult
+        pageIndex: Int = 0,
+        pageSize: Int = RESULTS_PER_PAGE
+    ): Either<InsightClientError, Page<DomainType>>
 
 }

@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlininsightclient.api.interfaces
 
 import arrow.core.Either
+import arrow.core.right
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
@@ -27,7 +28,13 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 
-typealias MapToDomain<T> = suspend (InsightObject) -> T
+typealias MapToDomain<DomainType> = suspend (InsightObject) -> Either<InsightClientError, DomainType>
+
+/**
+ * Function that does not change the input object
+ * Pass this as MapToDomain if you want to work directly with InsightObject instead of a specific DomainObject
+ */
+fun <T> identity(obj: T): Either<InsightClientError, T> = obj.right()
 
 /**
  * The InsightObjectOperator interface provides methods to interact with Insight objects.
@@ -90,6 +97,7 @@ interface InsightObjectOperator {
 
     /**
      * Retrieves a list of Insight objects of the specified type name.
+     * WARNING: The Attribute named "Name" could be renamed or removed.
      *
      * @param objectTypeName The name of the Insight object type to retrieve
      * @return Either an [InsightClientError] or a list of [InsightObject] objects
@@ -143,22 +151,13 @@ interface InsightObjectOperator {
 
     /**
      * Updates an existing Insight object in the system.
-     * This will overwrite the existing object, so missing attributes will get deleted.
+     * This function will overwrite the existing object, so missing attributes will get deleted.
+     * This update method works with InsightObject directly. It is useful for performance and legacy compatibility.
      *
      * @param obj The Insight object to update.
      * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
      */
-    suspend fun updateObject(obj: InsightObject): Either<InsightClientError, InsightObject>
-
-    /**
-     * Updates an existing Insight object in the system.
-     * This allows you to only update some attributes while keeping the values for all other attributes.
-     *
-     * @param obj The Insight object to update.
-     * @param insightAttributes: the attributes that will be updated
-     * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
-     */
-    suspend fun updateObject(obj: InsightObject, vararg insightAttributes: InsightAttribute): Either<InsightClientError, InsightObject>
+    suspend fun updateInsightObject(obj: InsightObject): Either<InsightClientError, InsightObject>
 
     /**
      * Updates an existing Insight object in the system.
@@ -167,7 +166,7 @@ interface InsightObjectOperator {
      * @param insightAttributes: the attributes that will be updated
      * @return An [Either] that contains either an [InsightClientError] or an [InsightObject] representing the updated object.
      */
-    suspend fun <T> updateObject(
+    suspend fun <T> updateInsightObject(
         objectId: InsightObjectId,
         vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
@@ -199,7 +198,7 @@ interface InsightObjectOperator {
      * @param objectTypeId The ID of the Insight object type.
      * @param insightAttributes
      */
-    suspend fun createObject(
+    suspend fun createInsightObject(
         objectTypeId: InsightObjectTypeId,
         vararg insightAttributes: InsightAttribute,
     ): Either<InsightClientError, InsightObjectId>

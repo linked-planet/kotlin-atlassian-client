@@ -19,14 +19,13 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.endsWith
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 interface InsightHistoryOperatorTest {
@@ -35,16 +34,12 @@ interface InsightHistoryOperatorTest {
 
     @Test
     fun testHistory() {
-        println("### START history_testHistory")
-
         runBlocking {
             val country = insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", ::identity).orNull()!!
             val history = insightHistoryOperator.getHistory(country.id).orNull()!!
-            assertTrue(history.historyItems.isNotEmpty())
+            assertThat(history.historyItems.isNotEmpty(), equalTo(true))
             assertThat(history.historyItems.last().actor.key, equalTo("admin"))
             assertThat(history.historyItems.last().created, endsWith("Z"))
         }
-
-        println("### END history_testHistory")
     }
 }

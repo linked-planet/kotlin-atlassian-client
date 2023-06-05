@@ -17,23 +17,27 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient
+package com.linkedplanet.kotlininsightclient.repositories
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.Country
+import com.linkedplanet.kotlininsightclient.InsightObjectType
+import com.linkedplanet.kotlininsightclient.TestAttributes
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 
-class CountryTestOperatorBasedOnAbstractImpl(
+class CountryTestRepositoryBasedOnAbstractImpl(
     override val insightObjectOperator: InsightObjectOperator
-) : AbstractInsightObjectOperator<Country>() {
+) : AbstractInsightObjectRepository<Country>() {
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     override val objectTypeId = InsightObjectType.Country.id
     private val shortName = TestAttributes.CountryShortName.attributeId
     private val name = TestAttributes.CountryName.attributeId

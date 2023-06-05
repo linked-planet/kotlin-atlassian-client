@@ -23,6 +23,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.gson.Gson
+import com.linkedplanet.kotlininsightclient.api.error.AuthenticationError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import org.http4k.client.Java8HttpClient
 import org.http4k.core.Body
@@ -58,8 +59,7 @@ class AuthenticatedJiraHttpClientFactory(
 
         val loginResponse = httpHandler(request)
         if (loginResponse.status != Status.OK) {
-            return InsightClientError(
-                "Authentication Failed",
+            return AuthenticationError(
                 "Login failed with HTTP StatusCode:${loginResponse.status.code}"
             ).left()
         } else {

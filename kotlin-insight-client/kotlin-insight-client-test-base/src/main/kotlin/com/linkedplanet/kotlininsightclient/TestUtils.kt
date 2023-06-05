@@ -20,8 +20,9 @@
 package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.OtherInsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import org.hamcrest.CoreMatchers.equalTo
@@ -38,12 +39,12 @@ fun <T> Either<InsightClientError, T>.orFail(): T {
     return (this as Either<InsightClientError, T>).orNull()!!
 }
 
-fun <T> Either<InsightClientError, T>.asError(): InsightClientError {
-    when (this) {
-        is Either.Left<InsightClientError> -> return this.value
-        is Either.Right -> assertThat(this, equalTo(InsightClientError("","")))
+fun <T> Either<InsightClientError, T>.asError(): InsightClientError = when (this) {
+    is Either.Left<InsightClientError> -> this.value
+    is Either.Right ->{
+        assertThat(this, equalTo(OtherInsightClientError("","")))
+        OtherInsightClientError("unreachable code!", "$this")
     }
-    return InsightClientError("error is neither left nor right", "$this")
 }
 
 suspend fun InsightObjectOperator.makeSureObjectWithNameDoesNotExist(objectTypeId: InsightObjectTypeId, name: String) {

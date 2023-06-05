@@ -19,11 +19,9 @@
  */
 package com.linkedplanet.kotlininsightclient
 
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
 import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
-import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
-import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -31,17 +29,26 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
-import com.linkedplanet.kotlininsightclient.api.model.addValue
+import com.linkedplanet.kotlininsightclient.api.model.addSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeByName
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeIdByName
 import com.linkedplanet.kotlininsightclient.api.model.getMultiReferenceValue
+import com.linkedplanet.kotlininsightclient.api.model.getSelectValues
 import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 import com.linkedplanet.kotlininsightclient.api.model.getUserList
-import com.linkedplanet.kotlininsightclient.api.model.getValueList
-import com.linkedplanet.kotlininsightclient.api.model.removeValue
+import com.linkedplanet.kotlininsightclient.api.model.removeSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.setValue
+import com.linkedplanet.kotlininsightclient.repositories.CompanyRepositoryBasedOnNameMapping
+import com.linkedplanet.kotlininsightclient.repositories.CompanyTestRepositoryBasedOnAbstractImpl
+import com.linkedplanet.kotlininsightclient.repositories.CompanyTestRepositoryManualImpl
+import com.linkedplanet.kotlininsightclient.repositories.CountryRepositoryBasedOnNameMapping
+import com.linkedplanet.kotlininsightclient.repositories.CountryTestRepositoryBasedOnAbstractImpl
+import com.linkedplanet.kotlininsightclient.repositories.CountryTestRepositoryManualImpl
+import com.linkedplanet.kotlininsightclient.repositories.SimpleObjectRepositoryBasedOnNameMapping
+import com.linkedplanet.kotlininsightclient.repositories.TestsWithListRepositoryBasedOnNameMapping
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -56,39 +63,16 @@ interface InsightObjectOperatorTest {
     val insightObjectTypeOperator: InsightObjectTypeOperator
     val insightSchemaOperator: InsightSchemaOperator
 
-    fun countryOperatorFromGeneric() = GenericInsightObjectOperatorImpl(Country::class,
-        insightObjectForDomainObject = { objectTypeId, domainObject: Country ->
-            insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
-        }
-    )
-
-    fun companyOperatorFromGeneric(countryOperator: GenericInsightObjectOperator<Country>) =
-        GenericInsightObjectOperatorImpl(Company::class,
-            insightObjectForDomainObject = { objectTypeId, domainObject: Company ->
-                insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
-            },
-            referenceAttributeToValue = { insightAttribute ->
-                val movie = insightAttribute.value.first().referencedObject!!.id
-                val eitherMovie = countryOperator.getById(movie)
-                eitherMovie.orNull()!!
-            },
-            attributeToReferencedObjectId = { schema: ObjectTypeSchemaAttribute, obj: Any? ->
-                val country = obj as Country
-                listOfNotNull(
-                    insightObjectOperator.getObjectByName(schema.referenceObjectTypeId!!, country.name, ::identity)
-                        .orNull()?.id
-                )
-            }
-        )
-
     @Test
-    fun testGenericInsightObjectOperatorCrud() = runBlocking {
-        val countryOperatorFromGeneric = countryOperatorFromGeneric()
-        val companyOperatorFromGeneric = companyOperatorFromGeneric(countryOperatorFromGeneric)
-        val countryManualImpl = CountryTestOperatorManualImpl(insightObjectOperator)
-        val companyManualImpl = CompanyTestOperatorManualImpl(insightObjectOperator, countryManualImpl)
-        val countryFromAbstract = CountryTestOperatorBasedOnAbstractImpl(insightObjectOperator)
-        val companyFromAbstract = CompanyTestOperatorBasedOnAbstractImpl(insightObjectOperator, countryFromAbstract)
+    fun testVariousInsightObjectRepositories() = runBlocking {
+        val countryOperatorFromGeneric = CountryRepositoryBasedOnNameMapping(
+            insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
+        val companyOperatorFromGeneric = CompanyRepositoryBasedOnNameMapping(
+            insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
+        val countryManualImpl = CountryTestRepositoryManualImpl(insightObjectOperator)
+        val companyManualImpl = CompanyTestRepositoryManualImpl(insightObjectOperator, countryManualImpl)
+        val countryFromAbstract = CountryTestRepositoryBasedOnAbstractImpl(insightObjectOperator)
+        val companyFromAbstract = CompanyTestRepositoryBasedOnAbstractImpl(insightObjectOperator, countryFromAbstract)
         // maybe use a parameter based testing framework
         listOf(
             Pair(countryOperatorFromGeneric, companyOperatorFromGeneric),
@@ -107,6 +91,11 @@ interface InsightObjectOperatorTest {
                 companyOperator.create(company).orFail()
                 val companyByName = companyOperator.getByName(company.name).orFail()
                 assertThat(companyByName, equalTo(company))
+                val byIQL = companyOperator.getByIQL("Name != null", pageIndex = 0, pageSize = 2).orFail()
+                assertThat(byIQL.pageSize, equalTo(2))
+                assertThat(byIQL.currentPageIndex, equalTo(0))
+                assertThat(byIQL.totalItems, equalTo(3))
+                assertThat(byIQL.totalPages, equalTo(2))
             } finally {
                 companyOperator.delete(company).orFail()
                 countryOperator.delete(country).orFail()
@@ -115,38 +104,17 @@ interface InsightObjectOperatorTest {
     }
 
     @Test
-    fun testGenericInsightObjectOperatorCrudWithListAttribute() = runBlocking {
-        println("### START object_testGenericInsightObjectOperatorCrudWithListAttribute")
+    fun testInsightObjectOperatorCrudWithListAttribute() = runBlocking {
+        val simpleObjectOperator = SimpleObjectRepositoryBasedOnNameMapping(
+            insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
 
-        val simpleObjectOperator = GenericInsightObjectOperatorImpl(SimpleObject::class,
-            insightObjectForDomainObject = { objectTypeId, domainObject: SimpleObject ->
-                insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
-            }
-        )
-        val testWithListsOperator = GenericInsightObjectOperatorImpl(TestWithLists::class,
-            insightObjectForDomainObject = { objectTypeId, domainObject: TestWithLists ->
-                insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
-            },
-            referenceAttributeToValue = { insightAttribute ->
-                val listOfObjects = insightAttribute.value
-                    .mapNotNull { it.referencedObject?.id }
-                    .mapNotNull { id -> simpleObjectOperator.getById(id).orNull() }
-                listOfObjects
-            },
-            attributeToReferencedObjectId = { schema: ObjectTypeSchemaAttribute, domainObjects ->
-                (domainObjects as List<*>)
-                    .mapNotNull { it as? SimpleObject }
-                    .mapNotNull {
-                        insightObjectOperator.getObjectByName(schema.referenceObjectTypeId!!, it.name, ::identity)
-                            .orNull()?.id
-                    }
-            }
-        )
+        val testWithListsOperator = TestsWithListRepositoryBasedOnNameMapping(
+            insightObjectOperator, insightObjectTypeOperator, insightSchemaOperator)
 
         val simpleObjects = simpleObjectOperator.getByIQL("Name in (Object2, Object3)").orFail()
         val objWithLists = TestWithLists(
             name = "CreatedByIntegrationTest",
-            itemList = simpleObjects,
+            itemList = simpleObjects.items,
             stringList = listOf("A", "B", "C")
         )
 
@@ -162,7 +130,6 @@ interface InsightObjectOperatorTest {
 
     @Test
     fun testObjectListWithFlatReference() {
-        println("### START object_testObjectListWithFlatReference")
         val companies = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.Company.id, toDomain = ::identity).orNull()!!.objects
         }
@@ -219,13 +186,10 @@ interface InsightObjectOperatorTest {
             equalTo("Germany")
         )
         assertThat(secondCompany.attachmentsExist, equalTo(true))
-
-        println("### END object_testObjectListWithFlatReference")
     }
 
     @Test
     fun testObjectListWithResolvedReference() {
-        println("### START object_testObjectListWithResolvedReference")
         val companies = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.Company.id, toDomain = ::identity).orNull()?.objects
         }
@@ -243,12 +207,10 @@ interface InsightObjectOperatorTest {
         }
         assertThat(country.getStringValue(CountryName.attributeId), equalTo("Germany"))
         assertThat(country.getStringValue(CountryShortName.attributeId), equalTo("DE"))
-        println("### END object_testObjectListWithResolvedReference")
     }
 
     @Test
     fun testObjectById() {
-        println("### START object_testObjectById")
         val company = runBlocking {
             insightObjectOperator.getObjectById(InsightObjectId(1), toDomain = ::identity).orFail()!!
         }
@@ -263,13 +225,25 @@ interface InsightObjectOperatorTest {
         assertThat(company.objectTypeName, equalTo("Company"))
         assertThat(company.objectTypeId, equalTo(InsightObjectTypeId(1)))
 
+        val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.DateTime
+        assertThat(created.displayValue, equalTo("27/Oct/22 11:15 AM"))
+//        assertThat(
+//            created.value?.withZoneSameInstant(ZoneOffset.UTC),
+//            equalTo(ZonedDateTime.parse("2022-10-27T09:15:53.212Z").withZoneSameInstant(ZoneOffset.UTC))
+//        )
+
+        val updated = company.getAttributeByName("Updated")!!.value as ObjectAttributeValue.DateTime
+        assertThat(updated.displayValue, equalTo("21/Feb/23 8:10 AM"))
+//        assertThat(
+//            updated.value?.withZoneSameInstant(ZoneOffset.UTC),
+//            equalTo(ZonedDateTime.parse("2023-02-21T07:10:25.993Z").withZoneSameInstant(ZoneOffset.UTC))
+//        )
+
         assertThat(company.attachmentsExist, equalTo(false))
-        println("### END object_testObjectById")
     }
 
     @Test
     fun testObjectSelfLink() = runBlocking {
-        println("### START object_testObjectSelfLink")
         val company = insightObjectOperator.getObjectById(InsightObjectId(1), ::identity).orFail()!!
         // first check if the URL is correct
         assertThat(company.objectSelf, endsWith("secure/insight/assets/IT-1"))
@@ -282,12 +256,10 @@ interface InsightObjectOperatorTest {
         val response = httpClient.getWithRelativePath(uri.path)
         assertThat(response.status.code, equalTo(200)) // also 200 if not logged in, but 404 if url is unknown
         assertThat(response.bodyString(), containsString("<title>Assets Search"))
-        println("### END object_testObjectSelfLink")
     }
 
     @Test
     fun testGetObjectsByObjectTypeName() = runBlocking {
-        println("### START object_testGetObjecsByObjectTypeName")
         val objs = insightObjectOperator.getObjectsByObjectTypeName("Country", toDomain = ::identity).orFail()
         val allCountryNames = objs.map { it.getStringValue(CountryName.attributeId) }
         assertThat(allCountryNames, Matchers.hasItem("Germany")) // among other items
@@ -295,7 +267,6 @@ interface InsightObjectOperatorTest {
 
     @Test
     fun testObjectWithListAttributes() {
-        println("### START object_testObjectWithListAttributes")
         val obj = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
         }!!.objects.first()
@@ -313,48 +284,51 @@ interface InsightObjectOperatorTest {
         assertThat(idList, equalTo(listOf(35, 36, 37).map { InsightObjectId(it) }))
         assertThat(nameList, equalTo(listOf("Object1", "Object2", "Object3")))
         assertThat(firstNameList, equalTo(listOf("F1", "F2", "F3")))
-        println("### END object_testObjectWithListAttributes")
     }
 
     @Test
     fun testAddingSelectList() {
-        println("### START object_testAddingSelectList")
         val obj = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
         }!!.objects.first()
-        val results = obj.getValueList(TestWithListsStringList.attributeId)
+
+        // check if options are A B C
+        val selectSchema = runBlocking {
+                insightObjectTypeOperator.getObjectType(InsightObjectType.TestWithLists.id).orFail()
+        }.attributes.firstOrNull { it.id == TestWithListsStringList.attributeId } as? ObjectTypeSchemaAttribute.Select
+        assertThat(selectSchema?.options, containsInAnyOrder("A", "B", "C"))
+
+        val results = obj.getSelectValues(TestWithListsStringList.attributeId)
         assertThat(results, equalTo(emptyList()))
-        obj.addValue(TestWithListsStringList.attributeId, "A")
-        obj.addValue(TestWithListsStringList.attributeId, "B")
-        runBlocking { insightObjectOperator.updateObject(obj).orNull() }
+        obj.addSelectValue(TestWithListsStringList.attributeId, "A")
+        obj.addSelectValue(TestWithListsStringList.attributeId, "B")
+        runBlocking { insightObjectOperator.updateInsightObject(obj).orNull() }
 
         val obj2 = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
         }!!.objects.first()
-        val results2 = obj2.getValueList(TestWithListsStringList.attributeId)
+        val results2 = obj2.getSelectValues(TestWithListsStringList.attributeId)
         assertThat(results2, containsInAnyOrder("A", "B"))
-        obj2.removeValue(TestWithListsStringList.attributeId, "B")
-        runBlocking { insightObjectOperator.updateObject(obj2).orNull() }
+        obj2.removeSelectValue(TestWithListsStringList.attributeId, "B")
+        runBlocking { insightObjectOperator.updateInsightObject(obj2).orNull() }
 
         val obj3 = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
         }!!.objects.first()
-        val results3 = obj3.getValueList(TestWithListsStringList.attributeId)
+        val results3 = obj3.getSelectValues(TestWithListsStringList.attributeId)
         assertThat(results3, equalTo(listOf("A")))
-        obj3.removeValue(TestWithListsStringList.attributeId, "A")
-        runBlocking { insightObjectOperator.updateObject(obj3).orNull() }
+        obj3.removeSelectValue(TestWithListsStringList.attributeId, "A")
+        runBlocking { insightObjectOperator.updateInsightObject(obj3).orNull() }
 
         val obj4 = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).orNull()
         }!!.objects.first()
-        val results4 = obj4.getValueList(TestWithListsStringList.attributeId)
+        val results4 = obj4.getSelectValues(TestWithListsStringList.attributeId)
         assertThat(results4, equalTo(emptyList()))
-        println("### END object_testAddingSelectList")
     }
 
     @Test
     fun testCreateAndDelete() {
-        println("### START object_testCreateAndDelete")
         runBlocking {
             // Check England does not exist
             insightObjectOperator.makeSureObjectWithNameDoesNotExist(InsightObjectType.Country.id, "England")
@@ -375,9 +349,9 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orFail()
 
-            assertThat(country1.id.value, greaterThan(0))
+            assertThat(country1.id.raw, greaterThan(0))
             assertThat(country1.getStringValue(CountryKey.attributeId)!!.isNotBlank(), equalTo(true))
-            assertThat(company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectId.value, greaterThan(0))
+            assertThat(company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectId.raw, greaterThan(0))
             assertThat(
                 company1.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectKey.isNotBlank(),
                 equalTo(true)
@@ -413,12 +387,10 @@ interface InsightObjectOperatorTest {
             assertThat(companyAfterDelete, equalTo(null))
             assertThat(countryAfterDelete, equalTo(null))
         }
-        println("### END object_testCreateAndDelete")
     }
 
     @Test
     fun testFilter() {
-        println("### START object_testFilter")
         runBlocking {
             val countries =
                 insightObjectOperator.getObjectsByIQL(
@@ -431,53 +403,36 @@ interface InsightObjectOperatorTest {
             assertThat(countries.first().getStringValue(CountryShortName.attributeId), equalTo("DE"))
             assertThat(countries.first().getStringValue(CountryName.attributeId), equalTo("Germany"))
         }
-        println("### END object_testFilter")
     }
 
     @Test
-    fun testUpdate() {
-        println("### START object_testUpdate")
-        runBlocking {
-            var country =
-                insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", toDomain = ::identity)
-                    .orNull()!!
-            assertThat(country.getStringValue(CountryName.attributeId), equalTo("Germany"))
-            assertThat(country.getStringValue(CountryShortName.attributeId), equalTo("DE"))
-            country.setValue(CountryShortName.attributeId, "ED")
-            country = runBlocking { insightObjectOperator.updateObject(country).orNull()!! }
-
-            val country2 =
-                insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", toDomain = ::identity)
-                    .orNull()!!
-            assertThat(country2.getStringValue(CountryName.attributeId), equalTo("Germany"))
-            assertThat(country2.getStringValue(CountryShortName.attributeId), equalTo("ED"))
-
-            var countryAfterUpdate =
-                insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", toDomain = ::identity)
-                    .orNull()!!
-            assertThat(countryAfterUpdate.getStringValue(CountryName.attributeId), equalTo("Germany"))
-            assertThat(countryAfterUpdate.getStringValue(CountryShortName.attributeId), equalTo("ED"))
-            countryAfterUpdate.setValue(CountryShortName.attributeId, "DE")
-            countryAfterUpdate = runBlocking { insightObjectOperator.updateObject(countryAfterUpdate).orNull()!! }
-
-            val countryAfterReUpdate =
-                insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", toDomain = ::identity)
-                    .orNull()!!
-            assertThat(
-                countryAfterReUpdate.getStringValue(CountryName.attributeId),
-                equalTo("Germany")
-            )
-            assertThat(
-                countryAfterReUpdate.getStringValue(CountryShortName.attributeId),
-                equalTo("DE")
-            )
+    fun testUpdate() = runBlocking {
+        val countryId = InsightObjectType.Country.id
+        var country = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
+        assertThat(country.getStringValue(CountryName.attributeId), equalTo("Germany"))
+        if (country.getStringValue(CountryShortName.attributeId) == "ED") {
+            //likely an old test run failed, try to fix it:
+            country.setValue(CountryShortName.attributeId, "DE")
+            insightObjectOperator.updateInsightObject(country).orFail()
+            country = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
         }
-        println("### END object_testUpdate")
+        assertThat(country.getStringValue(CountryShortName.attributeId), equalTo("DE"))
+        country.setValue(CountryShortName.attributeId, "ED")
+        insightObjectOperator.updateInsightObject(country).orFail()
+
+        val updatedCountry = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
+        assertThat(updatedCountry.getStringValue(CountryName.attributeId), equalTo("Germany"))
+        assertThat(updatedCountry.getStringValue(CountryShortName.attributeId), equalTo("ED"))
+        updatedCountry.setValue(CountryShortName.attributeId, "DE")
+        insightObjectOperator.updateInsightObject(updatedCountry).orFail()
+
+        val restoredCountry = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
+        assertThat(restoredCountry.getStringValue(CountryName.attributeId), equalTo("Germany"))
+        assertThat(restoredCountry.getStringValue(CountryShortName.attributeId), equalTo("DE"))
     }
 
     @Test
     fun testGetObjectsWithoutChildren() {
-        println("### START object_testGetObjectsWithoutChildren")
         val objectResponse = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.Abstract.id, withChildren = false, toDomain = ::identity)
                 .orNull()!!
@@ -487,12 +442,10 @@ interface InsightObjectOperatorTest {
         val objects = objectResponse.objects
         assertThat(objects, equalTo(emptyList()))
 
-        println("### END testGetObjectsWithoutChildren")
     }
 
     @Test
     fun testGetObjectsWithChildren() {
-        println("### START object_testGetObjectsWithChildren")
         val objectResponse = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.Abstract.id, withChildren = true, toDomain = ::identity)
                 .orNull()!!
@@ -507,16 +460,13 @@ interface InsightObjectOperatorTest {
 
         val secondObj = objects[1]
         assertThat(secondObj.id, equalTo(InsightObjectId(95)))
-
-        println("### END testGetObjectsWithChildren")
     }
 
     @Test
     fun testGetObjectsWithChildrenPaginated() {
-        println("### START object_testGetObjectsWithChildrenPaginated")
 
         // results 1 and 2
-        val allINSIGHTOBJECTList = runBlocking {
+        val allList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -525,14 +475,14 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(allINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val allObjects = allINSIGHTOBJECTList.objects
+        assertThat(allList.totalFilterCount, equalTo(2))
+        val allObjects = allList.objects
         assertThat(allObjects.size, equalTo(2))
         assertThat(allObjects[0].id, equalTo(InsightObjectId(94)))
         assertThat(allObjects[1].id, equalTo(InsightObjectId(95)))
 
         // results 1 and 2
-        val allExplINSIGHTOBJECTList = runBlocking {
+        val allExplList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -541,14 +491,14 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(allExplINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val allExplObjects = allExplINSIGHTOBJECTList.objects
+        assertThat(allExplList.totalFilterCount, equalTo(2))
+        val allExplObjects = allExplList.objects
         assertThat(allExplObjects.size, equalTo(2))
         assertThat(allExplObjects[0].id, equalTo(InsightObjectId(94)))
         assertThat(allExplObjects[1].id, equalTo(InsightObjectId(95)))
 
         // result 1
-        val firstINSIGHTOBJECTList = runBlocking {
+        val firstList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -557,13 +507,13 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(firstINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val firstObjects = firstINSIGHTOBJECTList.objects
+        assertThat(firstList.totalFilterCount, equalTo(2))
+        val firstObjects = firstList.objects
         assertThat(firstObjects.size, equalTo(1))
         assertThat(firstObjects[0].id, equalTo(InsightObjectId(94)))
 
         // result 2
-        val secondINSIGHTOBJECTList = runBlocking {
+        val secondList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -572,13 +522,13 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(secondINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val secondObjects = secondINSIGHTOBJECTList.objects
+        assertThat(secondList.totalFilterCount, equalTo(2))
+        val secondObjects = secondList.objects
         assertThat(secondObjects.size, equalTo(1))
         assertThat(secondObjects[0].id, equalTo(InsightObjectId(95)))
 
         // page doesn't exist
-        val emptyINSIGHTOBJECTList = runBlocking {
+        val emptyList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -587,16 +537,14 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(firstINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val emptyObjects = emptyINSIGHTOBJECTList.objects
+        assertThat(firstList.totalFilterCount, equalTo(2))
+        val emptyObjects = emptyList.objects
         assertThat(emptyObjects, equalTo(emptyList()))
 
-        println("### END object_testGetObjectsWithChildrenPaginated")
     }
 
     @Test
     fun testUserAttribute() {
-        println("### START object_testUserAttribute")
 
         val obj = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.User.id, toDomain = ::identity)
@@ -610,12 +558,10 @@ interface InsightObjectOperatorTest {
         assertThat(usersAttr.size, equalTo(2))
         assertThat(usersAttr.map { it.name }, hasItems("admin", "test1"))
 
-        println("### END object_testUserAttribute")
     }
 
     @Test
     fun testObjectCount() = runBlocking {
-        println("### START object_testGetObjectsWithChildrenPaginated")
         val count = insightObjectOperator.getObjectCount("objectType = Many").orFail()
         assertThat(count, equalTo(55))
     }

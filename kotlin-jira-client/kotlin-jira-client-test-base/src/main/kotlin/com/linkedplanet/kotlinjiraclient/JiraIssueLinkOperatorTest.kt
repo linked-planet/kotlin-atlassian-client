@@ -29,7 +29,6 @@ interface JiraIssueLinkOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
 
     @Test
     fun issueLinks_01CreateAndDeleteIssueLink() {
-        println("### START issueLinks_01CreateAndDeleteIssueLink")
         val (inward, _) = jiraCommentTestHelper.createIssueWithComment("issueLinks_01CreateAndDeleteIssueLink Inward")
         val (outward, _) = jiraCommentTestHelper.createIssueWithComment("issueLinks_01CreateAndDeleteIssueLink Outward")
 
@@ -57,13 +56,10 @@ interface JiraIssueLinkOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         // Check
         val issueLinksAfterDeletion = jiraIssueLinkTestHelper.getIssueLinks(inward.key)
         assertThat(issueLinksAfterDeletion.size(), equalTo(0))
-
-        println("### END issueLinks_01CreateAndDeleteIssueLink")
     }
 
     @Test
     fun issueLinks_02EpicLink() {
-        println("### START issueLinks_02EpicLink")
 
         // Create epic
         val epic = jiraIssueTestHelper.createEpic(
@@ -79,7 +75,5 @@ interface JiraIssueLinkOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
 
         val issue = jiraIssueTestHelper.getIssueByKey(issueWithEpicLink.key)
         assertThat(issue.epicKey, equalTo(epic.key))
-
-        println("### END issueLinks_02EpicLink")
     }
 }

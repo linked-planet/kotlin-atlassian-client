@@ -17,21 +17,28 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient
+package com.linkedplanet.kotlininsightclient.repositories
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import arrow.core.right
+import com.linkedplanet.kotlininsightclient.Country
+import com.linkedplanet.kotlininsightclient.InsightObjectType
+import com.linkedplanet.kotlininsightclient.TestAttributes
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.Page
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
+import kotlin.math.ceil
 
-class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightObjectOperator) : GenericInsightObjectOperator<Country>{
+class CountryTestRepositoryManualImpl(private val insightObjectOperator: InsightObjectOperator) : InsightObjectRepository<Country>{
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     val objectTypeId = InsightObjectType.Country.id
     private val shortName = TestAttributes.CountryShortName.attributeId
     private val name = TestAttributes.CountryName.attributeId
@@ -39,7 +46,7 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
     private fun toDomain(insightObject: InsightObject) = Country(
         name = insightObject.getStringValue(name)!!,
         shortName = insightObject.getStringValue(shortName)!!,
-    )
+    ).right()
 
     override suspend fun create(domainObject: Country): Either<InsightClientError, Country> {
         return insightObjectOperator.createObject(objectTypeId,
@@ -54,12 +61,13 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
         if (objectByName == null){
             create(domainObject).bind()
         } else {
-            val udpatedObject = insightObjectOperator.updateObject(
-                objectByName,
+            val udpatedObject = insightObjectOperator.updateInsightObject(
+                objectByName.id,
                 name toValue domainObject.name,
                 shortName toValue domainObject.name,
+                toDomain = ::identity
             ).bind()
-            toDomain(udpatedObject)
+            toDomain(udpatedObject).bind()
         }
     }
 
@@ -79,17 +87,25 @@ class CountryTestOperatorManualImpl(private val insightObjectOperator: InsightOb
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
-    ): Either<InsightClientError, List<Country>> =
+        pageIndex: Int,
+        pageSize: Int
+    ): Either<InsightClientError, Page<Country>> =
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
             withChildren,
-            pageFrom,
-            perPage,
+            pageIndex,
+            pageSize,
             ::toDomain
-        ).map { it.objects }
+        ).map { page ->
+            Page(
+                page.objects,
+                page.totalFilterCount,
+                ceil(page.totalFilterCount.toDouble() / pageSize.toDouble()).toInt(),
+                pageIndex,
+                pageSize
+            )
+        }
 
 
 }

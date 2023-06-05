@@ -22,50 +22,40 @@ package com.linkedplanet.kotlinjiraclient
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 interface JiraTransitionOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
 
     @Test
     fun transitions_01Transitions() {
-        println("### START transitions_01Transitions")
-
         val issue = jiraIssueTestHelper.createDefaultIssue(fieldFactory.jiraSummaryField("Transition Test Ticket"))
 
         // get doIt transition
         val transitions = jiraTransitionTestHelper.getAvailableTransitions(issue.key)
-        assertEquals(setOf("To Do", "Do it"), transitions.map { it.name }.toSet())
+        assertThat(transitions.map { it.name }.toSet(), equalTo(setOf("To Do", "Do it")))
         val doIt = transitions.firstOrNull { it.name == "Do it" }!!.id
 
         // move from "To Do" into "In Progress"
         val transitionToInProgress = jiraTransitionTestHelper.doTransition(issue.key, doIt)
-        assertTrue(transitionToInProgress)
+        assertThat(transitionToInProgress, equalTo(true))
         val issueInProgress = jiraIssueTestHelper.getIssueByKey(issue.key)
         assertThat(issueInProgress.status.name, equalTo("In Progress"))
 
         // get "To Do" transition
         val transitionsFromInProgress = jiraTransitionTestHelper.getAvailableTransitions(issue.key)
-        assertEquals(transitionsFromInProgress.map { it.name }.toSet(), setOf("To Do", "Did it"))
+        assertThat(transitionsFromInProgress.map { it.name }.toSet(), equalTo(setOf("To Do", "Did it")))
         val fromInProgressTransitions = transitionsFromInProgress.firstOrNull { it.name == "To Do" }!!.id
 
         // move from "In Progress" to "To Do"
         val transitionToToDo = jiraTransitionTestHelper.doTransition(issue.key, fromInProgressTransitions)
-        assertTrue(transitionToToDo)
+        assertThat(transitionToToDo, equalTo(true))
         val issueTodo = jiraIssueTestHelper.getIssueByKey(issue.key)
         assertThat(issueTodo.status.name, equalTo("To Do"))
-
-        println("### END transitions_01Transitions")
     }
 
     @Test
     fun transitions_02IssueNotFound() {
-        println("### START transitions_02IssueNotFound")
-
         val notFound = runBlocking { transitionOperator.getAvailableTransitions("unknownIssueKey") }
-        assertTrue(notFound.isLeft())
-
-        println("### END transitions_02IssueNotFound")
+        assertThat(notFound.isLeft(), equalTo(true))
     }
 }

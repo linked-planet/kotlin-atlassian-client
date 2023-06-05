@@ -30,8 +30,6 @@ interface JiraUserOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraField
 
     @Test
     fun users_01GetUsersByProjectKey() {
-        println("### START users_01GetUsersByProjectKey")
-
         val users = runBlocking { userOperator.getUsersByProjectKey(projectKey) }.rightAssertedJiraClientError()
         assertThat(users.size, equalTo(2))
 
@@ -40,14 +38,10 @@ interface JiraUserOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraField
 
         val test1 = users.firstOrNull { it.name == "test1" }
         JiraUserTestHelper.checkTestUser1(test1)
-
-        println("### END users_01GetUsersByProjectKey")
     }
 
     @Test
     fun users_02GetAssignableUsersByProjectKey() {
-        println("### START users_02GetAssignableUsersByProjectKey")
-
         val users =
             runBlocking { userOperator.getAssignableUsersByProjectKey(projectKey) }.rightAssertedJiraClientError()
         assertThat(users.size, equalTo(3))
@@ -60,33 +54,23 @@ interface JiraUserOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraField
 
         val test2 = users.firstOrNull { it.name == "test2" }
         JiraUserTestHelper.checkTestUser2(test2)
-
-        println("### END users_02GetAssignableUsersByProjectKey")
     }
 
     @Test
     fun users_03GetProjectAdminUsers() {
-        println("### START users_03GetProjectAdminUsers")
-
         val users = runBlocking { userOperator.getProjectAdminUsers(projectKey) }.rightAssertedJiraClientError()
         assertThat(users.size, equalTo(1))
 
         val admin = users.firstOrNull { it.name == "admin" }
         JiraUserTestHelper.checkAdminUser(admin)
-
-        println("### END users_03GetProjectAdminUsers")
     }
 
     @Test
     fun users_04GetSystemAdminUsers() {
-        println("### START users_04GetSystemAdminUsers")
-
         val users = runBlocking { userOperator.getSystemAdminUsers() }.rightAssertedJiraClientError()
         assertThat(users.size, equalTo(1))
 
         val admin = users.firstOrNull { it.name == "admin" }
         JiraUserTestHelper.checkAdminUser(admin)
-
-        println("### END users_04GetSystemAdminUsers")
     }
 }

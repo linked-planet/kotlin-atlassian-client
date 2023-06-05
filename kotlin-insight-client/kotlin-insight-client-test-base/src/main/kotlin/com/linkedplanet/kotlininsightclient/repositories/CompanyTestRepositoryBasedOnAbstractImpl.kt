@@ -17,13 +17,16 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient
+package com.linkedplanet.kotlininsightclient.repositories
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import com.linkedplanet.kotlininsightclient.Company
+import com.linkedplanet.kotlininsightclient.InsightObjectType
+import com.linkedplanet.kotlininsightclient.TestAttributes
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReference
@@ -32,11 +35,12 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
 
-class CompanyTestOperatorBasedOnAbstractImpl(
+class CompanyTestRepositoryBasedOnAbstractImpl(
     override val insightObjectOperator: InsightObjectOperator,
-    private val countryOperator: CountryTestOperatorBasedOnAbstractImpl
-) : AbstractInsightObjectOperator<Company>() {
+    private val countryOperator: CountryTestRepositoryBasedOnAbstractImpl
+) : AbstractInsightObjectRepository<Company>() {
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     override val objectTypeId = InsightObjectType.Company.id
     private val countryRef = TestAttributes.CompanyCountry.attributeId
     private val name = TestAttributes.CompanyName.attributeId

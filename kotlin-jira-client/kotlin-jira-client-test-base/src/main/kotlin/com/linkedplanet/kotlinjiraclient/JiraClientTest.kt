@@ -22,8 +22,12 @@ package com.linkedplanet.kotlinjiraclient
 import arrow.core.*
 import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.api.model.*
-import org.junit.Assert.*
+import org.junit.AssumptionViolatedException
 import org.junit.FixMethodOrder
+import org.junit.Rule
+import org.junit.rules.TestRule
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import org.junit.runners.MethodSorters
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -34,4 +38,24 @@ abstract class JiraClientTest<JiraFieldType> :
     JiraIssueTypeOperatorTest<JiraFieldType>,
     JiraProjectOperatorTest<JiraFieldType>,
     JiraTransitionOperatorTest<JiraFieldType>,
-    JiraUserOperatorTest<JiraFieldType>
+    JiraUserOperatorTest<JiraFieldType> {
+
+    @get:Rule
+    val watchman: TestRule = object : TestWatcher() {
+        override fun starting(desciption: Description) {
+            println("## Starting test: ${desciption.methodName}")
+        }
+
+        override fun failed(e: Throwable?, description: Description) {
+            println("### Failed test: ${description.methodName} message:${e?.message}")
+        }
+
+        override fun skipped(e: AssumptionViolatedException?, description: Description) {
+            println("## Skipped test: ${description.methodName} message:${e?.message}")
+        }
+
+        override fun succeeded(description: Description) {
+            println("## Succeeded test: ${description.methodName}")
+        }
+    }
+}

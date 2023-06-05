@@ -57,7 +57,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
     override suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>> =
         catchAsInsightClientError {
             objectFacade
-                .findAttachmentBeans(objectId.value)
+                .findAttachmentBeans(objectId.raw)
                 .map(::beanToInsightAttachment)
         }
 
@@ -76,7 +76,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     private fun allAttachmentStreamsForInsightObject(objectId: InsightObjectId) =
         catchAsInsightClientError {
-            val attachmentBeans = objectFacade.findAttachmentBeans(objectId.value)
+            val attachmentBeans = objectFacade.findAttachmentBeans(objectId.raw)
             attachmentBeans.map { bean ->
                 val attachmentContent = fileManager.getObjectAttachmentContent(bean.objectId, bean.nameInFileSystem)
                 bean.filename to attachmentContent
@@ -110,7 +110,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             val tempFilePath: Path = createTempFile(filename)
             Files.copy(inputStream, tempFilePath, StandardCopyOption.REPLACE_EXISTING)
             val mimeType = URLConnection.guessContentTypeFromName(filename)
-            val bean = objectFacade.addAttachmentBean(objectId.value, tempFilePath.toFile(), filename, mimeType, null)
+            val bean = objectFacade.addAttachmentBean(objectId.raw, tempFilePath.toFile(), filename, mimeType, null)
             val insightAttachment = beanToInsightAttachment(bean)
             insightAttachment
         }

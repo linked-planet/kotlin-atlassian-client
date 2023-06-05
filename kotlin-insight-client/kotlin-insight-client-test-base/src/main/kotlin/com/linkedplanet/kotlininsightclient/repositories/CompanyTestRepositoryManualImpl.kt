@@ -17,34 +17,41 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlininsightclient
+package com.linkedplanet.kotlininsightclient.repositories
 
 import arrow.core.Either
 import arrow.core.computations.either
-import arrow.core.identity
+import arrow.core.right
+import com.linkedplanet.kotlininsightclient.Company
+import com.linkedplanet.kotlininsightclient.InsightObjectType
+import com.linkedplanet.kotlininsightclient.TestAttributes
+import com.linkedplanet.kotlininsightclient.api.interfaces.identity
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReference
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
+import com.linkedplanet.kotlininsightclient.api.model.Page
 import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
+import kotlin.math.ceil
 
-class CompanyTestOperatorManualImpl(
+class CompanyTestRepositoryManualImpl(
     private val insightObjectOperator: InsightObjectOperator,
-    private val countryTestOperatorManualImpl: CountryTestOperatorManualImpl
-    ) : GenericInsightObjectOperator<Company>{
+    private val countryTestRepositoryManualImpl: CountryTestRepositoryManualImpl
+    ) : InsightObjectRepository<Company>{
 
+    override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     private val objectTypeId = InsightObjectType.Company.id
     private val countryRef = TestAttributes.CompanyCountry.attributeId
     private val name = TestAttributes.CompanyName.attributeId
 
     private suspend fun toDomain(insightObject: InsightObject) = Company(
         name = insightObject.getStringValue(name)!!,
-        country = countryTestOperatorManualImpl.getById(insightObject.getSingleReferenceValue(countryRef)!!.objectId).orNull()!!,
-    )
+        country = countryTestRepositoryManualImpl.getById(insightObject.getSingleReferenceValue(countryRef)!!.objectId).orNull()!!,
+    ).right()
 
     override suspend fun create(domainObject: Company): Either<InsightClientError, Company> = either {
         insightObjectOperator.createObject(
@@ -52,7 +59,7 @@ class CompanyTestOperatorManualImpl(
             name toValue domainObject.name,
             countryRef toReference domainObject.country?.name?.let { countryName ->
                 insightObjectOperator.getObjectByName(
-                    countryTestOperatorManualImpl.objectTypeId,
+                    countryTestRepositoryManualImpl.objectTypeId,
                     countryName,
                     ::identity
                 ).bind()?.id
@@ -66,12 +73,13 @@ class CompanyTestOperatorManualImpl(
         if (objectByName == null){
             create(domainObject).bind()
         } else {
-            val udpatedObject = insightObjectOperator.updateObject(
-                objectByName,
+            val udpatedObject = insightObjectOperator.updateInsightObject(
+                objectByName.id,
                 name toValue domainObject.name,
                 countryRef toValue domainObject.name,
+                toDomain = ::identity
             ).bind()
-            toDomain(udpatedObject)
+            toDomain(udpatedObject).bind()
         }
     }
 
@@ -91,17 +99,25 @@ class CompanyTestOperatorManualImpl(
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
-    ): Either<InsightClientError, List<Company>> =
+        pageIndex: Int,
+        pageSize: Int
+    ): Either<InsightClientError, Page<Company>> =
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
             withChildren,
-            pageFrom,
-            perPage,
+            pageIndex,
+            pageSize,
             ::toDomain
-        ).map { it.objects }
+        ).map { page ->
+            Page(
+                page.objects,
+                page.totalFilterCount,
+                ceil(page.totalFilterCount.toDouble() / pageSize.toDouble()).toInt(),
+                pageIndex,
+                pageSize
+            )
+        }
 
 
 }

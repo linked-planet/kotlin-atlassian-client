@@ -19,12 +19,13 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
+import java.time.ZonedDateTime
 import java.util.Collections.emptyList
 
 // region ID wrapper
 
 @JvmInline
-value class InsightObjectId(val value: Int) {
+value class InsightObjectId(val raw: Int) {
     companion object {
         val notPersistedObjectId = InsightObjectId(-1)
     }
@@ -49,6 +50,14 @@ data class InsightObjectPage<T>(
     val objects: List<T> = emptyList(),
 )
 
+data class Page<T> (
+    val items: List<T>,
+    val totalItems: Int,
+    val totalPages: Int,
+    val currentPageIndex: Int,
+    val pageSize: Int
+)
+
 fun <T> InsightObjectPage<T>.plus(insightObjectPage: InsightObjectPage<T>): InsightObjectPage<T> =
     InsightObjectPage(
         this.totalFilterCount + insightObjectPage.totalFilterCount,
@@ -66,26 +75,6 @@ data class InsightObject(
     val objectSelf: String
 )
 
-/**
- * See type attribute in response of https://insight-javadoc.riada.io/insight-javadoc-8.6/insight-rest/#object__id__attributes_get
- */
-enum class InsightObjectAttributeType(val attributeTypeId: Int) {
-    UNKNOWN(-1),
-    DEFAULT(0),
-    REFERENCE(1),
-    USER(2),
-    CONFLUENCE(3),
-    GROUP(4),
-    VERSION(5),
-    PROJECT(6),
-    STATUS(7);
-
-    companion object {
-        fun parse(value: Int) =
-            values().singleOrNull { it.attributeTypeId == value } ?: UNKNOWN
-    }
-}
-
 data class InsightReference(
     val objectTypeId: InsightObjectTypeId,
     val objectTypeName: String,
@@ -99,72 +88,72 @@ data class InsightReference(
  */
 data class InsightAttribute(
     val attributeId: InsightAttributeId,
-    val attributeType: InsightObjectAttributeType,
-    var value: List<ObjectAttributeValue>,
-    val schema: ObjectTypeSchemaAttribute?,
+    val value: ObjectAttributeValue,
+    val schema: ObjectTypeSchemaAttribute?
 ) {
+    fun isValueAttribute(): Boolean = when(value){
+        is ObjectAttributeValue.Text -> true
+        is ObjectAttributeValue.Integer -> true
+        is ObjectAttributeValue.Bool -> true
+        is ObjectAttributeValue.DoubleNumber -> true
+        is ObjectAttributeValue.Select -> true
+        is ObjectAttributeValue.Date -> true
+        is ObjectAttributeValue.Time -> true
+        is ObjectAttributeValue.DateTime -> true
+        is ObjectAttributeValue.Url -> true
+        is ObjectAttributeValue.Email -> true
+        is ObjectAttributeValue.Textarea -> true
+        is ObjectAttributeValue.Ipaddress -> true
+
+        is ObjectAttributeValue.Unknown -> false
+        is ObjectAttributeValue.Reference -> false
+        is ObjectAttributeValue.User -> false
+        is ObjectAttributeValue.Confluence -> false
+        is ObjectAttributeValue.Group -> false
+        is ObjectAttributeValue.Version -> false
+        is ObjectAttributeValue.Project -> false
+        is ObjectAttributeValue.Status -> false
+    }
+
+    fun isReference() : Boolean = value is ObjectAttributeValue.Reference
+
     companion object {
-
-        infix fun InsightAttributeId.toValue(value: Any?): InsightAttribute =
-            createAttr(
-                id = this,
-                type = InsightObjectAttributeType.DEFAULT,
-                value = listOf(
-                    ObjectAttributeValue(
-                        value = value,
-                        displayValue = null,
-                        referencedObject = null,
-                        user = null
-                    )
-                )
-            )
-
-        infix fun InsightAttributeId.toValues(primitiveValueList: List<Any?>): InsightAttribute =
-            createAttr(
-                id = this,
-                type = InsightObjectAttributeType.DEFAULT,
-                value = primitiveValueList.map {
-                    ObjectAttributeValue(
-                        value = it,
-                        displayValue = null,
-                        referencedObject = null,
-                        user = null
-                    )
-                }
-            )
-
-        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?): InsightAttribute =
-            createAttr(
-                id = this,
-                type = InsightObjectAttributeType.REFERENCE,
-                value = listOfNotNull(
-                    referencedObjectId?.let { createRef(it) }
-                )
-            )
-
-        infix fun InsightAttributeId.toReferences(referencedObjectIds: List<InsightObjectId>): InsightAttribute =
-            createAttr(
-                id = this,
-                type = InsightObjectAttributeType.REFERENCE,
-                value = referencedObjectIds.map {
-                    createRef(it)
-                }
-            )
-
-        private fun createRef(id: InsightObjectId) = ObjectAttributeValue(
-            value = null,
-            displayValue = null,
-            referencedObject = ReferencedObject(id, "", "", null),
-            user = null
+        infix fun InsightAttributeId.toValue(text: String) = InsightAttribute(this,
+            value = ObjectAttributeValue.Text(text),
+            schema = null, // null during creation
         )
-
-        private fun createAttr(id: InsightAttributeId, type: InsightObjectAttributeType, value: List<ObjectAttributeValue>) =
-            InsightAttribute(
-                attributeId = id,
-                attributeType = type,
-                value = value,
-                schema = null
-            )
+        infix fun InsightAttributeId.toValue(value: Int) = InsightAttribute(this,
+            value = ObjectAttributeValue.Integer(value),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: Boolean) = InsightAttribute(this,
+            value = ObjectAttributeValue.Bool(value),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: Double) = InsightAttribute(this,
+            value = ObjectAttributeValue.DoubleNumber(value),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: ZonedDateTime) = InsightAttribute(this,
+            value = ObjectAttributeValue.DateTime(value, ""),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toValue(value: List<String>) = InsightAttribute(this,
+            value = ObjectAttributeValue.Select(value),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) = InsightAttribute(this,
+            value = ObjectAttributeValue.Reference(listOfNotNull(referencedObjectId?.let {
+                ReferencedObject(it, "", "", null)
+            })),
+            schema = null, // null during creation
+        )
+        infix fun InsightAttributeId.toReferences(referencedObjectIds: List<InsightObjectId>) = InsightAttribute(this,
+            value = ObjectAttributeValue.Reference(referencedObjectIds.map {referencedObjectId ->
+                    ReferencedObject(referencedObjectId, "", "", null)
+            }),
+            schema = null, // null during creation
+        )
     }
 
 }
@@ -177,39 +166,191 @@ data class ObjectTypeSchema(
     val parentObjectTypeId: InsightObjectTypeId?
 )
 
-data class ObjectTypeSchemaAttribute(
-    val id: InsightAttributeId,
-    val name: String,
-    val defaultType: DefaultType?,
-    val options: String,
-    val minimumCardinality: Int,
-    val maximumCardinality: Int,
-    val referenceKind: ReferenceKind?,
-    val includeChildObjectTypes: Boolean,
-    val referenceObjectTypeId: InsightObjectTypeId?, // objectTypeId of the referenced object
-    val type: InsightObjectAttributeType
-)
+sealed class ObjectTypeSchemaAttribute {
 
-// if attributeType is default, this determines which kind of default type the value is
-enum class DefaultType(var defaultTypeId: Int) {
-    //    NONE(-1),  HTTP API models this with null, sdk with NONE
-    TEXT(0),
-    INTEGER(1),
-    BOOLEAN(2),
-    DOUBLE(3),
-    DATE(4),
-    TIME(5),
-    DATE_TIME(6),
-    URL(7),
-    EMAIL(8),
-    TEXTAREA(9),
-    SELECT(10),
-    IPADDRESS(11);
+    abstract val id: InsightAttributeId
+    abstract val name: String // attributeName
+    abstract val minimumCardinality: Int
+    abstract val maximumCardinality: Int
+    abstract val includeChildObjectTypes: Boolean
 
-    companion object {
-        fun parse(defaultTypeId: Int): DefaultType? =
-            DefaultType.values().singleOrNull { it.defaultTypeId == defaultTypeId }
+    fun isValueAttribute(): Boolean = when(this){
+        is Text -> true
+        is Integer -> true
+        is Bool -> true
+        is DoubleNumber -> true
+        is Select -> true
+        is Date -> true
+        is Time -> true
+        is DateTime -> true
+        is Url -> true
+        is Email -> true
+        is Textarea -> true
+        is Ipaddress -> true
+
+        is Unknown -> false
+        is Reference -> false
+        is User -> false
+        is Confluence -> false
+        is Group -> false
+        is Version -> false
+        is Project -> false
+        is Status -> false
     }
+
+    fun isReference() : Boolean = this is Reference
+
+    class Select(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+        val options: List<String>,
+    ) : ObjectTypeSchemaAttribute() // Select is the only DefaultType with maximumCardinality > 1
+
+    class Reference(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+        val referenceObjectTypeId: InsightObjectTypeId, // objectTypeId of the referenced object
+        val referenceKind: ReferenceKind
+    ) : ObjectTypeSchemaAttribute()
+
+    class Unknown(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+        val debugDescription: String
+    ) : ObjectTypeSchemaAttribute()
+
+    // region types having just the superclass attributes
+    data class Text(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Integer(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Bool(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class DoubleNumber(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Date(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Time(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class DateTime(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Url(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Email(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Textarea(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Ipaddress(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+
+    class User(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Confluence(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Group(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Version(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Project(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+    class Status(
+        override val id: InsightAttributeId,
+        override val name: String,
+        override val minimumCardinality: Int,
+        override val maximumCardinality: Int,
+        override val includeChildObjectTypes: Boolean,
+    ) : ObjectTypeSchemaAttribute()
+
+    // endregion types having just the superclass attributes
 }
 
 /**
@@ -224,7 +365,7 @@ enum class ReferenceKind(var referenceKindId: Int) {
     TECHNICAL(5);
 
     companion object {
-        fun parse(referenceKindId: Int): ReferenceKind =
+        fun parse(referenceKindId: Int?): ReferenceKind =
             ReferenceKind.values().singleOrNull { it.referenceKindId == referenceKindId } ?: UNKNOWN
     }
 }
@@ -247,12 +388,56 @@ data class InsightUser(
     val key: String
 )
 
-data class ObjectAttributeValue(
-    var value: Any?,
-    var displayValue: Any?,
-    var referencedObject: ReferencedObject?,
-    var user: InsightUser?
-)
+sealed class ObjectAttributeValue{
+
+    class Text(val value: String?) : ObjectAttributeValue()
+    class Integer(val value: Int?) : ObjectAttributeValue()
+    class Bool(val value: Boolean?) : ObjectAttributeValue()
+    class DoubleNumber(val value: Double?) : ObjectAttributeValue()
+    class Date(val value: ZonedDateTime?, val displayValue: String?) : ObjectAttributeValue()
+    class Time(val value: ZonedDateTime?, val displayValue: String?) : ObjectAttributeValue()
+    class DateTime(val value: ZonedDateTime?, val displayValue: String?) : ObjectAttributeValue()
+    class Url(val value: String?) : ObjectAttributeValue()
+    class Email(val value: String?) : ObjectAttributeValue()
+    class Textarea(val value: String?) : ObjectAttributeValue()
+    class Ipaddress(val value: String?) : ObjectAttributeValue()
+    class Select(val values: List<String>) : ObjectAttributeValue() // only default value with cardinality > 1
+
+
+    class Reference(val referencedObjects: List<ReferencedObject>) : ObjectAttributeValue()
+    class User(val users: List<InsightUser>) : ObjectAttributeValue()
+    class Confluence : ObjectAttributeValue() // A value that describes a page in Confluence
+    class Group : ObjectAttributeValue() // The Insight Group type
+    class Version : ObjectAttributeValue() // Value describing a version in Jira
+    class Project: ObjectAttributeValue() // Value that represents a Jira project
+    class Status : ObjectAttributeValue() // An Insight status type that can be associated with objects Cardinality:0-1
+    class Unknown : ObjectAttributeValue()
+
+    override fun toString(): String = when (this) {
+        is Text -> value ?: ""
+        is Integer -> value?.toString() ?: ""
+        is Bool -> value?.toString() ?: ""
+        is Date -> value?.toString() ?: ""
+        is DoubleNumber -> value?.toString() ?: ""
+        is Email -> value ?: ""
+        is Url -> value ?: ""
+        is Ipaddress -> value ?: ""
+        is Textarea -> value ?: ""
+        is DateTime -> value?.toString() ?: ""
+        is Time -> value?.toString() ?: ""
+        is Select -> values.joinToString(",")
+
+        is Reference -> referencedObjects.joinToString(",") { it.objectKey }
+        is User -> users.joinToString(",") { it.key }
+
+        is Group -> "" // TODO
+        is Project -> ""
+        is Status -> ""
+        is Version -> ""
+        is Confluence -> ""
+        is Unknown -> ""
+    }
+}
 
 data class ReferencedObject(
     var id: InsightObjectId,

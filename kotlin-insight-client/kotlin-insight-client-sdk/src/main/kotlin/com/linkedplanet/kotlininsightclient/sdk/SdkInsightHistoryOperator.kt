@@ -39,7 +39,7 @@ object SdkInsightHistoryOperator : InsightHistoryOperator {
     override suspend fun getHistory(objectId: InsightObjectId): Either<InsightClientError, InsightHistory> =
         catchAsInsightClientError {
             val historyItems =
-                objectFacade.findObjectHistoryBean(objectId.value).map { objectHistoryBean: ObjectHistoryBean ->
+                objectFacade.findObjectHistoryBean(objectId.raw).map { objectHistoryBean: ObjectHistoryBean ->
                     objectHistoryBean.run {
                         InsightHistoryItem(
                             id,

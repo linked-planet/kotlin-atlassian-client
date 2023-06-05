@@ -30,21 +30,15 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
 
     @Test
     fun comments_01CreateComment() {
-        println("### START comments_01CreateComment")
-
         val testName = "comments_01CreateComment"
         val (_, comment) = jiraCommentTestHelper.createIssueWithComment(testName)
 
         assertThat(comment.content, equalTo(testName))
         assertThat(comment.author, equalTo("admin"))
-
-        println("### END comments_01CreateComment")
     }
 
     @Test
     fun comments_02GetCommentsEmpty() {
-        println("### START comments_02GetCommentsEmpty")
-
         val issue = jiraIssueTestHelper.createDefaultIssue(fieldFactory.jiraSummaryField("Comment Test Ticket"))
 
         val comments = runBlocking {
@@ -53,14 +47,10 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
 
         assertThat(comments, notNullValue())
         assertThat(comments.size, equalTo(0))
-
-        println("### END comments_02GetCommentsEmpty")
     }
 
     @Test
     fun comments_03GetComments() {
-        println("### START comments_03GetComments")
-
         val testName = "comments_03GetComments"
         val (issue, _) = jiraCommentTestHelper.createIssueWithComment(testName)
 
@@ -74,14 +64,10 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
         val comment = comments.first()
         assertThat(comment.content, equalTo(testName))
         assertThat(comment.author, equalTo("admin"))
-
-        println("### END comments_03GetComments")
     }
 
     @Test
     fun comments_04UpdateComment() {
-        println("### START comments_04UpdateComment")
-
         val (issue, commentToUpdate) = jiraCommentTestHelper.createIssueWithComment("comments_04UpdateComment")
 
         runBlocking {
@@ -98,14 +84,10 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
 
         assertThat(comment.content, equalTo("Test-Update"))
         assertThat(comment.author, equalTo("admin"))
-
-        println("### END comments_04UpdateComment")
     }
 
     @Test
     fun comments_05DeleteComment() {
-        println("### START comments_05DeleteComment")
-
         val (issue, commentToDelete) = jiraCommentTestHelper.createIssueWithComment("comments_05DeleteComment")
 
         runBlocking { commentOperator.deleteComment(issue.key, commentToDelete.id) }.rightAssertedJiraClientError()
@@ -113,7 +95,5 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
         val commentsAfterDeletion =
             runBlocking { commentOperator.getComments(issue.key) }.rightAssertedJiraClientError()
         assertThat(commentsAfterDeletion.size, equalTo(0))
-
-        println("### END comments_05DeleteComment")
     }
 }

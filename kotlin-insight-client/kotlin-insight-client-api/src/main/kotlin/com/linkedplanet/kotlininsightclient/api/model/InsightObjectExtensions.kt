@@ -23,114 +23,88 @@ package com.linkedplanet.kotlininsightclient.api.model
 
 import java.time.ZonedDateTime
 
-private fun InsightObject.createAttribute(id: InsightAttributeId, attributeType: InsightObjectAttributeType) {
-    this.attributes = this.attributes + InsightAttribute(
-        attributeId = id,
-        attributeType = attributeType,
-        value = emptyList(),
-        null
-    )
-}
-
 fun InsightObject.getAttribute(id: InsightAttributeId): InsightAttribute? =
     this.attributes.singleOrNull { it.attributeId == id }
+
+inline fun <reified T: ObjectAttributeValue> InsightObject.getAttributeValue(id: InsightAttributeId): T? =
+    getAttribute(id)?.value as? T
 
 fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?.attributeId
 
 fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
     this.attributes.firstOrNull { it.schema?.name == name }
 
-fun InsightObject.isReferenceAttribute(id: InsightAttributeId): Boolean = getAttribute(id)?.isReference() ?: false
-
-fun InsightAttribute.isReference() : Boolean = attributeType == InsightObjectAttributeType.REFERENCE
+fun InsightObject.isReferenceAttribute(id: InsightAttributeId): Boolean =
+    getAttribute(id)?.isReference() ?: false
 
 fun InsightObject.isValueAttribute(id: InsightAttributeId): Boolean =
-    getAttribute(id)
-        ?.attributeType == InsightObjectAttributeType.DEFAULT
+    getAttribute(id)?.isValueAttribute() ?: false
 
 fun InsightObject.exists(id: InsightAttributeId): Boolean =
     getAttribute(id) != null
 
-fun InsightObject.clearValueList(id: InsightAttributeId) {
-    getAttribute(id)
-        ?.value = emptyList()
+// region ObjectAttributeValue.Select
+fun InsightObject.getSelectValues(id: InsightAttributeId): List<String> =
+    getAttributeValue<ObjectAttributeValue.Select>(id)?.values ?: emptyList()
+
+fun InsightObject.setSelectValues(attributeId: InsightAttributeId, values: List<String>) {
+    this.attributes = attributes
+        .filter { it.attributeId != attributeId } +
+            InsightAttribute(attributeId, ObjectAttributeValue.Select(values), null)
 }
 
-fun InsightObject.getValueList(id: InsightAttributeId): List<Any> =
-    getAttribute(id)
-        ?.value
-        ?.mapNotNull { it.value }
-        ?: emptyList()
-
-fun <T> InsightObject.setValueList(id: InsightAttributeId, values: List<T?>) {
-    if (!exists(id)) {
-        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
-    }
-    getAttribute(id)
-        ?.value = values.map {
-        ObjectAttributeValue(
-            value = it,
-            displayValue = "",
-            referencedObject = null,
-            user = null
-        )
-    }
+fun InsightObject.removeSelectValue(id: InsightAttributeId, value: String) {
+    val modifiedList = getSelectValues(id).filter { it != value }
+    setSelectValues(id, modifiedList)
 }
 
-fun <T> InsightObject.setValue(id: InsightAttributeId, value: T?) {
-    if (!exists(id)) {
-        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
-    }
-    getAttribute(id)
-        ?.value = listOf(ObjectAttributeValue(
-        value = value,
-        displayValue = "",
-        referencedObject = null,
-        user = null)
-    )
+fun InsightObject.addSelectValue(id: InsightAttributeId, value: String) {
+    val modifiedList = getSelectValues(id) + value
+    setSelectValues(id, modifiedList)
 }
 
-fun <T> InsightObject.removeValue(id: InsightAttributeId, value: T?) {
-    getAttribute(id)
-        ?.apply { this.value = this.value.filter { cur -> cur.value != value } }
+fun InsightObject.clearSelectValues(id: InsightAttributeId) =
+    setSelectValues(id, emptyList())
+// endregion ObjectAttributeValue.Select
+
+
+// region setters
+fun InsightObject.setValue(id: InsightAttributeId, value: ObjectAttributeValue){
+    this.attributes = attributes
+        .filter { it.attributeId != id } +
+            InsightAttribute(id, value, getAttribute(id)?.schema)
 }
 
-fun InsightObject.addValue(id: InsightAttributeId, value: Any?) {
-    if (!exists(id)) {
-        this.createAttribute(id, InsightObjectAttributeType.DEFAULT)
-    }
-    getAttribute(id)
-        ?.apply {
-            this.value = this.value + ObjectAttributeValue(
-                value = value,
-                displayValue = "",
-                referencedObject = null,
-                user = null
-            )
-        }
+fun InsightObject.setValue(id: InsightAttributeId, value: String?){
+    setValue(id,ObjectAttributeValue.Text(value))
+}
+fun InsightObject.setValue(id: InsightAttributeId, value: Int?){
+    setValue(id,ObjectAttributeValue.Integer(value))
 }
 
-fun <T> InsightObject.getValue(id: InsightAttributeId, transform: (Any) -> T): T? =
+fun InsightObject.setValue(id: InsightAttributeId, value: Boolean?){
+    setValue(id,ObjectAttributeValue.Bool(value))
+}
+
+fun InsightObject.setValue(id: InsightAttributeId, value: Double?){
+    setValue(id,ObjectAttributeValue.DoubleNumber(value))
+}
+
+fun InsightObject.setValue(id: InsightAttributeId, value: ZonedDateTime?, displayValue: String){
+    setValue(id, ObjectAttributeValue.DateTime(value, displayValue ))
+}
+// endregion setters
+
+
+// region getters
+fun <T> InsightObject.getValue(id: InsightAttributeId, transform: (ObjectAttributeValue) -> T): T? =
     getAttribute(id)
-        ?.value
-        ?.firstOrNull()
         ?.value
         ?.let { transform(it) }
 
-fun <T> InsightObject.getValueByName(name: String, transform: (Any) -> T): T? =
+fun <T> InsightObject.getValueByName(name: String, transform: (ObjectAttributeValue) -> T): T? =
     getAttributeIdByName(name)
         ?.let { getValue(it, transform) }
-
-fun <T> InsightObject.getValueList(id: InsightAttributeId, transform: (Any) -> T): List<T?> =
-    getAttribute(id)
-        ?.value
-        ?.map { transform(it) }
-        ?: emptyList()
-
-fun <T> InsightObject.getValueListByName(name: String, transform: (Any) -> T): List<T?> =
-    getAttributeIdByName(name)
-        ?.let { getValueList(it, transform) }
-        ?: emptyList()
 
 fun InsightObject.getStringValue(id: InsightAttributeId): String? =
     this.getValue(id) { it.toString() }
@@ -138,7 +112,7 @@ fun InsightObject.getStringValue(id: InsightAttributeId): String? =
 fun InsightObject.getIntValue(id: InsightAttributeId): Int? =
     getStringValue(id)?.toInt()
 
-fun InsightObject.getFloatValue(id: InsightAttributeId): Float? =
+fun InsightObject.getFloatValue(id: InsightAttributeId): Float? = //TODO: Everything should be double?
     getStringValue(id)?.toFloat()
 
 fun InsightObject.getBooleanValue(id: InsightAttributeId): Boolean? =
@@ -146,12 +120,21 @@ fun InsightObject.getBooleanValue(id: InsightAttributeId): Boolean? =
 
 fun InsightObject.getDateTimeValue(id: InsightAttributeId): ZonedDateTime? =
     getStringValue(id)?.let { ZonedDateTime.parse(it) }
+//endregion getters
 
+
+//region ObjectAttributeValue.User
+fun InsightObject.getUserList(id: InsightAttributeId): List<InsightUser> =
+    getAttributeValue<ObjectAttributeValue.User>(id)?.users ?: emptyList()
+// endregion user
+
+
+// region ObjectAttributeValue.Reference
 fun InsightObject.getSingleReferenceValue(id: InsightAttributeId): InsightReference? =
     getAttribute(id)
-        ?.value
+        ?.let { it.value as? ObjectAttributeValue.Reference }
+        ?.referencedObjects
         ?.firstOrNull()
-        ?.referencedObject
         ?.let {
             InsightReference(
                 it.objectType!!.id,
@@ -164,8 +147,8 @@ fun InsightObject.getSingleReferenceValue(id: InsightAttributeId): InsightRefere
 
 fun InsightObject.getMultiReferenceValue(id: InsightAttributeId): List<InsightReference> =
     getAttribute(id)
-        ?.value
-        ?.mapNotNull { it.referencedObject }
+        ?.let { it.value as? ObjectAttributeValue.Reference }
+        ?.referencedObjects
         ?.map {
             InsightReference(
                 it.objectType!!.id,
@@ -177,46 +160,30 @@ fun InsightObject.getMultiReferenceValue(id: InsightAttributeId): List<InsightRe
         }
         ?: emptyList()
 
-fun InsightObject.getUserList(id: InsightAttributeId): List<InsightUser> =
-    this.attributes
-        .firstOrNull { it.attributeId == id }
-        ?.value
-        ?.mapNotNull { it.user }
-        ?: emptyList()
-
 fun InsightObject.removeReference(attributeId: InsightAttributeId, referencedObjectId: InsightObjectId) {
-    getAttribute(attributeId)
-        ?.let {
-            it.value = it.value.filter { cur -> cur.referencedObject?.id != referencedObjectId }
-        }
+    val existingList = getAttributeValue<ObjectAttributeValue.Reference>(attributeId)?.referencedObjects ?: emptyList()
+    val referenceAttributeList = existingList.filter { it.id != referencedObjectId }
+    this.attributes = attributes
+        .filter { it.attributeId != attributeId } +
+            InsightAttribute(attributeId, ObjectAttributeValue.Reference(referenceAttributeList), null)
 }
 
-fun InsightObject.clearReferenceValue(id: InsightAttributeId) {
-    getAttribute(id)
-        ?.value = emptyList()
+fun InsightObject.clearReferenceValue(attributeId: InsightAttributeId) {
+    this.attributes = attributes
+        .filter { it.attributeId != attributeId } +
+            InsightAttribute(attributeId, ObjectAttributeValue.Reference(emptyList()), null)
 }
 
 fun InsightObject.addReference(attributeId: InsightAttributeId, referencedObjectId: InsightObjectId) {
-    if (!exists(attributeId)) {
-        this.createAttribute(attributeId, InsightObjectAttributeType.REFERENCE)
-    }
-    getAttribute(attributeId)
-        ?.let {
-            it.value = (it.value + ObjectAttributeValue(
-                value = null,
-                displayValue = null,
-                referencedObject = ReferencedObject(
-                    referencedObjectId,
-                    "",
-                    "",
-                    null
-                ),
-                user = null
-            ))
-        }
+    val existingList = getAttributeValue<ObjectAttributeValue.Reference>(attributeId)?.referencedObjects ?: emptyList()
+    val referenceAttributeList = existingList + ReferencedObject(referencedObjectId, "", "", null)
+    this.attributes = attributes
+        .filter { it.attributeId != attributeId } +
+            InsightAttribute(attributeId, ObjectAttributeValue.Reference(referenceAttributeList), null)
 }
 
 fun InsightObject.setSingleReference(id: InsightAttributeId, referencedObjectId: InsightObjectId) {
     this.clearReferenceValue(id)
     this.addReference(id, referencedObjectId)
 }
+// endregion

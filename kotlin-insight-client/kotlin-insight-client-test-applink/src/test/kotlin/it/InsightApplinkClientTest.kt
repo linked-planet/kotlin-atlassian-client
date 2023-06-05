@@ -26,7 +26,6 @@ import com.atlassian.confluence.user.UserAccessor
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner
 import com.linkedplanet.kotlinhttpclient.atlas.AtlasHttpClient
 import com.linkedplanet.kotlininsightclient.InsightClientTest
-import com.linkedplanet.kotlininsightclient.api.experimental.GenericInsightObjectOperatorImpl
 import com.linkedplanet.kotlininsightclient.api.interfaces.*
 import com.linkedplanet.kotlininsightclient.http.*
 import org.junit.Before
@@ -47,9 +46,7 @@ class InsightApplinkClientTest constructor(
     override val insightHistoryOperator get() = HttpInsightHistoryOperator(clientContext)
 
     init {
-        println("### Starting InsightApplinkClientTest")
-
-        println("### AppLinkUrl: ${applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java).displayUrl}")
+        println("AppLinkUrl: ${applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java).displayUrl}")
         val serviceUser = userAccessor.getUserByName("admin")
         AuthenticatedUserThreadLocal.asUser(serviceUser)
         val appLink = applicationLinkService.getPrimaryApplicationLink(JiraApplicationType::class.java)
@@ -58,11 +55,6 @@ class InsightApplinkClientTest constructor(
         )
 
         clientContext = HttpInsightClientContext("http://localhost:2990", httpClient)
-
-        GenericInsightObjectOperatorImpl.insightObjectOperator = insightObjectOperator
-        GenericInsightObjectOperatorImpl.insightObjectTypeOperator = insightObjectTypeOperator
-        GenericInsightObjectOperatorImpl.insightSchemaOperator = insightSchemaOperator
-        println("### Starting InsightApplinkClientTest")
     }
 
     @Before

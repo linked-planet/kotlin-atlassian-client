@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlininsightclient
 
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
-import com.linkedplanet.kotlininsightclient.api.model.DefaultType
+import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
@@ -32,34 +32,25 @@ interface InsightObjectTypeOperatorTest {
 
     @Test
     fun testGetObjectType() {
-        println("### START testGetObjectType")
-
         val objectType = runBlocking {
             insightObjectTypeOperator.getObjectType(InsightObjectType.Company.id).orFail()
         }
         assertThat(objectType, notNullValue())
         assertThat(objectType.name, equalTo("Company"))
         assertThat(objectType.parentObjectTypeId, equalTo(null))
-
         assertThat(objectType.attributes.size, equalTo(5))
 
-        val nameAttribute = objectType.attributes.singleOrNull { it.name == "Name" }
-        assertThat(nameAttribute, notNullValue())
-        assertThat(nameAttribute?.referenceKind, equalTo(null))
-        assertThat(nameAttribute?.defaultType, equalTo(DefaultType.TEXT))
+        val nameAttribute = objectType.attributes.singleOrNull { it.name == "Name" }  as? ObjectTypeSchemaAttribute.Text
+        assertThat(nameAttribute,  notNullValue())
 
-        val createdAttribute = objectType.attributes.singleOrNull { it.name == "Created" }
-        assertThat(createdAttribute, notNullValue())
-        assertThat(createdAttribute?.referenceKind, equalTo(null))
-        assertThat(createdAttribute?.defaultType, equalTo(DefaultType.DATE_TIME))
+        val createdAttribute = objectType.attributes.singleOrNull { it.name == "Created" } as? ObjectTypeSchemaAttribute.DateTime
+        assertThat(createdAttribute,  notNullValue())
 
-        val countryAttribute = objectType.attributes.singleOrNull { it.name == "Country" }
+        val countryAttribute = objectType.attributes.singleOrNull { it.name == "Country" } as? ObjectTypeSchemaAttribute.Reference
         assertThat(countryAttribute, notNullValue())
-        assertThat(countryAttribute?.defaultType, equalTo(null))
         assertThat(countryAttribute?.referenceKind, equalTo(ReferenceKind.REFERENCE))
+        assertThat(countryAttribute?.referenceObjectTypeId, equalTo(InsightObjectType.Country.id))
         assertThat(countryAttribute?.minimumCardinality, equalTo(0))
         assertThat(countryAttribute?.maximumCardinality, equalTo(1))
-
-        println("### END testGetObjectType")
     }
 }

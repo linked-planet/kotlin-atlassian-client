@@ -23,14 +23,17 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.rightIfNotNull
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.interfaces.GenericInsightObjectOperator
+import com.linkedplanet.kotlininsightclient.api.error.OtherNotFoundError
+import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
+import com.linkedplanet.kotlininsightclient.api.model.Page
+import kotlin.math.ceil
 
-abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectOperator<DomainType> {
+abstract class AbstractInsightObjectRepository<DomainType> : InsightObjectRepository<DomainType> {
 
     abstract val insightObjectOperator: InsightObjectOperator
     abstract val objectTypeId: InsightObjectTypeId
@@ -49,20 +52,17 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
         insightObjectOperator.createObject(
             objectTypeId,
             *attributes.toTypedArray(),
-            toDomain = { toDomain(it).bind() }
+            toDomain = ::toDomain
         ).bind()
     }
 
     override suspend fun update(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
         val insightObject = loadExistingInsightObject(domainObject).bind().rightIfNotNull {
-            InsightClientError(
-                "InsightObject update failed.",
-                "Could not retrieve the object."
-            )
+            OtherNotFoundError("Could not loadExistingInsightObject for DomainObject:$domainObject.")
         }.bind()
         val attributes: List<InsightAttribute> = attributesFromDomain(domainObject).bind()
         val insightObjectWithAttributes = insightObject.copy(attributes = attributes)
-        val updatedObject = insightObjectOperator.updateObject(insightObjectWithAttributes).bind()
+        val updatedObject = insightObjectOperator.updateInsightObject(insightObjectWithAttributes).bind()
         toDomain(updatedObject).bind()
     }
 
@@ -73,28 +73,36 @@ abstract class AbstractInsightObjectOperator<DomainType> : GenericInsightObjectO
         }
     }
 
-    override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> = either {
-        insightObjectOperator.getObjectByName(objectTypeId, name) { toDomain(it).bind() }.bind()
-    }
+    override suspend fun getByName(name: String): Either<InsightClientError, DomainType?> =
+        insightObjectOperator.getObjectByName(objectTypeId, name, ::toDomain)
 
-    override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> = either {
-        insightObjectOperator.getObjectById(objectId) { toDomain(it).bind() }.bind()
-    }
+    override suspend fun getById(objectId: InsightObjectId): Either<InsightClientError, DomainType?> =
+        insightObjectOperator.getObjectById(objectId, ::toDomain)
+
 
     override suspend fun getByIQL(
         iql: String,
         withChildren: Boolean,
-        pageFrom: Int,
-        perPage: Int
-    ): Either<InsightClientError, List<DomainType>> = either {
+        pageIndex: Int,
+        pageSize: Int
+    ): Either<InsightClientError, Page<DomainType>> = either {
         insightObjectOperator.getObjectsByIQL(
             objectTypeId,
             iql,
             withChildren,
-            pageFrom,
-            perPage
-        ) { toDomain(it).bind() }
-            .map { it.objects }.bind()
+            pageIndex,
+            pageSize,
+            ::toDomain
+        )
+            .map { page ->
+                Page(
+                    page.objects,
+                    page.totalFilterCount,
+                    ceil(page.totalFilterCount.toDouble() / pageSize.toDouble()).toInt(),
+                    pageIndex,
+                    pageSize
+                )
+            }.bind()
     }
 
 }
