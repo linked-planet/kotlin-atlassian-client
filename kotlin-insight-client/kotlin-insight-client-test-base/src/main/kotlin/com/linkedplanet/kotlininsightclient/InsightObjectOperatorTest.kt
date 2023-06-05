@@ -92,6 +92,11 @@ interface InsightObjectOperatorTest {
                 companyOperator.create(company).orFail()
                 val companyByName = companyOperator.getByName(company.name).orFail()
                 assertThat(companyByName, equalTo(company))
+                val byIQL = companyOperator.getByIQL("Name != null", pageIndex = 0, pageSize = 2).orFail()
+                assertThat(byIQL.pageSize, equalTo(2))
+                assertThat(byIQL.currentPageIndex, equalTo(0))
+                assertThat(byIQL.totalItems, equalTo(3))
+                assertThat(byIQL.totalPages, equalTo(2))
             } finally {
                 companyOperator.delete(company).orFail()
                 countryOperator.delete(country).orFail()
@@ -457,7 +462,7 @@ interface InsightObjectOperatorTest {
     fun testGetObjectsWithChildrenPaginated() {
 
         // results 1 and 2
-        val allINSIGHTOBJECTList = runBlocking {
+        val allList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -466,14 +471,14 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(allINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val allObjects = allINSIGHTOBJECTList.objects
+        assertThat(allList.totalFilterCount, equalTo(2))
+        val allObjects = allList.objects
         assertThat(allObjects.size, equalTo(2))
         assertThat(allObjects[0].id, equalTo(InsightObjectId(94)))
         assertThat(allObjects[1].id, equalTo(InsightObjectId(95)))
 
         // results 1 and 2
-        val allExplINSIGHTOBJECTList = runBlocking {
+        val allExplList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -482,14 +487,14 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(allExplINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val allExplObjects = allExplINSIGHTOBJECTList.objects
+        assertThat(allExplList.totalFilterCount, equalTo(2))
+        val allExplObjects = allExplList.objects
         assertThat(allExplObjects.size, equalTo(2))
         assertThat(allExplObjects[0].id, equalTo(InsightObjectId(94)))
         assertThat(allExplObjects[1].id, equalTo(InsightObjectId(95)))
 
         // result 1
-        val firstINSIGHTOBJECTList = runBlocking {
+        val firstList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -498,13 +503,13 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(firstINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val firstObjects = firstINSIGHTOBJECTList.objects
+        assertThat(firstList.totalFilterCount, equalTo(2))
+        val firstObjects = firstList.objects
         assertThat(firstObjects.size, equalTo(1))
         assertThat(firstObjects[0].id, equalTo(InsightObjectId(94)))
 
         // result 2
-        val secondINSIGHTOBJECTList = runBlocking {
+        val secondList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -513,13 +518,13 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(secondINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val secondObjects = secondINSIGHTOBJECTList.objects
+        assertThat(secondList.totalFilterCount, equalTo(2))
+        val secondObjects = secondList.objects
         assertThat(secondObjects.size, equalTo(1))
         assertThat(secondObjects[0].id, equalTo(InsightObjectId(95)))
 
         // page doesn't exist
-        val emptyINSIGHTOBJECTList = runBlocking {
+        val emptyList = runBlocking {
             insightObjectOperator.getObjects(
                 InsightObjectType.Abstract.id,
                 withChildren = true,
@@ -528,8 +533,8 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             ).orNull()!!
         }
-        assertThat(firstINSIGHTOBJECTList.totalFilterCount, equalTo(2))
-        val emptyObjects = emptyINSIGHTOBJECTList.objects
+        assertThat(firstList.totalFilterCount, equalTo(2))
+        val emptyObjects = emptyList.objects
         assertThat(emptyObjects, equalTo(emptyList()))
 
     }

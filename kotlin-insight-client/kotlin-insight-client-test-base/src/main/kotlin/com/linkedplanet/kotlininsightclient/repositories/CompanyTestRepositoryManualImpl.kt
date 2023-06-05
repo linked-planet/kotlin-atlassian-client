@@ -36,6 +36,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.Page
 import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
+import kotlin.math.ceil
 
 class CompanyTestRepositoryManualImpl(
     private val insightObjectOperator: InsightObjectOperator,
@@ -112,7 +113,7 @@ class CompanyTestRepositoryManualImpl(
             Page(
                 page.objects,
                 page.totalFilterCount,
-                page.totalFilterCount / pageSize,
+                ceil(page.totalFilterCount.toDouble() / pageSize.toDouble()).toInt(),
                 pageIndex,
                 pageSize
             )
