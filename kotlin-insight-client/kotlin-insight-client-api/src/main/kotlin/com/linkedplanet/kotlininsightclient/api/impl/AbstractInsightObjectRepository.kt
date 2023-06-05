@@ -31,6 +31,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.Page
+import kotlin.math.ceil
 
 abstract class AbstractInsightObjectRepository<DomainType> : InsightObjectRepository<DomainType> {
 
@@ -97,7 +98,7 @@ abstract class AbstractInsightObjectRepository<DomainType> : InsightObjectReposi
                 Page(
                     page.objects,
                     page.totalFilterCount,
-                    page.totalFilterCount / pageSize,
+                    ceil(page.totalFilterCount.toDouble() / pageSize.toDouble()).toInt(),
                     pageIndex,
                     pageSize
                 )

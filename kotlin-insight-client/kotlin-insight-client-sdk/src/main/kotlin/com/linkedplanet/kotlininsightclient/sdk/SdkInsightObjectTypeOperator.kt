@@ -147,7 +147,7 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
             ObjectTypeAttributeBean.DefaultType.TEXTAREA -> ObjectTypeSchemaAttribute.Textarea(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
-            ObjectTypeAttributeBean.DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.Textarea(
+            ObjectTypeAttributeBean.DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.Ipaddress(
                 iId, name, minimumCardinality, maximumCardinality, isIncludeChildObjectTypes
             )
             ObjectTypeAttributeBean.DefaultType.SELECT -> ObjectTypeSchemaAttribute.Select(
