@@ -59,7 +59,7 @@ class ObjectWithAllDefaultTypesRepository(
                 name = insightObject.getAttributeValue<Text>(Name.attributeId)?.value!!,
                 testBoolean = insightObject.getAttributeValue<ObjectAttributeValue.Bool>(TestBoolean.attributeId)?.value,
                 testInteger = insightObject.getAttributeValue<Integer>(TestInteger.attributeId)?.value,
-                testFloat = insightObject.getAttributeValue<ObjectAttributeValue.DoubleNumber>(TestFloat.attributeId)?.value?.toFloat(),
+                testFloat = insightObject.getAttributeValue<ObjectAttributeValue.DoubleNumber>(TestFloat.attributeId)?.value,
                 testDate = insightObject.getAttributeValue<ObjectAttributeValue.Date>(TestDate.attributeId)?.value,
                 testDateTime = insightObject.getAttributeValue<ObjectAttributeValue.DateTime>(TestDateTime.attributeId)?.value,
                 testUrl = insightObject.getAttributeValue<ObjectAttributeValue.Url>(TestUrl.attributeId)?.values?.toSet() ?: emptySet(),

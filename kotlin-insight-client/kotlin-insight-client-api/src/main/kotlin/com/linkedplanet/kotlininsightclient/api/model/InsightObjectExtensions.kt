@@ -115,8 +115,8 @@ fun InsightObject.getStringValue(id: InsightAttributeId): String? =
 fun InsightObject.getIntValue(id: InsightAttributeId): Int? =
     getStringValue(id)?.toInt()
 
-fun InsightObject.getFloatValue(id: InsightAttributeId): Float? = //TODO: Everything should be double?
-    getStringValue(id)?.toFloat()
+fun InsightObject.getDoubleValue(id: InsightAttributeId): Double? =
+    getStringValue(id)?.toDouble()
 
 fun InsightObject.getBooleanValue(id: InsightAttributeId): Boolean? =
     getStringValue(id)?.toBoolean()

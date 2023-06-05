@@ -63,7 +63,7 @@ enum class ObjectWithAllDefaultTypesAttributeIds(val attributeId: InsightAttribu
     Name(InsightAttributeId(68)),
     TestBoolean(InsightAttributeId(71)),
     TestInteger(InsightAttributeId(72)),
-    TestFloat(InsightAttributeId(73)),
+    TestFloat(InsightAttributeId(73)), // GUI calls this "Float" but it is a Double in SDK and HTTP
     TestDate(InsightAttributeId(74)),
     TestDateTime(InsightAttributeId(75)),
     TestUrl(InsightAttributeId(76)),
@@ -100,7 +100,7 @@ data class ObjectWithAllDefaultTypes(
     val name: String,
     val testBoolean: Boolean?,
     val testInteger: Int?,
-    val testFloat: Float?,
+    val testFloat: Double?, // GUI calls this "Float" but it is a Double in SDK and HTTP
     val testDate: LocalDate?,
     val testDateTime: ZonedDateTime?,
     val testUrl: Set<String>,
