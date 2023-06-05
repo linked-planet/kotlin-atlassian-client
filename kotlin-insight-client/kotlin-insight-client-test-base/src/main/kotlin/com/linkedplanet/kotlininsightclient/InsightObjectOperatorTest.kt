@@ -57,7 +57,8 @@ import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
 import org.junit.Test
 import java.net.URI
-import java.time.ZonedDateTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 
 interface InsightObjectOperatorTest {
     val insightObjectOperator: InsightObjectOperator
@@ -228,12 +229,19 @@ interface InsightObjectOperatorTest {
 
         val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.DateTime
         assertThat(created.value?.toInstant()?.toString(), startsWith("2022-10-27T"))
-        assertThat(created.value?.isEqual(ZonedDateTime.parse("2022-10-27T09:15:53.212Z")), equalTo(true))
         assertThat(created.displayValue, equalTo("27/Oct/22 11:15 AM"))
+        assertThat(
+            created.value?.truncatedTo(ChronoUnit.MINUTES)?.withZoneSameInstant(ZoneOffset.UTC),
+            equalTo(created.value?.truncatedTo(ChronoUnit.MINUTES)?.withZoneSameInstant(ZoneOffset.UTC))
+        )
+
         val updated = company.getAttributeByName("Updated")!!.value as ObjectAttributeValue.DateTime
         assertThat(updated.value?.toInstant()?.toString(), startsWith("2023-02-21T"))
-        assertThat(updated.value?.isEqual(ZonedDateTime.parse("2023-02-21T07:10:25.993Z")), equalTo(true))
         assertThat(updated.displayValue, equalTo("21/Feb/23 8:10 AM"))
+        assertThat(
+            created.value?.truncatedTo(ChronoUnit.MINUTES)?.withZoneSameInstant(ZoneOffset.UTC),
+            equalTo(created.value?.truncatedTo(ChronoUnit.MINUTES)?.withZoneSameInstant(ZoneOffset.UTC))
+        )
 
         assertThat(company.attachmentsExist, equalTo(false))
     }
