@@ -25,10 +25,8 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import arrow.core.rightIfNotNull
-import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
-import com.atlassian.jira.timezone.TimeZoneManager
 import com.atlassian.jira.user.util.UserManager
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
@@ -67,6 +65,7 @@ import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
 import com.riadalabs.jira.plugins.insight.services.model.factory.ObjectAttributeBeanFactory
 import io.riada.core.collector.model.toDisplayValue
+import java.time.ZoneId
 import java.util.*
 
 object SdkInsightObjectOperator : InsightObjectOperator {
@@ -80,8 +79,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
     private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
-    private val timezoneManager by lazy { ComponentAccessor.getComponent(TimeZoneManager::class.java) }
     private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()
+
+    private val zoneId: ZoneId by lazy { ZoneId.of("Z") }
 
     override suspend fun <T> getObjectById(
         id: InsightObjectId,
@@ -301,18 +301,19 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         toDomain(asInsightObject).bind()
     }
 
-    private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> =
-        catchAsInsightClientError {
-            val objectType = objectTypeFacade.loadObjectType(objectTypeId)
-            val objectTypeAttributeBeans = objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
-            val hasAttachments = objectFacade.findAttachmentBeans(id).isNotEmpty()
-            return@toInsightObject mapObjectBeanToInsightObject(
-                this@toInsightObject,
-                objectType,
-                objectTypeAttributeBeans,
-                hasAttachments
-            )
-        }
+    private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> = either {
+        val objectType = catchAsInsightClientError { objectTypeFacade.loadObjectType(objectTypeId) }.bind()
+        val attributeBeans = catchAsInsightClientError {
+            objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
+        }.bind()
+        val hasAttachments = catchAsInsightClientError { objectFacade.findAttachmentBeans(id).isNotEmpty() }.bind()
+        mapObjectBeanToInsightObject(
+            this@toInsightObject,
+            objectType,
+            attributeBeans,
+            hasAttachments
+        ).bind()
+    }
 
     private suspend fun mapObjectBeanToInsightObject(
         objectBean: ObjectBean,
@@ -387,17 +388,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             DefaultType.BOOLEAN -> ObjectAttributeValue.Bool(values.firstOrNull()?.booleanValue)
             DefaultType.DOUBLE -> ObjectAttributeValue.DoubleNumber(values.firstOrNull()?.doubleValue)
             DefaultType.DATE -> {
-                val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
-                val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateToString(Date.from(it.toInstant())) }
-                ObjectAttributeValue.Date(zonedDateTime, displayValue)
+                val date = values.firstOrNull()?.dateValue
+                val localDate = date?.toInstant()?.atZone(zoneId)?.toLocalDate()
+                val displayValue = date?.let { dateTimeFormatter.formatDateToString(it) }
+                ObjectAttributeValue.Date(localDate, displayValue)
             }
             DefaultType.TIME -> {
-                val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
+                val date = values.firstOrNull()?.dateValue
+                val localTime = date?.toInstant()?.atZone(zoneId)?.toLocalTime()
                 val displayValue = null // Insights original ObjectAssembler does not handle this case at all.
-                ObjectAttributeValue.Time(zonedDateTime, displayValue)
+                ObjectAttributeValue.Time(localTime, displayValue)
             }
             DefaultType.DATE_TIME -> {
-                val zonedDateTime = values.firstOrNull()?.dateValue?.let { toZonedDateTime(it) }
+                val date = values.firstOrNull()?.dateValue
+                val zonedDateTime = date?.toInstant()?.atZone(zoneId)
                 val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateTimeToString(Date.from(it.toInstant())) }
                 ObjectAttributeValue.DateTime(zonedDateTime, displayValue)
             }
@@ -409,9 +413,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             else -> internalError("Unsupported DefaultType (${objectTypeAttributeBean.defaultType})").bind()
         }
     }
-
-    private fun toZonedDateTime(it: Date) =
-        it.toInstant().atZone(timezoneManager.loggedInUserTimeZone.toZoneId())
 
     /**
      * Loads the full object that is referenced to create the compact [ReferencedObject].

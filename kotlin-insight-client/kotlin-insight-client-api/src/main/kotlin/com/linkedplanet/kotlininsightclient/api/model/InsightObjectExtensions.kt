@@ -29,6 +29,9 @@ fun InsightObject.getAttribute(id: InsightAttributeId): InsightAttribute? =
 inline fun <reified T: ObjectAttributeValue> InsightObject.getAttributeValue(id: InsightAttributeId): T? =
     getAttribute(id)?.value as? T
 
+inline fun <reified T: ObjectAttributeValue> InsightObject.getAttributeValueByName(name: String): T? =
+    getAttributeByName(name)?.value as? T
+
 fun InsightObject.getAttributeIdByName(name: String) = getAttributeByName(name)?.attributeId
 
 fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
