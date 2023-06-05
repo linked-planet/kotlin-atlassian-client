@@ -303,13 +303,14 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     private suspend fun ObjectBean.toInsightObject(): Either<InsightClientError, InsightObject> = either {
         val objectType = catchAsInsightClientError { objectTypeFacade.loadObjectType(objectTypeId) }.bind()
-        val objectTypeAttributeBeans =
-            catchAsInsightClientError { objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id) }.bind()
+        val attributeBeans = catchAsInsightClientError {
+            objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectType.id)
+        }.bind()
         val hasAttachments = catchAsInsightClientError { objectFacade.findAttachmentBeans(id).isNotEmpty() }.bind()
         mapObjectBeanToInsightObject(
             this@toInsightObject,
             objectType,
-            objectTypeAttributeBeans,
+            attributeBeans,
             hasAttachments
         ).bind()
     }
