@@ -48,9 +48,9 @@ class CompanyRepositoryBasedOnNameMapping(
         insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
 
     override suspend fun referenceAttributeToValue(attribute: InsightAttribute): Any? {
-        val movie = (attribute.value as ObjectAttributeValue.Reference).referencedObjects.first().id
-        val eitherMovie = countryOperator.getById(movie)
-        return eitherMovie.orNull()
+        val country = (attribute.value as ObjectAttributeValue.Reference).referencedObjects.first().id
+        val eitherCountry = countryOperator.getById(country)
+        return eitherCountry.orNull()
     }
 
     override suspend fun attributeToReferencedObjectId(
