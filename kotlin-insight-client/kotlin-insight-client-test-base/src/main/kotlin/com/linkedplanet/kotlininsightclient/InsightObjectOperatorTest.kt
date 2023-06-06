@@ -19,27 +19,42 @@
  */
 package com.linkedplanet.kotlininsightclient
 
+import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
+import com.linkedplanet.kotlininsightclient.ObjectWithAllDefaultTypesAttributeIds.*
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
+import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReference
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toUser
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toUsers
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
+import com.linkedplanet.kotlininsightclient.api.model.InsightUser
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addSelectValue
+import com.linkedplanet.kotlininsightclient.api.model.getAttributeAs
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeByName
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeIdByName
+import com.linkedplanet.kotlininsightclient.api.model.getBooleanValue
+import com.linkedplanet.kotlininsightclient.api.model.getDateTimeValue
+import com.linkedplanet.kotlininsightclient.api.model.getDateValue
+import com.linkedplanet.kotlininsightclient.api.model.getDoubleValue
+import com.linkedplanet.kotlininsightclient.api.model.getIntValue
 import com.linkedplanet.kotlininsightclient.api.model.getMultiReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getSelectValues
 import com.linkedplanet.kotlininsightclient.api.model.getSingleReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
+import com.linkedplanet.kotlininsightclient.api.model.getUrlValues
 import com.linkedplanet.kotlininsightclient.api.model.getUserList
 import com.linkedplanet.kotlininsightclient.api.model.removeSelectValue
+import com.linkedplanet.kotlininsightclient.api.model.setSelectValues
+import com.linkedplanet.kotlininsightclient.api.model.setUrlValues
 import com.linkedplanet.kotlininsightclient.api.model.setValue
 import com.linkedplanet.kotlininsightclient.repositories.CompanyRepositoryBasedOnNameMapping
 import com.linkedplanet.kotlininsightclient.repositories.CompanyTestRepositoryBasedOnAbstractImpl
@@ -145,23 +160,12 @@ interface InsightObjectOperatorTest {
         assertThat(firstCompany.label, equalTo("Test GmbH"))
 
         // Name
-        assertThat(firstCompany.getAttributeByName(CompanyName.attributeName), notNullValue())
-        assertThat(
-            firstCompany.getAttributeIdByName(CompanyName.attributeName),
-            equalTo(CompanyName.attributeId)
-        )
+        assertThat(firstCompany.getAttributeIdByName(CompanyName.attributeName), equalTo(CompanyName.attributeId))
         assertThat(firstCompany.getStringValue(CompanyName.attributeId), equalTo("Test GmbH"))
 
         // Country
-        assertThat(firstCompany.getAttributeByName(CompanyCountry.attributeName), notNullValue())
-        assertThat(
-            firstCompany.getAttributeIdByName(CompanyCountry.attributeName),
-            equalTo(CompanyCountry.attributeId)
-        )
-        assertThat(
-            firstCompany.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectName,
-            equalTo("Germany")
-        )
+        assertThat(firstCompany.getAttributeIdByName(CompanyCountry.attributeName), equalTo(CompanyCountry.attributeId))
+        assertThat(firstCompany.getSingleReferenceValue(CompanyCountry.attributeId)!!.objectName, equalTo("Germany"))
         assertThat(firstCompany.attachmentsExist, equalTo(false))
 
         val secondCompany = companies.firstOrNull { it.id == InsightObjectId(2) }
@@ -171,15 +175,10 @@ interface InsightObjectOperatorTest {
         assertThat(secondCompany.label, equalTo("Test AG"))
 
         // Name
-        assertThat(secondCompany.getAttributeByName(CompanyName.attributeName), notNullValue())
-        assertThat(
-            secondCompany.getAttributeIdByName(CompanyName.attributeName),
-            equalTo(CompanyName.attributeId)
-        )
+        assertThat(secondCompany.getAttributeIdByName(CompanyName.attributeName), equalTo(CompanyName.attributeId))
         assertThat(secondCompany.getStringValue(CompanyName.attributeId), equalTo("Test AG"))
 
         // Country
-        assertThat(secondCompany.getAttributeByName(CompanyCountry.attributeName), notNullValue())
         assertThat(
             secondCompany.getAttributeIdByName(CompanyCountry.attributeName),
             equalTo(CompanyCountry.attributeId)
@@ -244,34 +243,70 @@ interface InsightObjectOperatorTest {
         assertThat(company.attachmentsExist, equalTo(false))
     }
 
+    fun domainOjectWithAllDefaultTypes() = ObjectWithAllDefaultTypes(
+        id = InsightObjectId.notPersistedObjectId,
+        name = "testObjectWithAllDefaultTypes",
+        testBoolean = false,
+        testInteger = 72,
+        testFloat = 3.12345678901234, // only double precision does survive this roundtrip
+        testDate = LocalDate.parse("1984-04-01"),
+        testDateTime = ZonedDateTime.parse("1983-12-07T14:55:24Z"),
+        testUrl = setOf("http://localhost", "http://127.0.0.1"),
+        testEmail = "awesome@linked-planet.com",
+        testTextArea = "text area text",
+        testSelect = listOf("Test Option 2"),
+        testIpAddress = "192.168.0.2",
+    )
+
     @Test
     fun testObjectWithAllDefaultTypes() = runBlocking {
+        val original = domainOjectWithAllDefaultTypes()
         val repository = ObjectWithAllDefaultTypesRepository(insightObjectOperator)
-
-        val original = ObjectWithAllDefaultTypes(
-            id = InsightObjectId.notPersistedObjectId,
-            name = "testObjectWithAllDefaultTypes",
-            testBoolean = false,
-            testInteger = 72,
-            testFloat = 3.12345678901234, // only double precision does survive this roundtrip
-            testDate = LocalDate.parse("1984-04-01"),
-            testDateTime = ZonedDateTime.parse("1983-12-07T14:55:24Z"),
-            testUrl = setOf("http://localhost", "http://127.0.0.1"),
-            testEmail = "awesome@linked-planet.com",
-            testTextArea = "text area text",
-            testSelect = listOf("Test Option 2"),
-            testIpAddress = "192.168.0.2",
-        )
-        deleteAllObjectsWithType(repository.objectTypeId)
-        try {
+        autoClean(clean = { deleteAllObjectsWithType(repository.objectTypeId) }) {
             val created = repository.create(original).orFail()
             assertThat(created, not(equalTo(null)))
             assertThat(created, equalTo(original.copy(id = created.id)))
 
             val byId = repository.getById(created.id!!).orFail()
             assertThat(byId, equalTo(original.copy(id = created.id)))
-        } finally {
-            deleteAllObjectsWithType(repository.objectTypeId)
+        }
+    }
+
+    @Test
+    fun testInsightObjectExtensionsWithAllDefaultTypes() = runBlocking {
+        val original = domainOjectWithAllDefaultTypes()
+        val repository = ObjectWithAllDefaultTypesRepository(insightObjectOperator)
+        autoClean(clean = { deleteAllObjectsWithType(repository.objectTypeId) }) {
+            // test relies on testObjectWithAllDefaultTypes to be successful
+            val createdObj = repository.create(original).orFail()
+
+            val objectById = insightObjectOperator.getObjectById(createdObj.id!!, ::identity).orFail()!!
+            objectById.setValue(Name.attributeId, "updated")
+            objectById.setValue(TestBoolean.attributeId, true)
+            objectById.setValue(TestInteger.attributeId, 999)
+            objectById.setValue(TestFloat.attributeId, -123.0)
+            objectById.setValue(TestDate.attributeId, original.testDate!!.plusDays(1))
+            objectById.setValue(TestDateTime.attributeId, original.testDateTime!!.plusHours(10))
+            objectById.setUrlValues(TestUrl.attributeId, listOf("http://updated.values.it"))
+            objectById.setValue(TestEmail.attributeId, "udpated@linked-planet.com")
+            objectById.setValue(TestTextArea.attributeId, "updated text area")
+            objectById.setSelectValues(TestSelect.attributeId, listOf("Test Option 1"))
+            objectById.setValue(TestIpAddress.attributeId, "10.0.0.1")
+
+            insightObjectOperator.updateInsightObject(objectById).orFail()
+            val updatedObj = insightObjectOperator.getObjectById(objectById.id, ::identity).orFail()!!
+
+            assertThat(updatedObj.getStringValue(Name.attributeId), equalTo("updated"))
+            assertThat(updatedObj.getBooleanValue(TestBoolean.attributeId), equalTo(true))
+            assertThat(updatedObj.getIntValue(TestInteger.attributeId), equalTo(999))
+            assertThat(updatedObj.getDoubleValue(TestFloat.attributeId), equalTo(-123.0))
+            assertThat(updatedObj.getDateValue(TestDate.attributeId), equalTo(original.testDate.plusDays(1)))
+            assertThat(updatedObj.getDateTimeValue(TestDateTime.attributeId), equalTo(original.testDateTime.plusHours(10)))
+            assertThat(updatedObj.getUrlValues(TestUrl.attributeId), equalTo(listOf("http://updated.values.it")))
+            assertThat(updatedObj.getStringValue(TestEmail.attributeId), equalTo("udpated@linked-planet.com"))
+            assertThat(updatedObj.getStringValue(TestTextArea.attributeId), equalTo("updated text area"))
+            assertThat(updatedObj.getSelectValues(TestSelect.attributeId), equalTo(listOf("Test Option 1")))
+            assertThat(updatedObj.getStringValue(TestIpAddress.attributeId), equalTo("10.0.0.1"))
         }
     }
 
@@ -502,7 +537,6 @@ interface InsightObjectOperatorTest {
 
     @Test
     fun testGetObjectsWithChildrenPaginated() {
-
         // results 1 and 2
         val allList = runBlocking {
             insightObjectOperator.getObjects(
@@ -578,12 +612,10 @@ interface InsightObjectOperatorTest {
         assertThat(firstList.totalFilterCount, equalTo(2))
         val emptyObjects = emptyList.objects
         assertThat(emptyObjects, equalTo(emptyList()))
-
     }
 
     @Test
-    fun testUserAttribute() {
-
+    fun testGetUserAttribute() {
         val obj = runBlocking {
             insightObjectOperator.getObjects(InsightObjectType.User.id, toDomain = ::identity)
                 .map { it.objects.firstOrNull() }.orFail()
@@ -595,8 +627,49 @@ interface InsightObjectOperatorTest {
         val usersAttr = obj.getUserList(UserTestUsers.attributeId)
         assertThat(usersAttr.size, equalTo(2))
         assertThat(usersAttr.map { it.name }, hasItems("admin", "test1"))
-
     }
+
+    @Test
+    fun testUserCrud() = runBlocking {
+        suspend fun getUserAttributes(objectId: InsightObjectId): Pair<List<InsightUser>?, List<InsightUser>> {
+            val insightObject = insightObjectOperator.getObjectById(objectId, ::identity).orFail()!!
+            val attrUser = insightObject.getAttributeAs<InsightAttribute.User>(UserTestUser.attributeId)?.users
+            val attrUsers = insightObject.getUserList(UserTestUsers.attributeId)
+            return Pair(attrUser, attrUsers)
+        }
+
+        val objectName = "createdByUnitTest"
+        autoClean(clean = { deleteObjectByName(InsightObjectType.User.id, objectName).orFail() }) {
+            val user1 = InsightUser("", "", "", "JIRAUSER10100")
+            val user2 = InsightUser("", "", "", "JIRAUSER10101")
+            val objectId = insightObjectOperator.createInsightObject(
+                InsightObjectType.User.id,
+                UserTestName.attributeId toValue objectName,
+                UserTestUser.attributeId toUser user1,
+                UserTestUsers.attributeId toUsers listOf(user1)
+            ).orFail()
+            val (attrUser, attrUsers) = getUserAttributes(objectId)
+            assertThat(attrUser?.firstOrNull()?.key, equalTo(user1.key))
+            assertThat(attrUsers.firstOrNull()?.key, equalTo(user1.key))
+
+            insightObjectOperator.updateInsightObject(objectId,
+                UserTestUser.attributeId toUser user2,
+                UserTestUsers.attributeId toUsers listOf(user2, user1),
+                toDomain = ::identity )
+            val (updatedAttrUser, updatedAttrUsers) = getUserAttributes(objectId)
+            assertThat(updatedAttrUser?.firstOrNull()?.key, equalTo(user2.key))
+            assertThat(updatedAttrUsers.map { it.key }.toSet(), equalTo(setOf(user1.key, user2.key)))
+        }
+    }
+
+
+
+    private suspend fun deleteObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, Unit> =
+        arrow.core.computations.either {
+            insightObjectOperator.getObjectByName(objectTypeId, name, ::identity).bind()?.id?.let { id ->
+                insightObjectOperator.deleteObject(id).bind()
+            }
+        }
 
     @Test
     fun testObjectCount() = runBlocking {

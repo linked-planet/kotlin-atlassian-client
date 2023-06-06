@@ -54,3 +54,12 @@ suspend fun InsightObjectOperator.makeSureObjectWithNameDoesNotExist(objectTypeI
     assertThat(getObjectByName(objectTypeId, name, toDomain = ::identity).orFail(), equalTo(null))
     //if the former assertion failed that means deleteObject is not working, so this attachment test fails too
 }
+
+suspend fun autoClean(clean: suspend () -> Unit, testCode: suspend () -> Unit){
+    try {
+        clean()
+        testCode()
+    } finally {
+        clean()
+    }
+}

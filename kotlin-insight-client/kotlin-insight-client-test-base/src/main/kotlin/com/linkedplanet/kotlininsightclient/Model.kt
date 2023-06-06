@@ -55,6 +55,7 @@ enum class TestAttributes(val attributeId: InsightAttributeId, val attributeName
     SimpleObjectFirstname(InsightAttributeId(15), "Firstname"),
     SimpleObjectLastname(InsightAttributeId(16), "Lastname"),
 
+    UserTestName(InsightAttributeId(40), "Name"),
     UserTestUser(InsightAttributeId(43), "User"),
     UserTestUsers(InsightAttributeId(44), "Users"),
 }
