@@ -82,8 +82,8 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
         domainObjectByInsightObject(insightObject)
 
     override suspend fun attributesFromDomain(domainObject: DomainType): Either<InsightClientError, List<InsightAttribute>> =
-        props.map { prop ->
-            val attributeType: ObjectTypeSchemaAttribute = attrsMap[prop.name.lowercase()]!!
+        props.mapNotNull { prop ->
+            val attributeType: ObjectTypeSchemaAttribute = attrsMap[prop.name.lowercase()] ?: return@mapNotNull null
             val value: Any? = prop.get(domainObject)
             when {
                 attributeType.isValueAttribute() -> mapValueAttribute(value, attributeType)
@@ -135,7 +135,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
     ): Either<InsightClientError, DomainType> = either {
         val constructor = klass.primaryConstructor!!
         val args = constructor.parameters.map { param ->
-            val attributeId = attrsMap[param.name!!.lowercase()]!!.id
+            val attributeId = attrsMap[param.name?.lowercase()]?.id ?: return@map null
             val attribute = insightObject.getAttribute(attributeId)
             val mappedValue = when {
                 attribute?.isReference() == true -> referenceAttributeToValue(attribute)
