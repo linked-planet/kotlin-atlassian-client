@@ -428,7 +428,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 DefaultType.TEXTAREA -> ObjectTypeSchemaAttribute.TextareaSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.TextareaSchema(
+                DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.IpaddressSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
                 DefaultType.SELECT -> ObjectTypeSchemaAttribute.SelectSchema(

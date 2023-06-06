@@ -28,9 +28,9 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 
 class CompanyRepositoryBasedOnNameMapping(
@@ -47,9 +47,9 @@ class CompanyRepositoryBasedOnNameMapping(
         insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
 
     override suspend fun referenceAttributeToValue(attribute: InsightAttribute): Any? {
-        val movie = (attribute as InsightAttribute.Reference).referencedObjects.first().id
-        val eitherMovie = countryOperator.getById(movie)
-        return eitherMovie.orNull()
+        val country = (attribute as InsightAttribute.Reference).referencedObjects.first().id
+        val eitherCountry = countryOperator.getById(country)
+        return eitherCountry.orNull()
     }
 
     override suspend fun attributeToReferencedObjectId(

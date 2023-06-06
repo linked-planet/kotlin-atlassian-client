@@ -34,6 +34,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.Page
 import com.linkedplanet.kotlininsightclient.api.model.getStringValue
+import kotlin.math.ceil
 
 class CountryTestRepositoryManualImpl(private val insightObjectOperator: InsightObjectOperator) : InsightObjectRepository<Country>{
 
@@ -100,7 +101,7 @@ class CountryTestRepositoryManualImpl(private val insightObjectOperator: Insight
             Page(
                 page.objects,
                 page.totalFilterCount,
-                page.totalFilterCount / pageSize,
+                ceil(page.totalFilterCount.toDouble() / pageSize.toDouble()).toInt(),
                 pageIndex,
                 pageSize
             )
