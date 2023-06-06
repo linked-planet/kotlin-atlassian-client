@@ -44,9 +44,11 @@ import com.linkedplanet.kotlininsightclient.http.model.ObjectUpdateApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.getEditAttributes
 import com.linkedplanet.kotlininsightclient.http.model.toEditObjectItem
 import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class HttpInsightObjectOperator(private val context: HttpInsightClientContext) : InsightObjectOperator {
@@ -345,7 +347,10 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 InsightAttribute.Time(attributeId, localTime, values.firstOrNull()?.displayValue as? String?, schema)
             }
             DefaultType.DATE_TIME -> {
-                val zonedDateTime = singleValue()?.let { ZonedDateTime.parse(it) }
+
+                val javaDate = singleValue()?.let { Date.from(Instant.from(DateTimeFormatter.ISO_DATE_TIME.parse(it))) }
+                val zonedDateTime = singleValue()?.let { it -> ZonedDateTime.parse(it) }
+                println("HTTP original: ${singleValue()}  javaDate:${javaDate.toString()} zonedDateTime:${zonedDateTime}  displayValue${values.firstOrNull()?.displayValue}")
                 InsightAttribute.DateTime(attributeId, zonedDateTime, values.firstOrNull()?.displayValue as? String?, schema)
             }
             DefaultType.EMAIL -> InsightAttribute.Email(attributeId, singleValue(), schema)

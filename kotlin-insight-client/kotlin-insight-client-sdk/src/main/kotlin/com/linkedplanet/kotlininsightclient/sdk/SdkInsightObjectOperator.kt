@@ -403,9 +403,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 InsightAttribute.Time(id,localTime, displayValue, schema)
             }
             DefaultType.DATE_TIME -> {
-                val date = values.firstOrNull()?.dateValue
+                val date: Date? = values.firstOrNull()?.dateValue
                 val zonedDateTime = date?.toInstant()?.atZone(zoneId)
                 val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateTimeToString(Date.from(it.toInstant())) }
+                println("SDK: original javaDate:${date.toString()} zonedDateTime:${zonedDateTime} displayValue${displayValue}")
                 InsightAttribute.DateTime(id,zonedDateTime, displayValue, schema)
             }
             DefaultType.EMAIL -> InsightAttribute.Email(id,values.firstOrNull()?.textValue, schema)
