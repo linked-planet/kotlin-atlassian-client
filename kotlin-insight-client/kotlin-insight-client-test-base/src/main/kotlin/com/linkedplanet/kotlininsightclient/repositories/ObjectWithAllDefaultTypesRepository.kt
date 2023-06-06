@@ -29,7 +29,6 @@ import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.impl.AbstractInsightObjectRepository
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toEmailValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toIpaddressValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toSelectValues
@@ -38,9 +37,9 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue.Integer
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue.Text
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Integer
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Text
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeValue
 
 class ObjectWithAllDefaultTypesRepository(
@@ -57,17 +56,17 @@ class ObjectWithAllDefaultTypesRepository(
             ObjectWithAllDefaultTypes(
                 id = insightObject.id,
                 name = insightObject.getAttributeValue<Text>(Name.attributeId)?.value!!,
-                testBoolean = insightObject.getAttributeValue<ObjectAttributeValue.Bool>(TestBoolean.attributeId)?.value,
+                testBoolean = insightObject.getAttributeValue<InsightAttribute.Bool>(TestBoolean.attributeId)?.value,
                 testInteger = insightObject.getAttributeValue<Integer>(TestInteger.attributeId)?.value,
-                testFloat = insightObject.getAttributeValue<ObjectAttributeValue.DoubleNumber>(TestFloat.attributeId)?.value,
-                testDate = insightObject.getAttributeValue<ObjectAttributeValue.Date>(TestDate.attributeId)?.value,
-                testDateTime = insightObject.getAttributeValue<ObjectAttributeValue.DateTime>(TestDateTime.attributeId)?.value,
-                testUrl = insightObject.getAttributeValue<ObjectAttributeValue.Url>(TestUrl.attributeId)?.values?.toSet() ?: emptySet(),
-                testEmail = insightObject.getAttributeValue<ObjectAttributeValue.Email>(TestEmail.attributeId)?.value,
-                testTextArea = insightObject.getAttributeValue<ObjectAttributeValue.Textarea>(TestTextArea.attributeId)?.value,
-                testSelect = insightObject.getAttributeValue<ObjectAttributeValue.Select>(TestSelect.attributeId)?.values
+                testFloat = insightObject.getAttributeValue<InsightAttribute.DoubleNumber>(TestFloat.attributeId)?.value,
+                testDate = insightObject.getAttributeValue<InsightAttribute.Date>(TestDate.attributeId)?.value,
+                testDateTime = insightObject.getAttributeValue<InsightAttribute.DateTime>(TestDateTime.attributeId)?.value,
+                testUrl = insightObject.getAttributeValue<InsightAttribute.Url>(TestUrl.attributeId)?.values?.toSet() ?: emptySet(),
+                testEmail = insightObject.getAttributeValue<InsightAttribute.Email>(TestEmail.attributeId)?.value,
+                testTextArea = insightObject.getAttributeValue<InsightAttribute.Textarea>(TestTextArea.attributeId)?.value,
+                testSelect = insightObject.getAttributeValue<InsightAttribute.Select>(TestSelect.attributeId)?.values
                     ?: emptyList(),
-                testIpAddress = insightObject.getAttributeValue<ObjectAttributeValue.Ipaddress>(TestIpAddress.attributeId)?.value,
+                testIpAddress = insightObject.getAttributeValue<InsightAttribute.Ipaddress>(TestIpAddress.attributeId)?.value,
             )
         }
 

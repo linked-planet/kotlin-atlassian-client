@@ -28,10 +28,9 @@ import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.orFail
 
@@ -49,7 +48,7 @@ class TestsWithListRepositoryBasedOnNameMapping(
         insightObjectOperator.getObjectByName(objectTypeId, domainObject.name, ::identity)
 
     override suspend fun referenceAttributeToValue(attribute: InsightAttribute): Any? {
-        val listOfObjects = (attribute.value as? ObjectAttributeValue.Reference)?.referencedObjects
+        val listOfObjects = (attribute as? InsightAttribute.Reference)?.referencedObjects
             ?.mapNotNull { simpleObjectRepository.getById(it.id).orNull() }
         return listOfObjects
     }

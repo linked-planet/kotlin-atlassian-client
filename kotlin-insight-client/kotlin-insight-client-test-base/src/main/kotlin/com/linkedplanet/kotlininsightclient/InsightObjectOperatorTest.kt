@@ -29,7 +29,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeByName
@@ -228,14 +228,13 @@ interface InsightObjectOperatorTest {
         assertThat(company.objectTypeName, equalTo("Company"))
         assertThat(company.objectTypeId, equalTo(InsightObjectTypeId(1)))
 
-        val created = company.getAttributeByName("Created")!!.value as ObjectAttributeValue.DateTime
+        val created = company.getAttributeByName("Created")!! as InsightAttribute.DateTime
         assertThat(created.displayValue, equalTo("27/Oct/22 11:15 AM"))
 //        assertThat(
 //            created.value?.withZoneSameInstant(ZoneOffset.UTC),
 //            equalTo(ZonedDateTime.parse("2022-10-27T09:15:53.212Z").withZoneSameInstant(ZoneOffset.UTC))
 //        )
-
-        val updated = company.getAttributeByName("Updated")!!.value as ObjectAttributeValue.DateTime
+        val updated = company.getAttributeByName("Updated")!! as InsightAttribute.DateTime
         assertThat(updated.displayValue, equalTo("21/Feb/23 8:10 AM"))
 //        assertThat(
 //            updated.value?.withZoneSameInstant(ZoneOffset.UTC),

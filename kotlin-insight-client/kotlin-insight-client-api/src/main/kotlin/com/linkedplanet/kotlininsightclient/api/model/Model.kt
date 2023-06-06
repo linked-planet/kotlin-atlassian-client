@@ -88,98 +88,136 @@ data class InsightReference(
 /**
  * Holds the actual data value(s)
  */
-data class InsightAttribute(
+sealed class InsightAttribute(
     val attributeId: InsightAttributeId,
-    val value: ObjectAttributeValue,
     val schema: ObjectTypeSchemaAttribute?
 ) {
-    fun isValueAttribute(): Boolean = when(value){
-        is ObjectAttributeValue.Text -> true
-        is ObjectAttributeValue.Integer -> true
-        is ObjectAttributeValue.Bool -> true
-        is ObjectAttributeValue.DoubleNumber -> true
-        is ObjectAttributeValue.Select -> true
-        is ObjectAttributeValue.Date -> true
-        is ObjectAttributeValue.Time -> true
-        is ObjectAttributeValue.DateTime -> true
-        is ObjectAttributeValue.Url -> true
-        is ObjectAttributeValue.Email -> true
-        is ObjectAttributeValue.Textarea -> true
-        is ObjectAttributeValue.Ipaddress -> true
+    fun isValueAttribute(): Boolean = when(this){
+        is Text -> true
+        is Integer -> true
+        is Bool -> true
+        is DoubleNumber -> true
+        is Select -> true
+        is Date -> true
+        is Time -> true
+        is DateTime -> true
+        is Url -> true
+        is Email -> true
+        is Textarea -> true
+        is Ipaddress -> true
 
-        is ObjectAttributeValue.Unknown -> false
-        is ObjectAttributeValue.Reference -> false
-        is ObjectAttributeValue.User -> false
-        is ObjectAttributeValue.Confluence -> false
-        is ObjectAttributeValue.Group -> false
-        is ObjectAttributeValue.Version -> false
-        is ObjectAttributeValue.Project -> false
-        is ObjectAttributeValue.Status -> false
+        is Unknown -> false
+        is Reference -> false
+        is User -> false
+        is Confluence -> false
+        is Group -> false
+        is Version -> false
+        is Project -> false
+        is Status -> false
+    }
+    fun isReference() : Boolean = this is Reference
+
+
+    class Text(attributeId: InsightAttributeId, val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Integer(attributeId: InsightAttributeId,val value: Int?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Bool(attributeId: InsightAttributeId,val value: Boolean?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class DoubleNumber(attributeId: InsightAttributeId,val value: Double?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Date(attributeId: InsightAttributeId,val value: LocalDate?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    /**
+     * Note that time is part of the Enum inside the SDK, but is not selectable through the Insight GUI
+     */
+    class Time(attributeId: InsightAttributeId,val value: LocalTime?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class DateTime(attributeId: InsightAttributeId,val value: ZonedDateTime?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Email(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Textarea(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Ipaddress(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+
+    //  cardinality > 1
+    class Url(attributeId: InsightAttributeId,val values: List<String>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Select(attributeId: InsightAttributeId,val values: List<String>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+
+    // non default types
+    class Reference(attributeId: InsightAttributeId,val referencedObjects: List<ReferencedObject>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class User(attributeId: InsightAttributeId,val users: List<InsightUser>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Confluence(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // A value that describes a page in Confluence
+    class Group(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // The Insight Group type
+    class Version(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // Value describing a version in Jira
+    class Project(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?): InsightAttribute(attributeId, schema) // Value that represents a Jira project
+    class Status(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // An Insight status type that can be associated with objects Cardinality:0-1
+    class Unknown(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+
+    override fun toString(): String = when (this) {
+        is Text -> value ?: ""
+        is Integer -> value?.toString() ?: ""
+        is Bool -> value?.toString() ?: ""
+        is Date -> value?.toString() ?: ""
+        is DoubleNumber -> value?.toString() ?: ""
+        is Email -> value ?: ""
+        is Ipaddress -> value ?: ""
+        is Textarea -> value ?: ""
+        is DateTime -> value?.toString() ?: ""
+        is Time -> value?.toString() ?: ""
+
+        is Url ->  values.joinToString(",")
+        is Select -> values.joinToString(",")
+
+        is Reference -> referencedObjects.joinToString(",") { it.objectKey }
+        is User -> users.joinToString(",") { it.key }
+
+        is Group -> "" // TODO
+        is Project -> ""
+        is Status -> ""
+        is Version -> ""
+        is Confluence -> ""
+        is Unknown -> ""
     }
 
-    fun isReference() : Boolean = value is ObjectAttributeValue.Reference
-
     companion object {
-        infix fun InsightAttributeId.toValue(text: String?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Text(text),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toValue(value: Int?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Integer(value),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toValue(value: Boolean?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Bool(value),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toValue(value: Double?) = InsightAttribute(this,
-            value = ObjectAttributeValue.DoubleNumber(value),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toValue(value: LocalDate?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Date(value, null),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toValue(value: LocalTime?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Time(value, null),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toValue(value: ZonedDateTime?) = InsightAttribute(this,
-            value = ObjectAttributeValue.DateTime(value, null),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toEmailValue(text: String?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Email(text),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toTextareaValue(text: String?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Textarea(text),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toIpaddressValue(text: String?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Ipaddress(text),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toSelectValues(value: List<String>) = InsightAttribute(this,
-            value = ObjectAttributeValue.Select(value),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toUrlValues(value: List<String>) = InsightAttribute(this,
-            value = ObjectAttributeValue.Url(value),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) = InsightAttribute(this,
-            value = ObjectAttributeValue.Reference(listOfNotNull(referencedObjectId?.let {
-                ReferencedObject(it, "", "", null)
-            })),
-            schema = null, // null during creation
-        )
-        infix fun InsightAttributeId.toReferences(referencedObjectIds: List<InsightObjectId>) = InsightAttribute(this,
-            value = ObjectAttributeValue.Reference(referencedObjectIds.map {referencedObjectId ->
-                    ReferencedObject(referencedObjectId, "", "", null)
-            }),
-            schema = null, // null during creation
-        )
+        infix fun InsightAttributeId.toValue(text: String?) =
+            Text(this, value = text, schema = null)
+        infix fun InsightAttributeId.toValue(value: Int?) =
+            Integer(this, value = value, schema = null)
+
+        infix fun InsightAttributeId.toValue(value: Boolean?) =
+            Bool(this, value = value, schema = null)
+        infix fun InsightAttributeId.toValue(value: Double?) =
+            DoubleNumber(this, value = value, schema = null)
+        infix fun InsightAttributeId.toValue(value: LocalDate?) =
+            Date(this, value = value, schema = null, displayValue = null)
+        infix fun InsightAttributeId.toValue(value: LocalTime?) =
+            Time(this, value = value, schema = null, displayValue = null)
+        infix fun InsightAttributeId.toValue(value: ZonedDateTime?) =
+            DateTime(this, value = value, schema = null, displayValue = null)
+        infix fun InsightAttributeId.toEmailValue(text: String?) =
+            Email(this, value = text, schema = null)
+        infix fun InsightAttributeId.toTextareaValue(text: String?) =
+            Textarea(this, value = text, schema = null)
+        infix fun InsightAttributeId.toIpaddressValue(text: String?) =
+            Ipaddress(this, value = text, schema = null)
+
+        infix fun InsightAttributeId.toSelectValues(values: List<String>) =
+            Select(this, values = values, schema = null)
+
+        infix fun InsightAttributeId.toUrlValues(values: List<String>) =
+            Url(this, values = values, schema = null)
+
+        infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) =
+            Reference(
+                this,
+                referencedObjects = listOfNotNull(referencedObjectId?.let {
+                    ReferencedObject(it, "", "", null)
+                }),
+                schema = null,
+            )
+
+        infix fun InsightAttributeId.toReferences(referencedObjectIds: List<InsightObjectId>) =
+            Reference(
+                this,
+                referencedObjects = referencedObjectIds.map {
+                    ReferencedObject(it, "", "", null)
+                },
+                schema = null,
+            )
     }
 
 }
@@ -413,64 +451,6 @@ data class InsightUser(
     val emailAddress: String,
     val key: String
 )
-
-sealed class ObjectAttributeValue{
-
-    class Text(val value: String?) : ObjectAttributeValue()
-    class Integer(val value: Int?) : ObjectAttributeValue()
-    class Bool(val value: Boolean?) : ObjectAttributeValue()
-    class DoubleNumber(val value: Double?) : ObjectAttributeValue()
-    class Date(val value: LocalDate?, val displayValue: String?) : ObjectAttributeValue()
-
-    /**
-     * Note that time is part of the Enum inside the SDK, but is not selectable through the Insight GUI
-     */
-    class Time(val value: LocalTime?, val displayValue: String?) : ObjectAttributeValue()
-    class DateTime(val value: ZonedDateTime?, val displayValue: String?) : ObjectAttributeValue()
-    class Email(val value: String?) : ObjectAttributeValue()
-    class Textarea(val value: String?) : ObjectAttributeValue()
-    class Ipaddress(val value: String?) : ObjectAttributeValue()
-
-    //  cardinality > 1
-    class Url(val values: List<String>) : ObjectAttributeValue()
-    class Select(val values: List<String>) : ObjectAttributeValue()
-
-    // non default types
-    class Reference(val referencedObjects: List<ReferencedObject>) : ObjectAttributeValue()
-    class User(val users: List<InsightUser>) : ObjectAttributeValue()
-    class Confluence : ObjectAttributeValue() // A value that describes a page in Confluence
-    class Group : ObjectAttributeValue() // The Insight Group type
-    class Version : ObjectAttributeValue() // Value describing a version in Jira
-    class Project: ObjectAttributeValue() // Value that represents a Jira project
-    class Status : ObjectAttributeValue() // An Insight status type that can be associated with objects Cardinality:0-1
-    class Unknown : ObjectAttributeValue()
-
-    override fun toString(): String = when (this) {
-        is Text -> value ?: ""
-        is Integer -> value?.toString() ?: ""
-        is Bool -> value?.toString() ?: ""
-        is Date -> value?.toString() ?: ""
-        is DoubleNumber -> value?.toString() ?: ""
-        is Email -> value ?: ""
-        is Ipaddress -> value ?: ""
-        is Textarea -> value ?: ""
-        is DateTime -> value?.toString() ?: ""
-        is Time -> value?.toString() ?: ""
-
-        is Url ->  values.joinToString(",")
-        is Select -> values.joinToString(",")
-
-        is Reference -> referencedObjects.joinToString(",") { it.objectKey }
-        is User -> users.joinToString(",") { it.key }
-
-        is Group -> "" // TODO
-        is Project -> ""
-        is Status -> ""
-        is Version -> ""
-        is Confluence -> ""
-        is Unknown -> ""
-    }
-}
 
 data class ReferencedObject(
     var id: InsightObjectId,

@@ -28,14 +28,13 @@ import com.linkedplanet.kotlininsightclient.api.error.InvalidArgumentInsightClie
 import com.linkedplanet.kotlininsightclient.api.error.asEither
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReferences
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toSelectValues
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.ObjectAttributeValue
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.getAttribute
@@ -141,7 +140,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             val mappedValue = when {
                 attribute?.isReference() == true -> referenceAttributeToValue(attribute)
                 attribute == null -> null
-                else -> defaultAttributeToValue(attribute.value, param.type).bind()
+                else -> defaultAttributeToValue(attribute, param.type).bind()
             }
             mappedValue
 
@@ -151,22 +150,22 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
     }
 
     private suspend fun defaultAttributeToValue(
-        value: ObjectAttributeValue,
+        attribute: InsightAttribute,
         kType: KType
     ): Either<InsightClientError, Any?> = either {
-        when (value) {
-            is ObjectAttributeValue.Bool -> value.value
-            is ObjectAttributeValue.Date -> value.value
-            is ObjectAttributeValue.DateTime -> value.value
-            is ObjectAttributeValue.DoubleNumber -> value.value
-            is ObjectAttributeValue.Email -> value.value
-            is ObjectAttributeValue.Integer -> value.value
-            is ObjectAttributeValue.Ipaddress -> value.value
-            is ObjectAttributeValue.Text -> value.value
-            is ObjectAttributeValue.Textarea -> value.value
-            is ObjectAttributeValue.Time -> value.value
-            is ObjectAttributeValue.Url -> value.values
-            is ObjectAttributeValue.Select -> value.values// List<String>
+        when (attribute) {
+            is InsightAttribute.Bool -> attribute.value
+            is InsightAttribute.Date -> attribute.value
+            is InsightAttribute.DateTime -> attribute.value
+            is InsightAttribute.DoubleNumber -> attribute.value
+            is InsightAttribute.Email -> attribute.value
+            is InsightAttribute.Integer -> attribute.value
+            is InsightAttribute.Ipaddress -> attribute.value
+            is InsightAttribute.Text -> attribute.value
+            is InsightAttribute.Textarea -> attribute.value
+            is InsightAttribute.Time -> attribute.value
+            is InsightAttribute.Url -> attribute.values
+            is InsightAttribute.Select -> attribute.values// List<String>
             else -> InvalidArgumentInsightClientError(
                 "kType.classifier ${kType.classifier} is not supported."
             ).asEither<DomainType?>(
