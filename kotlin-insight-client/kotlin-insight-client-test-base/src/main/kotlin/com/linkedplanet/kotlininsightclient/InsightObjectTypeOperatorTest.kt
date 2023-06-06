@@ -40,13 +40,13 @@ interface InsightObjectTypeOperatorTest {
         assertThat(objectType.parentObjectTypeId, equalTo(null))
         assertThat(objectType.attributes.size, equalTo(5))
 
-        val nameAttribute = objectType.attributes.singleOrNull { it.name == "Name" }  as? ObjectTypeSchemaAttribute.Text
+        val nameAttribute = objectType.attributes.singleOrNull { it.name == "Name" }  as? ObjectTypeSchemaAttribute.TextSchema
         assertThat(nameAttribute,  notNullValue())
 
-        val createdAttribute = objectType.attributes.singleOrNull { it.name == "Created" } as? ObjectTypeSchemaAttribute.DateTime
+        val createdAttribute = objectType.attributes.singleOrNull { it.name == "Created" } as? ObjectTypeSchemaAttribute.DateTimeSchema
         assertThat(createdAttribute,  notNullValue())
 
-        val countryAttribute = objectType.attributes.singleOrNull { it.name == "Country" } as? ObjectTypeSchemaAttribute.Reference
+        val countryAttribute = objectType.attributes.singleOrNull { it.name == "Country" } as? ObjectTypeSchemaAttribute.ReferenceSchema
         assertThat(countryAttribute, notNullValue())
         assertThat(countryAttribute?.referenceKind, equalTo(ReferenceKind.REFERENCE))
         assertThat(countryAttribute?.referenceObjectTypeId, equalTo(InsightObjectType.Country.id))

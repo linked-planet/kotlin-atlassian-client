@@ -105,30 +105,30 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
             return when (InsightObjectAttributeType.parse(type)) {
                 InsightObjectAttributeType.DEFAULT -> mapDefaultType(this, iId)
 
-                InsightObjectAttributeType.REFERENCE -> ObjectTypeSchemaAttribute.Reference(
+                InsightObjectAttributeType.REFERENCE -> ObjectTypeSchemaAttribute.ReferenceSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
                     referenceObjectTypeId = InsightObjectTypeId(referenceObjectTypeId ?: -1),
                     referenceKind = ReferenceKind.parse(referenceType?.id)
                 )
-                InsightObjectAttributeType.USER -> ObjectTypeSchemaAttribute.User(
+                InsightObjectAttributeType.USER -> ObjectTypeSchemaAttribute.UserSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.CONFLUENCE -> ObjectTypeSchemaAttribute.Confluence(
+                InsightObjectAttributeType.CONFLUENCE -> ObjectTypeSchemaAttribute.ConfluenceSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.GROUP -> ObjectTypeSchemaAttribute.Group(
+                InsightObjectAttributeType.GROUP -> ObjectTypeSchemaAttribute.GroupSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.VERSION -> ObjectTypeSchemaAttribute.Version(
+                InsightObjectAttributeType.VERSION -> ObjectTypeSchemaAttribute.VersionSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.PROJECT -> ObjectTypeSchemaAttribute.Project(
+                InsightObjectAttributeType.PROJECT -> ObjectTypeSchemaAttribute.ProjectSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.STATUS -> ObjectTypeSchemaAttribute.Status(
+                InsightObjectAttributeType.STATUS -> ObjectTypeSchemaAttribute.StatusSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                else -> ObjectTypeSchemaAttribute.Unknown(
+                else -> ObjectTypeSchemaAttribute.UnknownSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
                     "HttpInsightObjectOperator: unknown ObjectTypeAttributeApiResponse.id :$id"
                 )
@@ -138,44 +138,44 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
     private fun mapDefaultType(apiAttributeType: ObjectTypeSchemaAttributeApiResponse, iId: InsightAttributeId) =
         apiAttributeType.run {
             when (defaultType?.id?.let { DefaultType.parse(it) }) {
-                DefaultType.TEXT -> ObjectTypeSchemaAttribute.Text(
+                DefaultType.TEXT -> ObjectTypeSchemaAttribute.TextSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.INTEGER -> ObjectTypeSchemaAttribute.Integer(
+                DefaultType.INTEGER -> ObjectTypeSchemaAttribute.IntegerSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.BOOLEAN -> ObjectTypeSchemaAttribute.Bool(
+                DefaultType.BOOLEAN -> ObjectTypeSchemaAttribute.BoolSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.DOUBLE -> ObjectTypeSchemaAttribute.DoubleNumber(
+                DefaultType.DOUBLE -> ObjectTypeSchemaAttribute.DoubleNumberSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.DATE -> ObjectTypeSchemaAttribute.Date(
+                DefaultType.DATE -> ObjectTypeSchemaAttribute.DateSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.TIME -> ObjectTypeSchemaAttribute.Time(
+                DefaultType.TIME -> ObjectTypeSchemaAttribute.TimeSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.DATE_TIME -> ObjectTypeSchemaAttribute.DateTime(
+                DefaultType.DATE_TIME -> ObjectTypeSchemaAttribute.DateTimeSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.URL -> ObjectTypeSchemaAttribute.Url(
+                DefaultType.URL -> ObjectTypeSchemaAttribute.UrlSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.EMAIL -> ObjectTypeSchemaAttribute.Email(
+                DefaultType.EMAIL -> ObjectTypeSchemaAttribute.EmailSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.TEXTAREA -> ObjectTypeSchemaAttribute.Textarea(
+                DefaultType.TEXTAREA -> ObjectTypeSchemaAttribute.TextareaSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.Ipaddress(
+                DefaultType.IPADDRESS -> ObjectTypeSchemaAttribute.IpaddressSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                DefaultType.SELECT -> ObjectTypeSchemaAttribute.Select(
+                DefaultType.SELECT -> ObjectTypeSchemaAttribute.SelectSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
                     options.split(",")
                 )
-                else -> ObjectTypeSchemaAttribute.Unknown(
+                else -> ObjectTypeSchemaAttribute.UnknownSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
                     "HttpInsightObjectOperator: got unknown DefaultType: name:${defaultType?.name} id:${defaultType?.id}"
                 )

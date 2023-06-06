@@ -61,7 +61,7 @@ class TestsWithListRepositoryBasedOnNameMapping(
             .mapNotNull { it as? SimpleObject }
             .mapNotNull {
                 insightObjectOperator.getObjectByName(
-                    objectTypeId = (schemaAttribute as ObjectTypeSchemaAttribute.Reference).referenceObjectTypeId,
+                    objectTypeId = (schemaAttribute as ObjectTypeSchemaAttribute.ReferenceSchema).referenceObjectTypeId,
                     name = it.name,
                     toDomain = ::identity
                 )
