@@ -406,8 +406,10 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 val date: Date? = values.firstOrNull()?.dateValue
                 val zonedDateTime = date?.toInstant()?.atZone(zoneId)
                 val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateTimeToString(Date.from(it.toInstant())) }
-                println("SDK: original javaDate:${date.toString()} zonedDateTime:${zonedDateTime} displayValue${displayValue}")
-                InsightAttribute.DateTime(id,zonedDateTime, displayValue, schema)
+                println("SDK: original instant:${date?.toInstant()} javaDate:${date.toString()} zonedDateTime:${zonedDateTime} displayValue${displayValue}")
+                println("original instant seconds:${date?.toInstant()?.epochSecond} nanos:${date?.toInstant()?.nano}")
+                println("zonedDateTime instant seconds:${zonedDateTime?.toInstant()?.epochSecond} nanos:${zonedDateTime?.toInstant()?.nano}")
+                InsightAttribute.DateTime(id, zonedDateTime, displayValue, schema)
             }
             DefaultType.EMAIL -> InsightAttribute.Email(id,values.firstOrNull()?.textValue, schema)
             DefaultType.TEXTAREA -> InsightAttribute.Textarea(id,values.firstOrNull()?.textValue, schema)

@@ -48,7 +48,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 class HttpInsightObjectOperator(private val context: HttpInsightClientContext) : InsightObjectOperator {
@@ -331,7 +330,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             apiAttribute.objectTypeAttribute?.defaultType
                 ?.let { type -> DefaultType.parse(type.id) }
 
-        val values = apiAttribute.objectAttributeValues
+        val values: List<ObjectAttributeValueApiResponse> = apiAttribute.objectAttributeValues
         fun singleValue() = values.firstOrNull()?.value as String?
         when (defaultType) {
             DefaultType.TEXT -> InsightAttribute.Text(attributeId, singleValue(), schema)
@@ -347,10 +346,12 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 InsightAttribute.Time(attributeId, localTime, values.firstOrNull()?.displayValue as? String?, schema)
             }
             DefaultType.DATE_TIME -> {
-
-                val javaDate = singleValue()?.let { Date.from(Instant.from(DateTimeFormatter.ISO_DATE_TIME.parse(it))) }
+                val instant = singleValue()?.let { Instant.parse(it) } // see ObjectAssembler:538
+                val javaDate = instant?.let { Date.from(it) } // see ObjectAssembler:538
                 val zonedDateTime = singleValue()?.let { it -> ZonedDateTime.parse(it) }
-                println("HTTP original: ${singleValue()}  javaDate:${javaDate.toString()} zonedDateTime:${zonedDateTime}  displayValue${values.firstOrNull()?.displayValue}")
+                println("HTTP instant:${instant} original: ${singleValue()}  javaDate:${javaDate.toString()} zonedDateTime:${zonedDateTime}  displayValue${values.firstOrNull()?.displayValue}")
+                println("HTTP original instant seconds:${instant?.epochSecond} nanos:${instant?.nano}")
+                println("HTTP zonedDateTime insant seconds:${zonedDateTime?.toInstant()?.epochSecond} nanos:${zonedDateTime?.toInstant()?.nano}")
                 InsightAttribute.DateTime(attributeId, zonedDateTime, values.firstOrNull()?.displayValue as? String?, schema)
             }
             DefaultType.EMAIL -> InsightAttribute.Email(attributeId, singleValue(), schema)
