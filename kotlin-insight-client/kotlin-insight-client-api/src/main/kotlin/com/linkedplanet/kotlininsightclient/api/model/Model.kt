@@ -165,11 +165,11 @@ sealed class InsightAttribute(
         is User -> users.joinToString(",") { it.key }
 
         // TODO support additional attribute types
-        is Group -> ""
-        is Project -> ""
-        is Status -> ""
-        is Version -> ""
-        is Confluence -> ""
+        is Group -> "Group attributeId=$attributeId"
+        is Project -> "Project attributeId=$attributeId"
+        is Status -> "Status attributeId=$attributeId"
+        is Version -> "Version attributeId=$attributeId"
+        is Confluence -> "Confluence attributeId=$attributeId"
         is Unknown -> ""
     }
 

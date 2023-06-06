@@ -369,7 +369,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 }
                 InsightAttribute.User(attributeId, users, schema)
             }
-            // TODO support additional attribute types
             Type.CONFLUENCE -> InsightAttribute.Confluence(attributeId, schema)
             Type.GROUP -> InsightAttribute.Group(attributeId, schema)
             Type.VERSION -> InsightAttribute.Version(attributeId, schema)
