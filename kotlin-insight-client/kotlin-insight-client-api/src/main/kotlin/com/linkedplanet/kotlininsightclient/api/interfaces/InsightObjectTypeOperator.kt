@@ -45,10 +45,7 @@ interface InsightObjectTypeOperator {
      * @param schemaId The ID of the schema.
      * @return either an [InsightClientError] or a list of [ObjectTypeSchema] objects representing the object types in the schema.
      */
-    suspend fun getObjectTypesBySchema(
-        schemaId: InsightSchemaId,
-        withChildren: Boolean = true
-    ): Either<InsightClientError, List<ObjectTypeSchema>>
+    suspend fun getObjectTypesBySchema(schemaId: InsightSchemaId): Either<InsightClientError, List<ObjectTypeSchema>>
 
     /**
      * Retrieves a list of Insight object types that belong to the schema with the specified ID and have the specified root object type.
