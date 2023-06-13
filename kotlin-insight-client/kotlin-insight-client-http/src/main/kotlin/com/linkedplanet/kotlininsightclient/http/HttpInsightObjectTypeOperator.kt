@@ -71,7 +71,10 @@ class HttpInsightObjectTypeOperator(private val context: HttpInsightClientContex
             ?: ObjectTypeNotFoundError(rootObjectTypeId).asEither<List<ObjectTypeSchema>>().bind()
     }
 
-    override suspend fun getObjectTypesBySchema(schemaId: InsightSchemaId): Either<InsightClientError, List<ObjectTypeSchema>> =
+    override suspend fun getObjectTypesBySchema(
+        schemaId: InsightSchemaId,
+        withChildren: Boolean
+    ): Either<InsightClientError, List<ObjectTypeSchema>> =
         either {
             context.httpClient.executeRestList<ObjectTypeSchemaApiResponse>(
                 "GET",

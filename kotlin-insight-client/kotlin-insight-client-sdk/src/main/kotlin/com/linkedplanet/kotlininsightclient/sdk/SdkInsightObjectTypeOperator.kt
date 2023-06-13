@@ -46,9 +46,17 @@ object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
             objectTypeSchemaForBean(objectTypeBean)
         }
 
-    override suspend fun getObjectTypesBySchema(schemaId: InsightSchemaId): Either<InsightClientError, List<ObjectTypeSchema>> =
+    override suspend fun getObjectTypesBySchema(
+        schemaId: InsightSchemaId,
+        withChildren: Boolean
+    ): Either<InsightClientError, List<ObjectTypeSchema>> =
         catchAsInsightClientError {
-            objectTypeFacade.findObjectTypeBeansFlat(schemaId.raw)
+            val objectTypeBeans: List<ObjectTypeBean> = if (withChildren) {
+                objectTypeFacade.findObjectTypeBeansFlat(schemaId.raw)
+            } else {
+                objectTypeFacade.findObjectTypeBeans(schemaId.raw)
+            }
+            objectTypeBeans
                 .map(::objectTypeSchemaForBean)
         }
 
