@@ -64,7 +64,6 @@ import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.Type
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
 import com.riadalabs.jira.plugins.insight.services.model.factory.ObjectAttributeBeanFactory
-import io.riada.core.collector.model.toDisplayValue
 import java.time.ZoneId
 import java.util.*
 
@@ -329,7 +328,12 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             val objTypeAttributeBean = objectTypeAttributeBeans.typeForBean(objAttributeBean).bind()
             mapAttributeBeanToInsightAttribute(objAttributeBean, objTypeAttributeBean).bind()
         }
-        val objectSelf = "${baseUrl}/secure/insight/assets/${objectBean.objectKey}"
+        val objectSelf =
+            attributes
+                .singleOrNull { it.schema?.name == "Link" }
+                ?.toString()
+                ?: "${baseUrl}/secure/insight/assets/${objectBean.objectKey}"
+
         InsightObject(
             InsightObjectTypeId(objectBean.objectTypeId),
             InsightObjectId(objectBean.id),
@@ -338,7 +342,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             objectBean.label,
             attributes,
             hasAttachments,
-            attributes.singleOrNull { it.schema?.name == "Link" }?.toDisplayValue() as? String ?: objectSelf
+            objectSelf
         )
     }
 
