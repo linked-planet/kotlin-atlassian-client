@@ -67,7 +67,9 @@ fun <T> InsightObjectPage<T>.plus(insightObjectPage: InsightObjectPage<T>): Insi
     )
 
 data class InsightObject(
+    @get:JvmName("getObjectTypeId")
     val objectTypeId: InsightObjectTypeId,
+    @get:JvmName("getId")
     val id: InsightObjectId,
     val objectTypeName: String,
     val objectKey: String,
@@ -78,8 +80,10 @@ data class InsightObject(
 )
 
 data class InsightReference(
+    @get:JvmName("getObjectTypeId")
     val objectTypeId: InsightObjectTypeId,
     val objectTypeName: String,
+    @get:JvmName("getObjectId")
     val objectId: InsightObjectId,
     val objectKey: String,
     val objectName: String
@@ -89,6 +93,7 @@ data class InsightReference(
  * Holds the actual data value(s)
  */
 sealed class InsightAttribute(
+    @get:JvmName("getAttributeId")
     val attributeId: InsightAttributeId,
     val schema: ObjectTypeSchemaAttribute?
 ) {
@@ -231,6 +236,7 @@ sealed class InsightAttribute(
 
 // region InsightObjectTypeOperator
 data class ObjectTypeSchema(
+    @get:JvmName("getId")
     val id: InsightObjectTypeId,
     val name: String,
     val attributes: List<ObjectTypeSchemaAttribute>,
@@ -272,6 +278,7 @@ sealed class ObjectTypeSchemaAttribute {
     fun isReference() : Boolean = this is ReferenceSchema
 
     class SelectSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -281,16 +288,19 @@ sealed class ObjectTypeSchemaAttribute {
     ) : ObjectTypeSchemaAttribute() // Select is the only DefaultType with maximumCardinality > 1
 
     class ReferenceSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
         override val maximumCardinality: Int,
         override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getReferenceObjectTypeId")
         val referenceObjectTypeId: InsightObjectTypeId, // objectTypeId of the referenced object
         val referenceKind: ReferenceKind
     ) : ObjectTypeSchemaAttribute()
 
     class UnknownSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -301,6 +311,7 @@ sealed class ObjectTypeSchemaAttribute {
 
     // region types having just the superclass attributes
     data class TextSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -308,6 +319,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class IntegerSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -315,6 +327,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class BoolSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -322,6 +335,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class DoubleNumberSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -329,6 +343,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class DateSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -336,6 +351,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class TimeSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -343,6 +359,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class DateTimeSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -350,6 +367,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class UrlSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -357,6 +375,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class EmailSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -364,6 +383,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class TextareaSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -371,6 +391,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class IpaddressSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -379,6 +400,7 @@ sealed class ObjectTypeSchemaAttribute {
     ) : ObjectTypeSchemaAttribute()
 
     class UserSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -386,6 +408,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class ConfluenceSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -393,6 +416,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class GroupSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -400,6 +424,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class VersionSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -407,6 +432,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class ProjectSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -414,6 +440,7 @@ sealed class ObjectTypeSchemaAttribute {
         override val includeChildObjectTypes: Boolean,
     ) : ObjectTypeSchemaAttribute()
     class StatusSchema(
+        @get:JvmName("getId")
         override val id: InsightAttributeId,
         override val name: String,
         override val minimumCardinality: Int,
@@ -445,6 +472,7 @@ enum class ReferenceKind(var referenceKindId: Int) {
 
 // region InsightSchemaOperator
 data class InsightSchema(
+    @get:JvmName("getId")
     val id: InsightSchemaId,
     val name: String,
     val objectCount: Int,
@@ -467,12 +495,14 @@ data class ReferencedObject(
 )
 
 data class ReferencedObjectType(
+    @get:JvmName("getId")
     val id: InsightObjectTypeId,
     val name: String
 )
 
 // region InsightHistoryOperator
 data class InsightHistory(
+    @get:JvmName("getObjectId")
     val objectId: InsightObjectId,
     val historyItems: List<InsightHistoryItem>
 )
@@ -495,6 +525,7 @@ data class Actor(
 
 // region InsightAttachmentOperator
 data class InsightAttachment(
+    @get:JvmName("getId")
     val id: AttachmentId,
     val author: String,
     val mimeType: String,
