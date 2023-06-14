@@ -19,6 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -92,6 +93,30 @@ data class InsightReference(
 /**
  * Holds the actual data value(s)
  */
+@Schema(
+    oneOf = [
+        InsightAttribute.Text::class,
+        InsightAttribute.Integer::class,
+        InsightAttribute.Bool::class,
+        InsightAttribute.DoubleNumber::class,
+        InsightAttribute.Select::class,
+        InsightAttribute.Date::class,
+        InsightAttribute.Time::class,
+        InsightAttribute.DateTime::class,
+        InsightAttribute.Url::class,
+        InsightAttribute.Email::class,
+        InsightAttribute.Textarea::class,
+        InsightAttribute.Ipaddress::class,
+        InsightAttribute.Reference::class,
+        InsightAttribute.User::class,
+        InsightAttribute.Confluence::class,
+        InsightAttribute.Group::class,
+        InsightAttribute.Version::class,
+        InsightAttribute.Project::class,
+        InsightAttribute.Status::class,
+        InsightAttribute.Unknown::class,
+    ]
+)
 sealed class InsightAttribute(
     @get:JvmName("getAttributeId")
     val attributeId: InsightAttributeId,
@@ -243,6 +268,30 @@ data class ObjectTypeSchema(
     val parentObjectTypeId: InsightObjectTypeId?
 )
 
+@Schema(
+    oneOf = [
+        ObjectTypeSchemaAttribute.TextSchema::class,
+        ObjectTypeSchemaAttribute.IntegerSchema::class,
+        ObjectTypeSchemaAttribute.BoolSchema::class,
+        ObjectTypeSchemaAttribute.DoubleNumberSchema::class,
+        ObjectTypeSchemaAttribute.SelectSchema::class,
+        ObjectTypeSchemaAttribute.DateSchema::class,
+        ObjectTypeSchemaAttribute.TimeSchema::class,
+        ObjectTypeSchemaAttribute.DateTimeSchema::class,
+        ObjectTypeSchemaAttribute.UrlSchema::class,
+        ObjectTypeSchemaAttribute.EmailSchema::class,
+        ObjectTypeSchemaAttribute.TextareaSchema::class,
+        ObjectTypeSchemaAttribute.IpaddressSchema::class,
+        ObjectTypeSchemaAttribute.ReferenceSchema::class,
+        ObjectTypeSchemaAttribute.UserSchema::class,
+        ObjectTypeSchemaAttribute.ConfluenceSchema::class,
+        ObjectTypeSchemaAttribute.GroupSchema::class,
+        ObjectTypeSchemaAttribute.VersionSchema::class,
+        ObjectTypeSchemaAttribute.ProjectSchema::class,
+        ObjectTypeSchemaAttribute.StatusSchema::class,
+        ObjectTypeSchemaAttribute.UnknownSchema::class,
+    ]
+)
 sealed class ObjectTypeSchemaAttribute {
 
     abstract val id: InsightAttributeId

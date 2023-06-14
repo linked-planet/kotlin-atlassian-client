@@ -22,9 +22,24 @@
 package com.linkedplanet.kotlininsightclient.api.error
 
 import arrow.core.Either
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(
+    oneOf = [
+        InvalidArgumentInsightClientError::class,
+        InternalInsightClientError::class,
+        ExceptionInsightClientError::class,
+        AuthenticationError::class,
+        ObjectNotFoundError::class,
+        ObjectTypeNotFoundError::class,
+        OtherNotFoundError::class,
+        OtherInsightClientError::class,
+        HttpInsightClientError::class
+    ]
+)
 
 @Suppress("unused")
 sealed class InsightClientError(
