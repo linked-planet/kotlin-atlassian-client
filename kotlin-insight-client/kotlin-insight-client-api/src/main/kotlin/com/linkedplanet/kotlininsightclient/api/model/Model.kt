@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlininsightclient.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
+import javax.validation.constraints.NotNull
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
