@@ -28,37 +28,37 @@ import java.util.Collections.emptyList
 // region ID wrapper
 
 @JvmInline
-value class InsightObjectId(val raw: Int) {
+value class InsightObjectId(@field:NotNull val raw: Int) {
     companion object {
         val notPersistedObjectId = InsightObjectId(-1)
     }
 }
 
 @JvmInline
-value class InsightObjectTypeId(val raw: Int)
+value class InsightObjectTypeId(@field:NotNull val raw: Int)
 
 @JvmInline
-value class AttachmentId(val raw: Int)
+value class AttachmentId(@field:NotNull val raw: Int)
 
 @JvmInline
-value class InsightSchemaId(val raw: Int)
+value class InsightSchemaId(@field:NotNull val raw: Int)
 
 @JvmInline
-value class InsightAttributeId(val raw: Int)
+value class InsightAttributeId(@field:NotNull val raw: Int)
 
 // endregion ID wrapper
 
 data class InsightObjectPage<T>(
-    val totalFilterCount: Int = -1,
-    val objects: List<T> = emptyList(),
+    @field:NotNull val totalFilterCount: Int = -1,
+    @field:NotNull val objects: List<T> = emptyList(),
 )
 
 data class Page<T> (
-    val items: List<T>,
-    val totalItems: Int,
-    val totalPages: Int,
-    val currentPageIndex: Int,
-    val pageSize: Int
+    @field:NotNull val items: List<T>,
+    @field:NotNull val totalItems: Int,
+    @field:NotNull val totalPages: Int,
+    @field:NotNull val currentPageIndex: Int,
+    @field:NotNull val pageSize: Int
 )
 
 fun <T> InsightObjectPage<T>.plus(insightObjectPage: InsightObjectPage<T>): InsightObjectPage<T> =
@@ -69,25 +69,25 @@ fun <T> InsightObjectPage<T>.plus(insightObjectPage: InsightObjectPage<T>): Insi
 
 data class InsightObject(
     @get:JvmName("getObjectTypeId")
-    val objectTypeId: InsightObjectTypeId,
+    @field:NotNull  val objectTypeId: InsightObjectTypeId,
     @get:JvmName("getId")
-    val id: InsightObjectId,
-    val objectTypeName: String,
-    val objectKey: String,
-    val label: String,
-    var attributes: List<InsightAttribute>,
-    val attachmentsExist: Boolean,
-    val objectSelf: String
+    @field:NotNull val id: InsightObjectId,
+    @field:NotNull val objectTypeName: String,
+    @field:NotNull val objectKey: String,
+    @field:NotNull val label: String,
+    @field:NotNull var attributes: List<InsightAttribute>,
+    @field:NotNull val attachmentsExist: Boolean,
+    @field:NotNull val objectSelf: String
 )
 
 data class InsightReference(
     @get:JvmName("getObjectTypeId")
-    val objectTypeId: InsightObjectTypeId,
-    val objectTypeName: String,
+    @field:NotNull val objectTypeId: InsightObjectTypeId,
+    @field:NotNull val objectTypeName: String,
     @get:JvmName("getObjectId")
-    val objectId: InsightObjectId,
-    val objectKey: String,
-    val objectName: String
+    @field:NotNull val objectId: InsightObjectId,
+    @field:NotNull val objectKey: String,
+    @field:NotNull val objectName: String
 )
 
 /**
@@ -119,7 +119,7 @@ data class InsightReference(
 )
 sealed class InsightAttribute(
     @get:JvmName("getAttributeId")
-    val attributeId: InsightAttributeId,
+    @field:NotNull val attributeId: InsightAttributeId,
     val schema: ObjectTypeSchemaAttribute?
 ) {
     fun isValueAttribute(): Boolean = when(this){
@@ -167,8 +167,8 @@ sealed class InsightAttribute(
     class Select(attributeId: InsightAttributeId,val values: List<String>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
 
     // non default types
-    class Reference(attributeId: InsightAttributeId,val referencedObjects: List<ReferencedObject>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class User(attributeId: InsightAttributeId,val users: List<InsightUser>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Reference(attributeId: InsightAttributeId,@field:NotNull val referencedObjects: List<ReferencedObject>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class User(attributeId: InsightAttributeId,@field:NotNull val users: List<InsightUser>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
     class Confluence(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // A value that describes a page in Confluence
     class Group(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // The Insight Group type
     class Version(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // Value describing a version in Jira
@@ -262,9 +262,9 @@ sealed class InsightAttribute(
 // region InsightObjectTypeOperator
 data class ObjectTypeSchema(
     @get:JvmName("getId")
-    val id: InsightObjectTypeId,
-    val name: String,
-    val attributes: List<ObjectTypeSchemaAttribute>,
+    @field:NotNull val id: InsightObjectTypeId,
+    @field:NotNull val name: String,
+    @field:NotNull val attributes: List<ObjectTypeSchemaAttribute>,
     @get:JvmName("getParentObjectTypeId")
     val parentObjectTypeId: InsightObjectTypeId?
 )
@@ -295,11 +295,11 @@ data class ObjectTypeSchema(
 )
 sealed class ObjectTypeSchemaAttribute(
     @get:JvmName("getId")
-    val id: InsightAttributeId,
-    val name: String, // attributeName
-    val minimumCardinality: Int,
-    val maximumCardinality: Int,
-    val includeChildObjectTypes: Boolean
+    @field:NotNull val id: InsightAttributeId,
+    @field:NotNull val name: String, // attributeName
+    @field:NotNull val minimumCardinality: Int,
+    @field:NotNull val maximumCardinality: Int,
+    @field:NotNull val includeChildObjectTypes: Boolean
 ) {
 
     fun isValueAttribute(): Boolean = when(this){
@@ -334,7 +334,7 @@ sealed class ObjectTypeSchemaAttribute(
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        val options: List<String>,
+        @field:NotNull val options: List<String>,
     ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
 
     class ReferenceSchema(
@@ -344,8 +344,8 @@ sealed class ObjectTypeSchemaAttribute(
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
         @get:JvmName("getReferenceObjectTypeId")
-        val referenceObjectTypeId: InsightObjectTypeId, // objectTypeId of the referenced object
-        val referenceKind: ReferenceKind
+        @field:NotNull val referenceObjectTypeId: InsightObjectTypeId, // objectTypeId of the referenced object
+        @field:NotNull val referenceKind: ReferenceKind
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
 
     class UnknownSchema(
@@ -354,7 +354,7 @@ sealed class ObjectTypeSchemaAttribute(
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        val debugDescription: String
+        @field:NotNull val debugDescription: String
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
 
     // region types having just the superclass attributes
@@ -504,18 +504,18 @@ enum class ReferenceKind(var referenceKindId: Int) {
 // region InsightSchemaOperator
 data class InsightSchema(
     @get:JvmName("getId")
-    val id: InsightSchemaId,
-    val name: String,
-    val objectCount: Int,
-    val objectTypeCount: Int
+    @field:NotNull val id: InsightSchemaId,
+    @field:NotNull val name: String,
+    @field:NotNull val objectCount: Int,
+    @field:NotNull val objectTypeCount: Int
 )
 // endregion InsightSchemaOperator
 
 data class InsightUser(
-    val displayName: String,
-    val name: String,
-    val emailAddress: String,
-    val key: String
+    @field:NotNull val displayName: String,
+    @field:NotNull val name: String,
+    @field:NotNull val emailAddress: String,
+    @field:NotNull val key: String
 )
 
 data class ReferencedObject(
@@ -527,26 +527,26 @@ data class ReferencedObject(
 
 data class ReferencedObjectType(
     @get:JvmName("getId")
-    val id: InsightObjectTypeId,
-    val name: String
+    @field:NotNull val id: InsightObjectTypeId,
+    @field:NotNull val name: String
 )
 
 // region InsightHistoryOperator
 data class InsightHistory(
     @get:JvmName("getObjectId")
-    val objectId: InsightObjectId,
-    val historyItems: List<InsightHistoryItem>
+    @field:NotNull val objectId: InsightObjectId,
+    @field:NotNull val historyItems: List<InsightHistoryItem>
 )
 
 data class InsightHistoryItem(
-    val id: Int,
+    @field:NotNull val id: Int,
     val affectedAttribute: String?,
     val oldValue: String?,
     val newValue: String?,
-    val actor: Actor,
-    val type: Int,
-    val created: String, // updated is neither available through sdk nor ktor
-    val objectId: InsightObjectId
+    @field:NotNull val actor: Actor,
+    @field:NotNull val type: Int,
+    @field:NotNull val created: String, // updated is neither available through sdk nor ktor
+    @field:NotNull val objectId: InsightObjectId
 )
 
 data class Actor(
@@ -557,13 +557,13 @@ data class Actor(
 // region InsightAttachmentOperator
 data class InsightAttachment(
     @get:JvmName("getId")
-    val id: AttachmentId,
-    val author: String,
-    val mimeType: String,
-    val filename: String,
-    val filesize: String, // for human display e.g. 10.1 kB
-    val created: String, // ISO 8601 String
-    val comment: String, // we are only able to download them but can not create attachments with comments
-    val url: String
+    @field:NotNull val id: AttachmentId,
+    @field:NotNull val author: String,
+    @field:NotNull val mimeType: String,
+    @field:NotNull val filename: String,
+    @field:NotNull val filesize: String, // for human display e.g. 10.1 kB
+    @field:NotNull val created: String, // ISO 8601 String
+    @field:NotNull val comment: String, // we are only able to download them but can not create attachments with comments
+    @field:NotNull val url: String
 )
 // endregion InsightAttachmentOperator
