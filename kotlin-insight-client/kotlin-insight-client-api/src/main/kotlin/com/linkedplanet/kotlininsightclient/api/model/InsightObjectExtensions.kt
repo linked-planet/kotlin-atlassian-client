@@ -39,10 +39,12 @@ fun InsightObject.getAttributeByName(name: String): InsightAttribute? =
     this.attributes.firstOrNull { it.schema?.name == name }
 
 fun InsightObject.isReferenceAttribute(id: InsightAttributeId): Boolean =
-    getAttribute(id)?.isReference() ?: false
+    getAttribute(id)?.isReferenceAttribute() ?: false
+
+fun InsightAttribute.isReferenceAttribute() = this is InsightAttribute.Reference
 
 fun InsightObject.isValueAttribute(id: InsightAttributeId): Boolean =
-    getAttribute(id)?.isValueAttribute() ?: false
+    getAttribute(id)?.isValueAttribute ?: false
 
 fun InsightObject.exists(id: InsightAttributeId): Boolean =
     getAttribute(id) != null

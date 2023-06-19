@@ -20,11 +20,11 @@
 package com.linkedplanet.kotlininsightclient.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.constraints.NotNull
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.Collections.emptyList
+import javax.validation.constraints.NotNull
 
 // region ID wrapper
 
@@ -123,31 +123,31 @@ sealed class InsightAttribute(
     @field:NotNull val attributeId: InsightAttributeId,
     val schema: ObjectTypeSchemaAttribute?
 ) {
-    fun isValueAttribute(): Boolean = when(this){
-        is Text -> true
-        is Integer -> true
-        is Bool -> true
-        is DoubleNumber -> true
-        is Select -> true
-        is Date -> true
-        is Time -> true
-        is DateTime -> true
-        is Url -> true
-        is Email -> true
-        is Textarea -> true
-        is Ipaddress -> true
+    val isValueAttribute: Boolean by lazy {
+        when (this) {
+            is Text -> true
+            is Integer -> true
+            is Bool -> true
+            is DoubleNumber -> true
+            is Select -> true
+            is Date -> true
+            is Time -> true
+            is DateTime -> true
+            is Url -> true
+            is Email -> true
+            is Textarea -> true
+            is Ipaddress -> true
 
-        is Unknown -> false
-        is Reference -> false
-        is User -> false
-        is Confluence -> false
-        is Group -> false
-        is Version -> false
-        is Project -> false
-        is Status -> false
+            is Unknown -> false
+            is Reference -> false
+            is User -> false
+            is Confluence -> false
+            is Group -> false
+            is Version -> false
+            is Project -> false
+            is Status -> false
+        }
     }
-    fun isReference() : Boolean = this is Reference
-
 
     class Text(attributeId: InsightAttributeId, val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
     class Integer(attributeId: InsightAttributeId,val value: Int?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
@@ -303,31 +303,31 @@ sealed class ObjectTypeSchemaAttribute(
     @field:NotNull val includeChildObjectTypes: Boolean
 ) {
 
-    fun isValueAttribute(): Boolean = when(this){
-        is TextSchema -> true
-        is IntegerSchema -> true
-        is BoolSchema -> true
-        is DoubleNumberSchema -> true
-        is SelectSchema -> true
-        is DateSchema -> true
-        is TimeSchema -> true
-        is DateTimeSchema -> true
-        is UrlSchema -> true
-        is EmailSchema -> true
-        is TextareaSchema -> true
-        is IpaddressSchema -> true
+    val isValueAttribute: Boolean by lazy {
+        when(this){
+            is TextSchema -> true
+            is IntegerSchema -> true
+            is BoolSchema -> true
+            is DoubleNumberSchema -> true
+            is SelectSchema -> true
+            is DateSchema -> true
+            is TimeSchema -> true
+            is DateTimeSchema -> true
+            is UrlSchema -> true
+            is EmailSchema -> true
+            is TextareaSchema -> true
+            is IpaddressSchema -> true
 
-        is UnknownSchema -> false
-        is ReferenceSchema -> false
-        is UserSchema -> false
-        is ConfluenceSchema -> false
-        is GroupSchema -> false
-        is VersionSchema -> false
-        is ProjectSchema -> false
-        is StatusSchema -> false
+            is UnknownSchema -> false
+            is ReferenceSchema -> false
+            is UserSchema -> false
+            is ConfluenceSchema -> false
+            is GroupSchema -> false
+            is VersionSchema -> false
+            is ProjectSchema -> false
+            is StatusSchema -> false
+        }
     }
-
-    fun isReference() : Boolean = this is ReferenceSchema
 
     class SelectSchema(
         id: InsightAttributeId,

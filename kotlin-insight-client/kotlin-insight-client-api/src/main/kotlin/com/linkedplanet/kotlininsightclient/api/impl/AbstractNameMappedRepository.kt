@@ -86,7 +86,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             val attributeType: ObjectTypeSchemaAttribute = attrsMap[prop.name.lowercase()] ?: return@mapNotNull null
             val value: Any? = prop.get(domainObject)
             when {
-                attributeType.isValueAttribute() -> mapValueAttribute(value, attributeType)
+                attributeType.isValueAttribute -> mapValueAttribute(value, attributeType)
 
                 attributeType is ObjectTypeSchemaAttribute.ReferenceSchema -> {
                     val referencedObjectIds = attributeToReferencedObjectId(attributeType, value)
@@ -138,7 +138,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             val attributeId = attrsMap[param.name?.lowercase()]?.id ?: return@map null
             val attribute = insightObject.getAttribute(attributeId)
             val mappedValue = when {
-                attribute?.isReference() == true -> referenceAttributeToValue(attribute)
+                attribute?.let { it is InsightAttribute.Reference } == true -> referenceAttributeToValue(attribute)
                 attribute == null -> null
                 else -> defaultAttributeToValue(attribute, param.type).bind()
             }
