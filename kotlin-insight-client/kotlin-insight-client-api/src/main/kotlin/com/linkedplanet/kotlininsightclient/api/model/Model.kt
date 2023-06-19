@@ -95,6 +95,7 @@ data class InsightReference(
  * Holds the actual data value(s)
  */
 @Schema(
+    discriminatorProperty = "type", // improves compatibility with Gson serialization
     oneOf = [
         InsightAttribute.Text::class,
         InsightAttribute.Integer::class,
@@ -121,7 +122,8 @@ data class InsightReference(
 sealed class InsightAttribute(
     @get:JvmName("getAttributeId")
     @field:NotNull val attributeId: InsightAttributeId,
-    val schema: ObjectTypeSchemaAttribute?
+    val schema: ObjectTypeSchemaAttribute?,
+    @field:NotNull val type: AttributeTypeEnum
 ) {
     val isValueAttribute: Boolean by lazy {
         when (this) {
@@ -149,33 +151,33 @@ sealed class InsightAttribute(
         }
     }
 
-    class Text(attributeId: InsightAttributeId, val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class Integer(attributeId: InsightAttributeId,val value: Int?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class Bool(attributeId: InsightAttributeId,val value: Boolean?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class DoubleNumber(attributeId: InsightAttributeId,val value: Double?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class Date(attributeId: InsightAttributeId,val value: LocalDate?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Text(attributeId: InsightAttributeId, val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Text)
+    class Integer(attributeId: InsightAttributeId,val value: Int?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Integer)
+    class Bool(attributeId: InsightAttributeId,val value: Boolean?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Bool)
+    class DoubleNumber(attributeId: InsightAttributeId,val value: Double?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.DoubleNumber)
+    class Date(attributeId: InsightAttributeId,val value: LocalDate?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Date)
     /**
      * Note that time is part of the Enum inside the SDK, but is not selectable through the Insight GUI
      */
-    class Time(attributeId: InsightAttributeId,val value: LocalTime?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class DateTime(attributeId: InsightAttributeId,val value: ZonedDateTime?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class Email(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class Textarea(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class Ipaddress(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Time(attributeId: InsightAttributeId,val value: LocalTime?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Time)
+    class DateTime(attributeId: InsightAttributeId,val value: ZonedDateTime?, val displayValue: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.DateTime)
+    class Email(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Email)
+    class Textarea(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum. Textarea)
+    class Ipaddress(attributeId: InsightAttributeId,val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Ipaddress)
 
     //  cardinality > 1
-    class Url(attributeId: InsightAttributeId,val values: List<String>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class Select(attributeId: InsightAttributeId,val values: List<String>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Url(attributeId: InsightAttributeId,val values: List<String>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Url)
+    class Select(attributeId: InsightAttributeId,val values: List<String>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Select)
 
     // non default types
-    class Reference(attributeId: InsightAttributeId,@field:NotNull val referencedObjects: List<ReferencedObject>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class User(attributeId: InsightAttributeId,@field:NotNull val users: List<InsightUser>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
-    class Confluence(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // A value that describes a page in Confluence
-    class Group(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // The Insight Group type
-    class Version(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // Value describing a version in Jira
-    class Project(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?): InsightAttribute(attributeId, schema) // Value that represents a Jira project
-    class Status(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema) // An Insight status type that can be associated with objects Cardinality:0-1
-    class Unknown(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema)
+    class Reference(attributeId: InsightAttributeId,@field:NotNull val referencedObjects: List<ReferencedObject>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Reference)
+    class User(attributeId: InsightAttributeId,@field:NotNull val users: List<InsightUser>, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.User)
+    class Confluence(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Confluence) // A value that describes a page in Confluence
+    class Group(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Group) // The Insight Group type
+    class Version(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Version) // Value describing a version in Jira
+    class Project(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?): InsightAttribute(attributeId, schema, AttributeTypeEnum.Project) // Value that represents a Jira project
+    class Status(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Status) // An Insight status type that can be associated with objects Cardinality:0-1
+    class Unknown(attributeId: InsightAttributeId, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Unknown)
 
     override fun toString(): String = when (this) {
         is Text -> value ?: ""
@@ -260,6 +262,29 @@ sealed class InsightAttribute(
 
 }
 
+enum class AttributeTypeEnum {
+    Text,
+    Integer,
+    Bool,
+    DoubleNumber,
+    Select,
+    Date,
+    Time,
+    DateTime,
+    Url,
+    Email,
+    Textarea,
+    Ipaddress,
+    Reference,
+    User,
+    Confluence,
+    Group,
+    Version,
+    Project,
+    Status,
+    Unknown,
+}
+
 // region InsightObjectTypeOperator
 data class ObjectTypeSchema(
     @get:JvmName("getId")
@@ -271,6 +296,7 @@ data class ObjectTypeSchema(
 )
 
 @Schema(
+    discriminatorProperty = "type",
     oneOf = [
         ObjectTypeSchemaAttribute.TextSchema::class,
         ObjectTypeSchemaAttribute.IntegerSchema::class,
@@ -300,7 +326,8 @@ sealed class ObjectTypeSchemaAttribute(
     @field:NotNull val name: String, // attributeName
     @field:NotNull val minimumCardinality: Int,
     @field:NotNull val maximumCardinality: Int,
-    @field:NotNull val includeChildObjectTypes: Boolean
+    @field:NotNull val includeChildObjectTypes: Boolean,
+    @field:NotNull val type: AttributeTypeEnum
 ) {
 
     val isValueAttribute: Boolean by lazy {
@@ -336,7 +363,7 @@ sealed class ObjectTypeSchemaAttribute(
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
         @field:NotNull val options: List<String>,
-    ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+    ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Select)
 
     class ReferenceSchema(
         id: InsightAttributeId,
@@ -347,7 +374,7 @@ sealed class ObjectTypeSchemaAttribute(
         @get:JvmName("getReferenceObjectTypeId")
         @field:NotNull val referenceObjectTypeId: InsightObjectTypeId, // objectTypeId of the referenced object
         @field:NotNull val referenceKind: ReferenceKind
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Reference)
 
     class UnknownSchema(
         id: InsightAttributeId,
@@ -356,7 +383,7 @@ sealed class ObjectTypeSchemaAttribute(
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
         @field:NotNull val debugDescription: String
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Unknown)
 
     // region types having just the superclass attributes
     class TextSchema(
@@ -365,77 +392,77 @@ sealed class ObjectTypeSchemaAttribute(
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Text)
     class IntegerSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Integer)
     class BoolSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Bool)
     class DoubleNumberSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.DoubleNumber)
     class DateSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Date)
     class TimeSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Time)
     class DateTimeSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.DateTime)
     class UrlSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Url)
     class EmailSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Email)
     class TextareaSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Textarea)
     class IpaddressSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Ipaddress)
 
     class UserSchema(
         id: InsightAttributeId,
@@ -443,42 +470,42 @@ sealed class ObjectTypeSchemaAttribute(
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.User)
     class ConfluenceSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Confluence)
     class GroupSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Group)
     class VersionSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Version)
     class ProjectSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Project)
     class StatusSchema(
         id: InsightAttributeId,
         name: String,
         minimumCardinality: Int,
         maximumCardinality: Int,
         includeChildObjectTypes: Boolean,
-        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes)
+        ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Status)
 
     // endregion types having just the superclass attributes
 }
