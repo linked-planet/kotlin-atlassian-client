@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.linked-planet.client</groupId>
         <artifactId>kotlin-atlassian-client</artifactId>
-        <version>0.12.5</version>
+        <version>0.12.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>kotlin-insight-client</artifactId>
