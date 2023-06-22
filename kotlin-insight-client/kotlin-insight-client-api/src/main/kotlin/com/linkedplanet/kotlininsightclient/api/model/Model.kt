@@ -125,32 +125,6 @@ sealed class InsightAttribute(
     val schema: ObjectTypeSchemaAttribute?,
     @field:NotNull val type: AttributeTypeEnum
 ) {
-    val isValueAttribute: Boolean by lazy {
-        when (this) {
-            is Text -> true
-            is Integer -> true
-            is Bool -> true
-            is DoubleNumber -> true
-            is Select -> true
-            is Date -> true
-            is Time -> true
-            is DateTime -> true
-            is Url -> true
-            is Email -> true
-            is Textarea -> true
-            is Ipaddress -> true
-
-            is Unknown -> false
-            is Reference -> false
-            is User -> false
-            is Confluence -> false
-            is Group -> false
-            is Version -> false
-            is Project -> false
-            is Status -> false
-        }
-    }
-
     class Text(attributeId: InsightAttributeId, val value: String?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Text)
     class Integer(attributeId: InsightAttributeId,val value: Int?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Integer)
     class Bool(attributeId: InsightAttributeId,val value: Boolean?, schema: ObjectTypeSchemaAttribute?) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Bool)
@@ -262,6 +236,34 @@ sealed class InsightAttribute(
 
 }
 
+fun InsightAttribute.isValueAttribute() = this.type.isValueAttribute()
+fun ObjectTypeSchemaAttribute.isValueAttribute() = this.type.isValueAttribute()
+
+fun AttributeTypeEnum.isValueAttribute(): Boolean =
+    when (this) {
+        AttributeTypeEnum.Text -> true
+        AttributeTypeEnum.Integer -> true
+        AttributeTypeEnum.Bool -> true
+        AttributeTypeEnum.DoubleNumber -> true
+        AttributeTypeEnum.Select -> true
+        AttributeTypeEnum.Date -> true
+        AttributeTypeEnum.Time -> true
+        AttributeTypeEnum.DateTime -> true
+        AttributeTypeEnum.Url -> true
+        AttributeTypeEnum.Email -> true
+        AttributeTypeEnum.Textarea -> true
+        AttributeTypeEnum.Ipaddress -> true
+
+        AttributeTypeEnum.Unknown -> false
+        AttributeTypeEnum.Reference -> false
+        AttributeTypeEnum.User -> false
+        AttributeTypeEnum.Confluence -> false
+        AttributeTypeEnum.Group -> false
+        AttributeTypeEnum.Version -> false
+        AttributeTypeEnum.Project -> false
+        AttributeTypeEnum.Status -> false
+    }
+
 enum class AttributeTypeEnum {
     Text,
     Integer,
@@ -329,32 +331,6 @@ sealed class ObjectTypeSchemaAttribute(
     @field:NotNull val includeChildObjectTypes: Boolean,
     @field:NotNull val type: AttributeTypeEnum
 ) {
-
-    val isValueAttribute: Boolean by lazy {
-        when(this){
-            is TextSchema -> true
-            is IntegerSchema -> true
-            is BoolSchema -> true
-            is DoubleNumberSchema -> true
-            is SelectSchema -> true
-            is DateSchema -> true
-            is TimeSchema -> true
-            is DateTimeSchema -> true
-            is UrlSchema -> true
-            is EmailSchema -> true
-            is TextareaSchema -> true
-            is IpaddressSchema -> true
-
-            is UnknownSchema -> false
-            is ReferenceSchema -> false
-            is UserSchema -> false
-            is ConfluenceSchema -> false
-            is GroupSchema -> false
-            is VersionSchema -> false
-            is ProjectSchema -> false
-            is StatusSchema -> false
-        }
-    }
 
     class SelectSchema(
         id: InsightAttributeId,

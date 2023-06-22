@@ -38,6 +38,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.getAttribute
+import com.linkedplanet.kotlininsightclient.api.model.isValueAttribute
 import jdk.jfr.Experimental
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
@@ -86,7 +87,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             val attributeType: ObjectTypeSchemaAttribute = attrsMap[prop.name.lowercase()] ?: return@mapNotNull null
             val value: Any? = prop.get(domainObject)
             when {
-                attributeType.isValueAttribute -> mapValueAttribute(value, attributeType)
+                attributeType.isValueAttribute() -> mapValueAttribute(value, attributeType)
 
                 attributeType is ObjectTypeSchemaAttribute.ReferenceSchema -> {
                     val referencedObjectIds = attributeToReferencedObjectId(attributeType, value)

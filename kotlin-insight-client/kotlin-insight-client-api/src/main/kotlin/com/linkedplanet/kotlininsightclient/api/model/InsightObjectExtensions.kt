@@ -44,7 +44,7 @@ fun InsightObject.isReferenceAttribute(id: InsightAttributeId): Boolean =
 fun InsightAttribute.isReferenceAttribute() = this is InsightAttribute.Reference
 
 fun InsightObject.isValueAttribute(id: InsightAttributeId): Boolean =
-    getAttribute(id)?.isValueAttribute ?: false
+    getAttribute(id)?.isValueAttribute() ?: false
 
 fun InsightObject.exists(id: InsightAttributeId): Boolean =
     getAttribute(id) != null
