@@ -24,6 +24,7 @@ import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.C
 import com.linkedplanet.kotlininsightclient.ObjectWithAllDefaultTypesAttributeIds.*
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.impl.GsonUtil
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
@@ -33,6 +34,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toUser
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toUsers
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toValue
+import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlininsightclient.api.model.InsightUser
@@ -307,6 +309,25 @@ interface InsightObjectOperatorTest {
             assertThat(updatedObj.getStringValue(TestTextArea.attributeId), equalTo("updated text area"))
             assertThat(updatedObj.getSelectValues(TestSelect.attributeId), equalTo(listOf("Test Option 1")))
             assertThat(updatedObj.getStringValue(TestIpAddress.attributeId), equalTo("10.0.0.1"))
+        }
+    }
+
+    @Test
+    fun testGsonSerialization() = runBlocking  {
+        val domainObject = domainOjectWithAllDefaultTypes()
+        val repository = ObjectWithAllDefaultTypesRepository(insightObjectOperator)
+        autoClean(clean = { deleteAllObjectsWithType(repository.objectTypeId) }) {
+            val created = repository.create(domainObject).orFail()
+            val originalInsightObject: InsightObject = insightObjectOperator.getObjectById(created.id!!, ::identity).orFail()!!
+
+            val gson = GsonUtil.gsonBuilder()
+                .setPrettyPrinting()
+                .create()
+
+            val objectAsJson: String = gson.toJson(originalInsightObject)
+            val fromJson = gson.fromJson(objectAsJson, InsightObject::class.java)
+
+            assertThat(fromJson, equalTo(originalInsightObject))
         }
     }
 
