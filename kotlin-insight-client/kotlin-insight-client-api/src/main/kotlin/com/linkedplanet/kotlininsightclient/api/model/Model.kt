@@ -126,7 +126,8 @@ sealed class InsightAttribute(
     @field:NotNull val type: AttributeTypeEnum
 ) {
     data class Text(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: String?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Text) {
@@ -134,7 +135,8 @@ sealed class InsightAttribute(
     }
 
     data class Integer(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: Int?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Integer){
@@ -142,7 +144,8 @@ sealed class InsightAttribute(
     }
 
     data class Bool(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: Boolean?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Bool){
@@ -150,7 +153,8 @@ sealed class InsightAttribute(
     }
 
     data class DoubleNumber(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: Double?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.DoubleNumber){
@@ -158,7 +162,8 @@ sealed class InsightAttribute(
     }
 
     data class Date(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: LocalDate?,
         val displayValue: String?,
         override val schema: ObjectTypeSchemaAttribute?
@@ -170,7 +175,8 @@ sealed class InsightAttribute(
      * Note that time is part of the Enum inside the SDK, but is not selectable through the Insight GUI
      */
     data class Time(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: LocalTime?,
         val displayValue: String?,
         override val schema: ObjectTypeSchemaAttribute?
@@ -179,7 +185,8 @@ sealed class InsightAttribute(
     }
 
     data class DateTime(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: ZonedDateTime?,
         val displayValue: String?,
         override val schema: ObjectTypeSchemaAttribute?
@@ -188,7 +195,8 @@ sealed class InsightAttribute(
     }
 
     data class Email(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: String?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Email){
@@ -196,7 +204,8 @@ sealed class InsightAttribute(
     }
 
     data class Textarea(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: String?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Textarea){
@@ -204,7 +213,8 @@ sealed class InsightAttribute(
     }
 
     data class Ipaddress(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val value: String?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Ipaddress){
@@ -213,7 +223,8 @@ sealed class InsightAttribute(
 
     //  cardinality > 1
     data class Url(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val values: List<String>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Url){
@@ -221,7 +232,8 @@ sealed class InsightAttribute(
     }
 
     data class Select(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         val values: List<String>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Select){
@@ -230,7 +242,8 @@ sealed class InsightAttribute(
 
     // non default types
     data class Reference(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         @field:NotNull val referencedObjects: List<ReferencedObject>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Reference) {
@@ -238,7 +251,8 @@ sealed class InsightAttribute(
     }
 
     data class User(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         @field:NotNull val users: List<InsightUser>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.User){
@@ -249,7 +263,8 @@ sealed class InsightAttribute(
      * A page in Confluence
      */
     data class Confluence(
-        override val attributeId: InsightAttributeId,
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(
         attributeId,
@@ -262,7 +277,10 @@ sealed class InsightAttribute(
     /**
      * The Insight Group type
      */
-    data class Group(override val attributeId: InsightAttributeId, override val schema: ObjectTypeSchemaAttribute?) :
+    data class Group(
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
+        override val schema: ObjectTypeSchemaAttribute?) :
         InsightAttribute(attributeId, schema, AttributeTypeEnum.Group){
         override fun toString() = "Group attributeId=$attributeId"
     }
@@ -270,7 +288,10 @@ sealed class InsightAttribute(
     /**
      * Version in Jira
      */
-    data class Version(override val attributeId: InsightAttributeId, override val schema: ObjectTypeSchemaAttribute?) :
+    data class Version(
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
+        override val schema: ObjectTypeSchemaAttribute?) :
         InsightAttribute(attributeId, schema, AttributeTypeEnum.Version){
         override fun toString() = "Version attributeId=$attributeId"
     }
@@ -278,7 +299,10 @@ sealed class InsightAttribute(
     /**
      *  Represents a Jira project
      */
-    data class Project(override val attributeId: InsightAttributeId, override val schema: ObjectTypeSchemaAttribute?) :
+    data class Project(
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
+        override val schema: ObjectTypeSchemaAttribute?) :
         InsightAttribute(attributeId, schema, AttributeTypeEnum.Project){
         override fun toString() = "Project attributeId=$attributeId"
     }
@@ -287,12 +311,18 @@ sealed class InsightAttribute(
      * An Insight status type that can be associated with objects.
      * Cardinality:0-1
      */
-    data class Status(override val attributeId: InsightAttributeId, override val schema: ObjectTypeSchemaAttribute?) :
+    data class Status(
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
+        override val schema: ObjectTypeSchemaAttribute?) :
             InsightAttribute(attributeId, schema, AttributeTypeEnum.Status){
         override fun toString() = "Status attributeId=$attributeId"
     }
 
-    data class Unknown(override val attributeId: InsightAttributeId, override val schema: ObjectTypeSchemaAttribute?) :
+    data class Unknown(
+        @get:JvmName("getAttributeId")
+        @field:NotNull override val attributeId: InsightAttributeId,
+        override val schema: ObjectTypeSchemaAttribute?) :
         InsightAttribute(attributeId, schema, AttributeTypeEnum.Unknown){
         override fun toString() = ""
     }
@@ -450,154 +480,174 @@ sealed class ObjectTypeSchemaAttribute(
 ) {
 
     data class SelectSchema(
-       override val id: InsightAttributeId,
-       override val name: String,
-       override val minimumCardinality: Int,
-       override val maximumCardinality: Int,
-       override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         @field:NotNull val options: List<String>,
     ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Select)
 
     data class ReferenceSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         @get:JvmName("getReferenceObjectTypeId")
         @field:NotNull val referenceObjectTypeId: InsightObjectTypeId, // objectTypeId of the referenced object
         @field:NotNull val referenceKind: ReferenceKind
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Reference)
 
     data class UnknownSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         @field:NotNull val debugDescription: String
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Unknown)
 
     // region types having just the superclass attributes
     data class TextSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Text)
     data class IntegerSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Integer)
     data class BoolSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Bool)
     data class DoubleNumberSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.DoubleNumber)
     data class DateSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Date)
     data class TimeSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Time)
     data class DateTimeSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.DateTime)
     data class UrlSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Url)
     data class EmailSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Email)
     data class TextareaSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Textarea)
     data class IpaddressSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Ipaddress)
 
     data class UserSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.User)
     data class ConfluenceSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Confluence)
     data class GroupSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Group)
     data class VersionSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Version)
     data class ProjectSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Project)
     data class StatusSchema(
-        override val id: InsightAttributeId,
-        override val name: String,
-        override val minimumCardinality: Int,
-        override val maximumCardinality: Int,
-        override val includeChildObjectTypes: Boolean,
+        @get:JvmName("getId")
+        @field:NotNull override val id: InsightAttributeId,
+        @field:NotNull override val name: String, // attributeName
+        @field:NotNull override val minimumCardinality: Int,
+        @field:NotNull override val maximumCardinality: Int,
+        @field:NotNull override val includeChildObjectTypes: Boolean,
         ) : ObjectTypeSchemaAttribute(id, name, minimumCardinality, maximumCardinality, includeChildObjectTypes, AttributeTypeEnum.Status)
 
     // endregion types having just the superclass attributes
