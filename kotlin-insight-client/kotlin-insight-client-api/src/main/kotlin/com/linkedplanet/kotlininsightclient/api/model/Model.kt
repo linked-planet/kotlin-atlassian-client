@@ -656,7 +656,7 @@ sealed class ObjectTypeSchemaAttribute(
 /**
  * This is the "Additional Value" one can select when choosing object as the attribute type.
  */
-enum class ReferenceKind(var referenceKindId: Int) {
+enum class ReferenceKind(val referenceKindId: Int) {
     UNKNOWN(-1),
     DEPENDENCY(1),
     LINK(2),
@@ -690,10 +690,11 @@ data class InsightUser(
 )
 
 data class ReferencedObject(
-    var id: InsightObjectId,
-    var label: String,
-    var objectKey: String,
-    var objectType: ReferencedObjectType?
+    @get:JvmName("getId")
+    @field:NotNull val id: InsightObjectId,
+    @field:NotNull val label: String,
+    @field:NotNull val objectKey: String,
+    val objectType: ReferencedObjectType?
 )
 
 data class ReferencedObjectType(
