@@ -44,19 +44,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("unused")
 sealed class InsightClientError(
     val error: String,
-    val message: String
+    val message: String,
+    val stacktrace: String = ""
 ) {
-    val stacktrace: String = Exception(message).stackTraceToString()
 
     companion object {
         private const val internalErrorString = "Jira/Insight hat ein internes Problem festgestellt"
-        fun fromException(e: Exception): InsightClientError =
-            ExceptionInsightClientError(e.message ?: internalErrorString, e.stackTraceToString())
         fun fromException(e: Throwable): InsightClientError =
-            ExceptionInsightClientError(e.message ?: "Interner Fehler", e.stackTraceToString())
+            ExceptionInsightClientError("Insight-Fehler", e.message ?: internalErrorString, e.stackTraceToString())
 
         fun internalError(message: String): Either<InsightClientError, InsightAttribute> =
-            InternalInsightClientError("Interner Fehler", message).asEither()
+            InternalInsightClientError("Interner Insight-Fehler", message).asEither()
 
     }
 }
@@ -65,15 +63,15 @@ fun <T> InsightClientError.asEither(): Either<InsightClientError, T> = Either.Le
 class InvalidArgumentInsightClientError(message: String) : InsightClientError("Unerwarteter Parameter", message)
 
 class InternalInsightClientError(error: String, message: String) : InsightClientError(error, message)
-class ExceptionInsightClientError(error: String, message: String) : InsightClientError(error, message)
+class ExceptionInsightClientError(error: String, message: String, stacktrace: String) : InsightClientError(error, message, stacktrace)
 
 class AuthenticationError(message: String) : InsightClientError("Authentifizierung fehlgeschlagen", message)
 
 class ObjectNotFoundError(val objectId: InsightObjectId):
-    InsightClientError("Objekt nicht gefunden", "Das Objekt mit der InsightObjectId=$objectId wurde nicht gefunden.")
+    InsightClientError("Insight Objekt nicht gefunden", "Das Objekt mit der InsightObjectId=$objectId wurde nicht gefunden.")
 
 class ObjectTypeNotFoundError(val rootObjectTypeId: InsightObjectTypeId) :
-    InsightClientError("Objekttyp unbekannt", "Der Objekttyp mit der angegebenen InsightObjectTypeId=$rootObjectTypeId wurde nicht gefunden.")
+    InsightClientError("Insight Objekttyp unbekannt", "Der Objekttyp mit der angegebenen InsightObjectTypeId=$rootObjectTypeId wurde nicht gefunden.")
 
 class OtherNotFoundError(message: String) : InsightClientError("Nicht gefunden.", message)
 

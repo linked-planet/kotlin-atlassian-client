@@ -27,5 +27,9 @@ inline fun <B> Either.Companion.catchJiraClientError(
     message: String? = null,
     f: () -> B
 ): Either<JiraClientError, B> = catch(f).mapLeft {
-    JiraClientError(error ?: it.message.toString(), message ?: it.stackTraceToString())
+    JiraClientError(
+        error = error ?: "Jira-Fehler",
+        message = message ?: it.message ?: "-",
+        stacktrace = it.stackTraceToString()
+    )
 }
