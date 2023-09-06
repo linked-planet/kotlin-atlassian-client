@@ -17,16 +17,18 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlinjiraclient.api.error
+@file:Suppress("CanBeParameter", "unused") // we want clients to access the additional information
 
-import com.linkedplanet.kotlinatlassianclientcore.common.error.AtlassianClientError
+package com.linkedplanet.kotlinatlassianclientcore.common.error
 
-@Suppress("unused")
-open class JiraClientError(
-    error: String,
-    message: String,
-    stacktrace: String = ""
-) : AtlassianClientError(error, message, stacktrace) {
+import arrow.core.Either
 
+open class AtlassianClientError(
+    val error: String,
+    val message: String,
+    val stacktrace: String = ""
+) {
     companion object
 }
+
+fun <ERROR : AtlassianClientError, T> ERROR.asEither(): Either<ERROR, T> = Either.Left(this)

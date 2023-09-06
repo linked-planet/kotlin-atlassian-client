@@ -22,6 +22,7 @@
 package com.linkedplanet.kotlininsightclient.api.error
 
 import arrow.core.Either
+import com.linkedplanet.kotlinatlassianclientcore.common.error.AtlassianClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
@@ -43,10 +44,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("unused")
 sealed class InsightClientError(
-    val error: String,
-    val message: String,
-    val stacktrace: String = ""
-) {
+    error: String,
+    message: String,
+    stacktrace: String = ""
+) : AtlassianClientError(error, message, stacktrace) {
 
     companion object {
         private const val internalErrorString = "Jira/Insight hat ein internes Problem festgestellt"
