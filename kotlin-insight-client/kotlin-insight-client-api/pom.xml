@@ -34,5 +34,10 @@
             <version>2.2.2-atlassian-1</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.linked-planet.client</groupId>
+            <artifactId>kotlin-atlassian-client-core-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
