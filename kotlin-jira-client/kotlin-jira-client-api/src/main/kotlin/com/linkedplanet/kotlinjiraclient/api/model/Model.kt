@@ -27,14 +27,6 @@ data class Page<T> (
     val pageSize: Int
 )
 
-data class JiraUser(
-    val key: String,
-    val name: String,
-    val emailAddress: String,
-    var avatarUrl: String?,
-    val displayName: String
-)
-
 data class JiraStatus(
     val id: String,
     val name: String,

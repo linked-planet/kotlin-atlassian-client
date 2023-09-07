@@ -20,8 +20,8 @@
 package com.linkedplanet.kotlinjiraclient.api.interfaces
 
 import arrow.core.Either
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
-import com.linkedplanet.kotlinjiraclient.api.model.JiraUser
 
 /**
  * Manages Jira users.

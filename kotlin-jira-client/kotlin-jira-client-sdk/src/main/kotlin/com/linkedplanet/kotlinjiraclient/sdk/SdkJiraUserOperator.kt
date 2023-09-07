@@ -31,7 +31,7 @@ import com.atlassian.jira.security.roles.ProjectRoleManager
 import com.atlassian.jira.user.ApplicationUser
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraUserOperator
-import com.linkedplanet.kotlinjiraclient.api.model.JiraUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
 
 object SdkJiraUserOperator : JiraUserOperator {
