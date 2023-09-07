@@ -153,9 +153,10 @@ fun InsightObject.getSingleReferenceValue(id: InsightAttributeId): InsightRefere
         ?.referencedObjects
         ?.firstOrNull()
         ?.let {
+            val objectType = it.objectType!!
             InsightReference(
-                it.objectType!!.id,
-                it.objectType!!.name,
+                objectType.id,
+                objectType.name,
                 it.id,
                 it.objectKey,
                 it.label
@@ -167,9 +168,10 @@ fun InsightObject.getMultiReferenceValue(id: InsightAttributeId): List<InsightRe
         ?.let { it as? InsightAttribute.Reference }
         ?.referencedObjects
         ?.map {
+            val objectType = it.objectType!!
             InsightReference(
-                it.objectType!!.id,
-                it.objectType!!.name,
+                objectType.id,
+                objectType.name,
                 it.id,
                 it.objectKey,
                 it.label
