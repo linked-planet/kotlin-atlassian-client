@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
-import com.linkedplanet.kotlinatlassianclientcore.common.api.AtlassianUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 import java.time.LocalTime
@@ -254,7 +254,7 @@ sealed class InsightAttribute(
     data class User(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        @field:NotNull val users: List<AtlassianUser>,
+        @field:NotNull val users: List<JiraUser>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.User){
         override fun toString() = users.joinToString(",") { it.key }
@@ -357,10 +357,10 @@ sealed class InsightAttribute(
         infix fun InsightAttributeId.toUrlValues(values: List<String>) =
             Url(this, values = values, schema = null)
 
-        infix fun InsightAttributeId.toUser(user: AtlassianUser?) =
+        infix fun InsightAttributeId.toUser(user: JiraUser?) =
             User(this, listOfNotNull(user), schema = null)
 
-        infix fun InsightAttributeId.toUsers(users: List<AtlassianUser>) =
+        infix fun InsightAttributeId.toUsers(users: List<JiraUser>) =
             User(this, users, schema = null)
 
         infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) =

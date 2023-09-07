@@ -24,7 +24,7 @@ import arrow.core.computations.either
 import arrow.core.flatten
 import arrow.core.rightIfNotNull
 import com.google.gson.JsonParser
-import com.linkedplanet.kotlinatlassianclientcore.common.api.AtlassianUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
@@ -307,7 +307,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 }
                 InsightObjectAttributeType.USER -> {
                     val users = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
-                        av.user?.run { AtlassianUser(key, name, emailAddress ?: "", displayName = displayName) }
+                        av.user?.run { JiraUser(key, name, emailAddress ?: "", displayName = displayName) }
                     }
                     InsightAttribute.User(attributeId, users, schema)
                 }

@@ -29,7 +29,7 @@ import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
 import com.atlassian.jira.user.util.UserManager
-import com.linkedplanet.kotlinatlassianclientcore.common.api.AtlassianUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectNotFoundError
@@ -448,11 +448,11 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             }
         }
     private val avatarService by lazy { ComponentAccessor.getAvatarService() }
-    private fun loadAtlassianUserByKey(userKey: String): Either<InsightClientError, AtlassianUser?> =
+    private fun loadAtlassianUserByKey(userKey: String): Either<InsightClientError, JiraUser?> =
         catchAsInsightClientError {
             userManager.getUserByKey(userKey)?.run {
                 val avatarUrl = avatarService.getAvatarURL(this, this).toASCIIString()
-                AtlassianUser(key, name, emailAddress, avatarUrl, displayName)
+                JiraUser(key, name, emailAddress, avatarUrl, displayName)
             }
         }
 
