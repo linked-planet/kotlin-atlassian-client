@@ -22,11 +22,12 @@
 package com.linkedplanet.kotlinatlassianclientcore.common.error
 
 import arrow.core.Either
+import javax.validation.constraints.NotNull
 
 open class AtlassianClientError(
-    val error: String,
-    val message: String,
-    val stacktrace: String = ""
+    @field:NotNull val error: String,
+    @field:NotNull val message: String,
+    @field:NotNull val stacktrace: String = ""
 ) {
     companion object
 }
