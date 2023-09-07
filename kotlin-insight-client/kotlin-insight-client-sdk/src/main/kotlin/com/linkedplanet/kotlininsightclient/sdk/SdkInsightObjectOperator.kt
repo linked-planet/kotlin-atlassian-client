@@ -452,7 +452,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         catchAsInsightClientError {
             userManager.getUserByKey(userKey)?.run {
                 val avatarUrl = avatarService.getAvatarURL(this, this).toASCIIString()
-                AtlassianUser(displayName, name, emailAddress, key, avatarUrl)
+                AtlassianUser(key, name, emailAddress, avatarUrl, displayName)
             }
         }
 

@@ -661,8 +661,8 @@ interface InsightObjectOperatorTest {
 
         val objectName = "createdByUnitTest"
         autoClean(clean = { deleteObjectByName(InsightObjectType.User.id, objectName).orFail() }) {
-            val user1 = AtlassianUser("", "", "", "JIRAUSER10100")
-            val user2 = AtlassianUser("", "", "", "JIRAUSER10101")
+            val user1 = AtlassianUser("JIRAUSER10100", "", "", displayName = "")
+            val user2 = AtlassianUser("JIRAUSER10101", "", "", displayName = "")
             val objectId = insightObjectOperator.createInsightObject(
                 InsightObjectType.User.id,
                 UserTestName.attributeId toValue objectName,

@@ -48,7 +48,6 @@ import com.linkedplanet.kotlininsightclient.http.util.toInsightClientError
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
-import java.util.*
 
 class HttpInsightObjectOperator(private val context: HttpInsightClientContext) : InsightObjectOperator {
 
@@ -308,7 +307,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 }
                 InsightObjectAttributeType.USER -> {
                     val users = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
-                        av.user?.run { AtlassianUser(displayName, name, emailAddress ?: "", key) }
+                        av.user?.run { AtlassianUser(key, name, emailAddress ?: "", displayName = displayName) }
                     }
                     InsightAttribute.User(attributeId, users, schema)
                 }
