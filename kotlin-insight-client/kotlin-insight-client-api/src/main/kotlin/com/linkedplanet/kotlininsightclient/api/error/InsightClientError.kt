@@ -23,6 +23,7 @@ package com.linkedplanet.kotlininsightclient.api.error
 
 import arrow.core.Either
 import com.linkedplanet.kotlinatlassianclientcore.common.error.AtlassianClientError
+import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
@@ -59,7 +60,6 @@ sealed class InsightClientError(
 
     }
 }
-fun <T> InsightClientError.asEither(): Either<InsightClientError, T> = Either.Left(this)
 
 class InvalidArgumentInsightClientError(message: String) : InsightClientError("Unerwarteter Parameter", message)
 

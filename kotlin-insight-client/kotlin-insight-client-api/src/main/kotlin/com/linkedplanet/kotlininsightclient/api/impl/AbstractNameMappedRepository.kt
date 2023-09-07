@@ -23,9 +23,9 @@ import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.right
 import arrow.core.sequenceEither
+import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InvalidArgumentInsightClientError
-import com.linkedplanet.kotlininsightclient.api.error.asEither
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toReferences
@@ -169,7 +169,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
             is InsightAttribute.Select -> attribute.values// List<String>
             else -> InvalidArgumentInsightClientError(
                 "kType.classifier ${kType.classifier} is not supported."
-            ).asEither<DomainType?>(
+            ).asEither<InsightClientError, DomainType?>(
             ).bind()
         }
     }
