@@ -1,6 +1,6 @@
 /*-
  * #%L
- * kotlin-jira-client-api
+ * kotlin-atlassian-client-core-common
  * %%
  * Copyright (C) 2022 - 2023 linked-planet GmbH
  * %%
