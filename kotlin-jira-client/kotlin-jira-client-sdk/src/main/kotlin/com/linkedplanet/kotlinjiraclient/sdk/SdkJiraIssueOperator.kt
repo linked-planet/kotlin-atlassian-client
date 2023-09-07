@@ -32,7 +32,8 @@ import com.google.gson.JsonObject
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
-import com.linkedplanet.kotlinjiraclient.api.model.Page
+import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
+import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraField
 import com.linkedplanet.kotlinjiraclient.sdk.util.IssueJsonConverter
 import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
@@ -108,7 +109,7 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     ): Either<JiraClientError, T?> = either {
         val potentiallyMultipleIssues = getIssuesByJQLPaginated(jql, 0, 1, parser).bind()
         if (potentiallyMultipleIssues.totalItems < 1) {
-            JiraClientError("Issue not found", "No issue was found.").left().bind()
+            JiraClientError("Issue not found", "No issue was found.").asEither<JiraClientError, T?>().bind()
         }
         potentiallyMultipleIssues.items.first()
     }

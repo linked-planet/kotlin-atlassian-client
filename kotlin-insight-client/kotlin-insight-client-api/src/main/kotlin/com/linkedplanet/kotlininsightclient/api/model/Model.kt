@@ -55,14 +55,6 @@ data class InsightObjectPage<T>(
     @field:NotNull val objects: List<T> = emptyList(),
 )
 
-data class Page<T> (
-    @field:NotNull val items: List<T>,
-    @field:NotNull val totalItems: Int,
-    @field:NotNull val totalPages: Int,
-    @field:NotNull val currentPageIndex: Int,
-    @field:NotNull val pageSize: Int
-)
-
 fun <T> InsightObjectPage<T>.plus(insightObjectPage: InsightObjectPage<T>): InsightObjectPage<T> =
     InsightObjectPage(
         this.totalFilterCount + insightObjectPage.totalFilterCount,

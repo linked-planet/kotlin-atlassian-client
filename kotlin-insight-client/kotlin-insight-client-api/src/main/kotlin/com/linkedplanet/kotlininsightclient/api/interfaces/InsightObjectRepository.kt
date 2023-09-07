@@ -22,7 +22,7 @@ package com.linkedplanet.kotlininsightclient.api.interfaces
 import arrow.core.Either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
-import com.linkedplanet.kotlininsightclient.api.model.Page
+import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 
 /**
  * Generic Interface to CRUD one type of domain object, like a customer, to Insight.
