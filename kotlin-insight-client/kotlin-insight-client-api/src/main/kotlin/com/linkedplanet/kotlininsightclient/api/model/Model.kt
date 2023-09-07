@@ -19,6 +19,7 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
+import com.linkedplanet.kotlinatlassianclientcore.common.api.AtlassianUser
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 import java.time.LocalTime
@@ -253,7 +254,7 @@ sealed class InsightAttribute(
     data class User(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        @field:NotNull val users: List<InsightUser>,
+        @field:NotNull val users: List<AtlassianUser>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.User){
         override fun toString() = users.joinToString(",") { it.key }
@@ -356,10 +357,10 @@ sealed class InsightAttribute(
         infix fun InsightAttributeId.toUrlValues(values: List<String>) =
             Url(this, values = values, schema = null)
 
-        infix fun InsightAttributeId.toUser(user: InsightUser?) =
+        infix fun InsightAttributeId.toUser(user: AtlassianUser?) =
             User(this, listOfNotNull(user), schema = null)
 
-        infix fun InsightAttributeId.toUsers(users: List<InsightUser>) =
+        infix fun InsightAttributeId.toUsers(users: List<AtlassianUser>) =
             User(this, users, schema = null)
 
         infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) =
@@ -681,13 +682,6 @@ data class InsightSchema(
     @field:NotNull val objectTypeCount: Int
 )
 // endregion InsightSchemaOperator
-
-data class InsightUser(
-    @field:NotNull val displayName: String,
-    @field:NotNull val name: String,
-    @field:NotNull val emailAddress: String,
-    @field:NotNull val key: String
-)
 
 data class ReferencedObject(
     @get:JvmName("getId")

@@ -25,9 +25,11 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import arrow.core.rightIfNotNull
+import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
 import com.atlassian.jira.user.util.UserManager
+import com.linkedplanet.kotlinatlassianclientcore.common.api.AtlassianUser
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectNotFoundError
@@ -41,7 +43,6 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.InsightUser
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
@@ -369,7 +370,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             }
             Type.USER -> {
                 val users = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
-                    loadInsightUserByKey(attribute.textValue).bind()
+                    loadAtlassianUserByKey(attribute.textValue).bind()
                 }
                 InsightAttribute.User(attributeId, users, schema)
             }
@@ -446,11 +447,12 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 )
             }
         }
-
-    private fun loadInsightUserByKey(userKey: String): Either<InsightClientError, InsightUser?> =
+    private val avatarService by lazy { ComponentAccessor.getAvatarService() }
+    private fun loadAtlassianUserByKey(userKey: String): Either<InsightClientError, AtlassianUser?> =
         catchAsInsightClientError {
             userManager.getUserByKey(userKey)?.run {
-                InsightUser(displayName, name, emailAddress, key)
+                val avatarUrl = avatarService.getAvatarURL(this, this).toASCIIString()
+                AtlassianUser(displayName, name, emailAddress, key, avatarUrl)
             }
         }
 

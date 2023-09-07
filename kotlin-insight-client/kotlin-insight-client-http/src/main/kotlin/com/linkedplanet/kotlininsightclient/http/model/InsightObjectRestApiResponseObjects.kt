@@ -71,14 +71,15 @@ internal data class ObjectAttributeValueApiResponse(
     var value: Any?,
     var displayValue: Any?,
     var referencedObject: ReferencedObjectApiResponse?,
-    var user: InsightUserApiResponse?
+    var user: AtlassianUserApiResponse?
 )
 
-internal data class InsightUserApiResponse(
+internal data class AtlassianUserApiResponse(
     val displayName: String,
     val name: String,
     val emailAddress: String?,
-    val key: String
+    val key: String,
+    val avatarUrl: String?
 )
 
 internal data class ReferencedObjectApiResponse(

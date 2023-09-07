@@ -21,6 +21,7 @@
 
 package com.linkedplanet.kotlininsightclient.api.model
 
+import com.linkedplanet.kotlinatlassianclientcore.common.api.AtlassianUser
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
@@ -141,7 +142,7 @@ fun InsightObject.getDateTimeValue(id: InsightAttributeId): ZonedDateTime? =
 
 
 //region ObjectAttributeValue.User
-fun InsightObject.getUserList(id: InsightAttributeId): List<InsightUser> =
+fun InsightObject.getUserList(id: InsightAttributeId): List<AtlassianUser> =
     getAttributeAs<InsightAttribute.User>(id)?.users ?: emptyList()
 // endregion user
 
