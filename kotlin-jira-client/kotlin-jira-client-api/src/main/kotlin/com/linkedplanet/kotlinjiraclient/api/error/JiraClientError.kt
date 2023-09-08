@@ -22,9 +22,9 @@ package com.linkedplanet.kotlinjiraclient.api.error
 @Suppress("unused")
 open class JiraClientError(
     val error: String,
-    val message: String
+    val message: String,
+    val stacktrace: String = ""
 ) {
-    val stacktrace: String = Exception(message).stackTraceToString()
 
     companion object
 }
