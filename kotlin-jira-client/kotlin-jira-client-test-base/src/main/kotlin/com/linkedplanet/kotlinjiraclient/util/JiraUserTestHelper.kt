@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlinjiraclient.util
 
-import com.linkedplanet.kotlinjiraclient.api.model.JiraUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat

@@ -27,7 +27,7 @@ import com.linkedplanet.kotlinhttpclient.api.http.*
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
-import com.linkedplanet.kotlinjiraclient.api.model.Page
+import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraField
 import com.linkedplanet.kotlinjiraclient.http.model.HttpMappingField
 import com.linkedplanet.kotlinjiraclient.http.util.fromHttpDomainError

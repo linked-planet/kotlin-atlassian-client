@@ -27,7 +27,7 @@ import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlinhttpclient.api.http.*
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraUserOperator
-import com.linkedplanet.kotlinjiraclient.api.model.JiraUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlinjiraclient.http.model.*
 import com.linkedplanet.kotlinjiraclient.http.util.fromHttpDomainError
 

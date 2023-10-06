@@ -1,6 +1,6 @@
 /*-
  * #%L
- * kotlin-jira-client-api
+ * kotlin-http-client-api
  * %%
  * Copyright (C) 2022 - 2023 linked-planet GmbH
  * %%
@@ -17,16 +17,6 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlinjiraclient.api.error
+package com.linkedplanet.kotlinhttpclient.error
 
-import com.linkedplanet.kotlinatlassianclientcore.common.error.AtlassianClientError
-
-@Suppress("unused")
-open class JiraClientError(
-    error: String,
-    message: String,
-    stacktrace: String = ""
-) : AtlassianClientError(error, message, stacktrace) {
-
-    companion object
-}
+class HttpDomainError(val statusCode: Int, val error: String, val message: String)

@@ -21,6 +21,7 @@
 
 package com.linkedplanet.kotlininsightclient.api.model
 
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
@@ -141,7 +142,7 @@ fun InsightObject.getDateTimeValue(id: InsightAttributeId): ZonedDateTime? =
 
 
 //region ObjectAttributeValue.User
-fun InsightObject.getUserList(id: InsightAttributeId): List<InsightUser> =
+fun InsightObject.getUserList(id: InsightAttributeId): List<JiraUser> =
     getAttributeAs<InsightAttribute.User>(id)?.users ?: emptyList()
 // endregion user
 
@@ -153,9 +154,10 @@ fun InsightObject.getSingleReferenceValue(id: InsightAttributeId): InsightRefere
         ?.referencedObjects
         ?.firstOrNull()
         ?.let {
+            val objectType = it.objectType!!
             InsightReference(
-                it.objectType!!.id,
-                it.objectType!!.name,
+                objectType.id,
+                objectType.name,
                 it.id,
                 it.objectKey,
                 it.label
@@ -167,9 +169,10 @@ fun InsightObject.getMultiReferenceValue(id: InsightAttributeId): List<InsightRe
         ?.let { it as? InsightAttribute.Reference }
         ?.referencedObjects
         ?.map {
+            val objectType = it.objectType!!
             InsightReference(
-                it.objectType!!.id,
-                it.objectType!!.name,
+                objectType.id,
+                objectType.name,
                 it.id,
                 it.objectKey,
                 it.label

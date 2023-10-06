@@ -1,6 +1,6 @@
 /*-
  * #%L
- * kotlin-jira-client-api
+ * kotlin-atlassian-client-core-common
  * %%
  * Copyright (C) 2022 - 2023 linked-planet GmbH
  * %%
@@ -17,16 +17,14 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlinjiraclient.api.error
+package com.linkedplanet.kotlinatlassianclientcore.common.api
 
-import com.linkedplanet.kotlinatlassianclientcore.common.error.AtlassianClientError
+import javax.validation.constraints.NotNull
 
-@Suppress("unused")
-open class JiraClientError(
-    error: String,
-    message: String,
-    stacktrace: String = ""
-) : AtlassianClientError(error, message, stacktrace) {
-
-    companion object
-}
+data class JiraUser(
+    @field:NotNull val key: String,
+    @field:NotNull val name: String,
+    @field:NotNull val emailAddress: String,
+    @field:NotNull val avatarUrl: String? = null,
+    @field:NotNull val displayName: String
+)

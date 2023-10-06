@@ -37,7 +37,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.InsightUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeAs
@@ -652,7 +652,7 @@ interface InsightObjectOperatorTest {
 
     @Test
     fun testUserCrud() = runBlocking {
-        suspend fun getUserAttributes(objectId: InsightObjectId): Pair<List<InsightUser>?, List<InsightUser>> {
+        suspend fun getUserAttributes(objectId: InsightObjectId): Pair<List<JiraUser>?, List<JiraUser>> {
             val insightObject = insightObjectOperator.getObjectById(objectId, ::identity).orFail()!!
             val attrUser = insightObject.getAttributeAs<InsightAttribute.User>(UserTestUser.attributeId)?.users
             val attrUsers = insightObject.getUserList(UserTestUsers.attributeId)
@@ -661,8 +661,8 @@ interface InsightObjectOperatorTest {
 
         val objectName = "createdByUnitTest"
         autoClean(clean = { deleteObjectByName(InsightObjectType.User.id, objectName).orFail() }) {
-            val user1 = InsightUser("", "", "", "JIRAUSER10100")
-            val user2 = InsightUser("", "", "", "JIRAUSER10101")
+            val user1 = JiraUser("JIRAUSER10100", "", "", displayName = "")
+            val user2 = JiraUser("JIRAUSER10101", "", "", displayName = "")
             val objectId = insightObjectOperator.createInsightObject(
                 InsightObjectType.User.id,
                 UserTestName.attributeId toValue objectName,

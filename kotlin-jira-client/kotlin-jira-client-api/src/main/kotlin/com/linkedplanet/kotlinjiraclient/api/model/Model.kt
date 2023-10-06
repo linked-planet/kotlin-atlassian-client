@@ -19,22 +19,6 @@
  */
 package com.linkedplanet.kotlinjiraclient.api.model
 
-data class Page<T> (
-    val items: List<T>,
-    val totalItems: Int,
-    val totalPages: Int,
-    val currentPageIndex: Int,
-    val pageSize: Int
-)
-
-data class JiraUser(
-    val key: String,
-    val name: String,
-    val emailAddress: String,
-    var avatarUrl: String?,
-    val displayName: String
-)
-
 data class JiraStatus(
     val id: String,
     val name: String,

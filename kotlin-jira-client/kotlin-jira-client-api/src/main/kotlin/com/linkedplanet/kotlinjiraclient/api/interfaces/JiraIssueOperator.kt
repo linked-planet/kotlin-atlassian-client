@@ -21,9 +21,9 @@ package com.linkedplanet.kotlinjiraclient.api.interfaces
 
 import arrow.core.Either
 import com.google.gson.JsonObject
+import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
-import com.linkedplanet.kotlinjiraclient.api.model.Page
 
 /**
  * Provides methods for working with Jira issues, including retrieving issues by JQL query, issue type, or key; creating and updating issues; and deleting issues.

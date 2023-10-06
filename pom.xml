@@ -15,6 +15,7 @@
         <module>kotlin-http-client</module>
         <module>kotlin-jira-client</module>
         <module>kotlin-insight-client</module>
+        <module>kotlin-atlassian-client-core-common</module>
     </modules>
 
     <properties>

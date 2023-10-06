@@ -20,16 +20,8 @@
 package com.linkedplanet.kotlinjiraclient.util
 
 import arrow.core.Either
-import com.linkedplanet.kotlinhttpclient.error.DomainError
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import org.junit.Assert.fail
-
-internal fun <R> Either<DomainError, R?>.rightAsserted(): R {
-    this.mapLeft {
-        fail("Unexpected DomainError: ${it.error} - ${it.message}")
-    }
-    return this.orNull()!!
-}
 
 
 internal fun <R> Either<JiraClientError, R?>.rightAssertedJiraClientError(): R {

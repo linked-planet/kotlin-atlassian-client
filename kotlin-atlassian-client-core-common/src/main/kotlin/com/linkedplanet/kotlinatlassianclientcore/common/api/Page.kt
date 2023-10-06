@@ -1,6 +1,6 @@
 /*-
  * #%L
- * kotlin-http-client-api
+ * kotlin-atlassian-client-core-common
  * %%
  * Copyright (C) 2022 - 2023 linked-planet GmbH
  * %%
@@ -17,19 +17,14 @@
  * limitations under the License.
  * #L%
  */
-package com.linkedplanet.kotlinhttpclient.error
+package com.linkedplanet.kotlinatlassianclientcore.common.api
 
-import com.linkedplanet.kotlinhttpclient.api.http.GSON
+import javax.validation.constraints.NotNull
 
-data class DomainErrorObject(
-    val error: String,
-    val message: String
+data class Page<T> (
+    @field:NotNull val items: List<T>,
+    @field:NotNull val totalItems: Int,
+    @field:NotNull val totalPages: Int,
+    @field:NotNull val currentPageIndex: Int,
+    @field:NotNull val pageSize: Int
 )
-
-open class DomainError(val error: String, val message: String) {
-    fun toJson(): String =
-        GSON.toJson(DomainErrorObject(error, message))
-}
-
-class HttpDomainError(val statusCode: Int, error: String, message: String) : DomainError(error, message)
-class ResponseError(message: String) : DomainError("Schnittstellen-Fehler", message)

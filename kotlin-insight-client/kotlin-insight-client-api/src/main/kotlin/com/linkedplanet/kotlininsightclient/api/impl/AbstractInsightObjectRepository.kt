@@ -22,6 +22,7 @@ package com.linkedplanet.kotlininsightclient.api.impl
 import arrow.core.Either
 import arrow.core.computations.either
 import arrow.core.rightIfNotNull
+import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.OtherNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectRepository
@@ -30,7 +31,6 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
 import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.Page
 import kotlin.math.ceil
 
 abstract class AbstractInsightObjectRepository<DomainType> : InsightObjectRepository<DomainType> {

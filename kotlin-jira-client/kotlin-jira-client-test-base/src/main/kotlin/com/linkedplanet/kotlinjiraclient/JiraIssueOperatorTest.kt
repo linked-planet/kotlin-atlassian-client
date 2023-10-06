@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlinjiraclient
 
 import arrow.core.*
-import com.linkedplanet.kotlinjiraclient.api.model.Page
+import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlinjiraclient.util.*
 import java.time.ZoneOffset
 import java.time.ZonedDateTime

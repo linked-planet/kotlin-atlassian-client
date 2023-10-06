@@ -19,6 +19,7 @@
  */
 package com.linkedplanet.kotlinjiraclient.http.model
 
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlinhttpclient.api.http.HttpPage
 import com.linkedplanet.kotlinjiraclient.api.model.*
 
