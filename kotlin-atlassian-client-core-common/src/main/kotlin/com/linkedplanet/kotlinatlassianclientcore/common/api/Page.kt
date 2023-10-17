@@ -27,4 +27,33 @@ data class Page<T> (
     @field:NotNull val totalPages: Int,
     @field:NotNull val currentPageIndex: Int,
     @field:NotNull val pageSize: Int
-)
+
+
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Page<*>) return false
+
+        if (items != other.items) return false
+        if (totalItems != other.totalItems) return false
+        if (totalPages != other.totalPages) return false
+        if (currentPageIndex != other.currentPageIndex) return false
+        if (pageSize != other.pageSize) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = items.hashCode()
+        result = 31 * result + totalItems
+        result = 31 * result + totalPages
+        result = 31 * result + currentPageIndex
+        result = 31 * result + pageSize
+        return result
+    }
+
+    override fun toString(): String {
+        return "Page(items=$items, totalItems=$totalItems, totalPages=$totalPages, currentPageIndex=$currentPageIndex, pageSize=$pageSize)"
+    }
+
+}
