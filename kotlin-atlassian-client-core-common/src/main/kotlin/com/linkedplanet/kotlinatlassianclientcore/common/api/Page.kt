@@ -27,8 +27,6 @@ data class Page<T> (
     @field:NotNull val totalPages: Int,
     @field:NotNull val currentPageIndex: Int,
     @field:NotNull val pageSize: Int
-
-
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
