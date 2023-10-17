@@ -11,6 +11,8 @@ on:
 env:
   MAIN_BRANCH: 'dev'
   MAIN_BRANCH_FULL: 'refs/heads/dev'
+  MAVEN_OPTS: >
+    -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3 -Daether.connector.http.connectionMaxTtl=25
 
 jobs:
   build:
