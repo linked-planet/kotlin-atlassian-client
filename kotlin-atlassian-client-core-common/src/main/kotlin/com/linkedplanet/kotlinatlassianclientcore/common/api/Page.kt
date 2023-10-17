@@ -21,7 +21,7 @@ package com.linkedplanet.kotlinatlassianclientcore.common.api
 
 import javax.validation.constraints.NotNull
 
-data class Page<T> (
+open class Page<T> (
     @field:NotNull val items: List<T>,
     @field:NotNull val totalItems: Int,
     @field:NotNull val totalPages: Int,
