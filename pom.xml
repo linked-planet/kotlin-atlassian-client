@@ -24,7 +24,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <kotlin.version>1.8.10</kotlin.version>
+        <kotlin.version>1.8.20</kotlin.version>
         <kotlinx.coroutines.core.version>1.6.4</kotlinx.coroutines.core.version>
         <arrow.version>1.2.1</arrow.version>
         <arrow.meta.version>1.6.2</arrow.meta.version>

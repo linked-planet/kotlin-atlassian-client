@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlinjiraclient.http
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import com.google.gson.JsonObject
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueLinkOperator

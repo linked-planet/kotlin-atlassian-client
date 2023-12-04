@@ -20,9 +20,10 @@
 package com.linkedplanet.kotlininsightclient.http
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import arrow.core.flatten
-import arrow.core.rightIfNotNull
+import arrow.core.left
+import arrow.core.right
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
@@ -150,8 +151,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         vararg insightAttributes: InsightAttribute,
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> = either {
-        val obj = getObjectById(objectId, ::identity).bind()
-            .rightIfNotNull { ObjectNotFoundError(objectId) }.bind()
+        val obj = (getObjectById(objectId, ::identity).bind()
+            ?.right() ?: ObjectNotFoundError(objectId).left()).bind()
 
         val attributeMap = obj.attributes.associateBy { it.attributeId }.toMutableMap()
         insightAttributes.forEach {
@@ -201,8 +202,8 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> = either {
         val insightObjectId = createInsightObject(objectTypeId, *insightAttributes).bind()
-        getObjectById(insightObjectId, toDomain).bind()
-            .rightIfNotNull { ObjectNotFoundError(insightObjectId) }.bind()
+        (getObjectById(insightObjectId, toDomain).bind()
+            ?.right() ?: ObjectNotFoundError(insightObjectId).left()).bind()
     }
 
     // PRIVATE DOWN HERE

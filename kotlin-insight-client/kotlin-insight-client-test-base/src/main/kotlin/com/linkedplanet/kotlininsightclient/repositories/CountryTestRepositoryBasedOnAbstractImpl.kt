@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlininsightclient.repositories
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import com.linkedplanet.kotlininsightclient.Country
 import com.linkedplanet.kotlininsightclient.InsightObjectType
 import com.linkedplanet.kotlininsightclient.TestAttributes

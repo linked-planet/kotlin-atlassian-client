@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.*
-import arrow.core.computations.either
+import arrow.core.raise.either
 import com.atlassian.jira.bc.issue.search.SearchService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.event.type.EventDispatchOption

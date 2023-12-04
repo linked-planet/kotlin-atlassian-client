@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlinjiraclient.http
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlinhttpclient.api.http.*

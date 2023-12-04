@@ -20,11 +20,10 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import arrow.core.rightIfNotNull
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
@@ -185,8 +184,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> =
         either {
-            val obj = getObjectById(objectId, ::identity).bind()
-                .rightIfNotNull { ObjectNotFoundError(objectId) }.bind()
+            val obj = (getObjectById(objectId, ::identity).bind()
+                ?.right() ?: ObjectNotFoundError(objectId).left<ObjectNotFoundError>()).bind()
             val updated = updateObject(obj, *insightAttributes).bind()
             toDomain(updated).bind()
         }
@@ -269,8 +268,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         toDomain: MapToDomain<T>
     ): Either<InsightClientError, T> = either {
         val insightObjectId = createInsightObject(objectTypeId, *insightAttributes).bind()
-        getObjectById(insightObjectId, toDomain).bind()
-            .rightIfNotNull { ObjectNotFoundError(insightObjectId) }.bind()
+        (getObjectById(insightObjectId, toDomain).bind()
+            ?.right() ?: ObjectNotFoundError(insightObjectId).left<ObjectNotFoundError>()).bind()
     }
 
     private fun createEmptyDomainObject(

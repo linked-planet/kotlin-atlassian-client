@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlininsightclient.api.impl
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import arrow.core.right
 import arrow.core.sequenceEither
 import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
@@ -39,7 +39,6 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.getAttribute
 import com.linkedplanet.kotlininsightclient.api.model.isValueAttribute
-import jdk.jfr.Experimental
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import kotlin.reflect.KClass
@@ -58,7 +57,7 @@ import kotlin.reflect.full.primaryConstructor
  * idea: class to id map (for automatic child object parsing)
  * optional: attribute name to id map in case one wants to manually specify everything
  */
-@Experimental
+//@Experimental
 abstract class AbstractNameMappedRepository<DomainType : Any>(
     private val klass: KClass<DomainType>
 ) : AbstractInsightObjectRepository<DomainType>() {
@@ -68,7 +67,7 @@ abstract class AbstractNameMappedRepository<DomainType : Any>(
     override var RESULTS_PER_PAGE: Int = Int.MAX_VALUE
     override val objectTypeId: InsightObjectTypeId get() = objectTypeSchema.id
     @Suppress("MemberVisibilityCanBePrivate") // this is public, so clients could use it to add missing functionality
-    protected val objectTypeSchema: ObjectTypeSchema by lazy { objectTypeSchemaFromKClass().orNull()!! }
+    protected val objectTypeSchema: ObjectTypeSchema by lazy { objectTypeSchemaFromKClass().getOrNull()!! }
 
     private val props: Collection<KProperty1<DomainType, *>> = klass.memberProperties
     private val attrsMap: Map<String, ObjectTypeSchemaAttribute> by lazy {

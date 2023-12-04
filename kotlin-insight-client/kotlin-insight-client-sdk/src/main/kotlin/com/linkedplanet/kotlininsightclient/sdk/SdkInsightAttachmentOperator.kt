@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
