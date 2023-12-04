@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlininsightclient.http
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import com.google.gson.reflect.TypeToken
 import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError

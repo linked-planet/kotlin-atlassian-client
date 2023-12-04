@@ -20,8 +20,9 @@
 package com.linkedplanet.kotlininsightclient.api.impl
 
 import arrow.core.Either
-import arrow.core.computations.either
-import arrow.core.rightIfNotNull
+import arrow.core.left
+import arrow.core.raise.either
+import arrow.core.right
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.OtherNotFoundError
@@ -57,9 +58,8 @@ abstract class AbstractInsightObjectRepository<DomainType> : InsightObjectReposi
     }
 
     override suspend fun update(domainObject: DomainType): Either<InsightClientError, DomainType> = either {
-        val insightObject = loadExistingInsightObject(domainObject).bind().rightIfNotNull {
-            OtherNotFoundError("Could not loadExistingInsightObject for DomainObject:$domainObject.")
-        }.bind()
+        val insightObject = (loadExistingInsightObject(domainObject).bind()?.right()
+            ?: OtherNotFoundError("Could not loadExistingInsightObject for DomainObject:$domainObject.").left()).bind()
         val attributes: List<InsightAttribute> = attributesFromDomain(domainObject).bind()
         val insightObjectWithAttributes = insightObject.copy(attributes = attributes)
         val updatedObject = insightObjectOperator.updateInsightObject(insightObjectWithAttributes).bind()

@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlinjiraclient.http
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import arrow.core.left
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken

@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlinjiraclient.util
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import com.google.gson.*
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.field.JIRA_DATE_TIME_FORMATTER

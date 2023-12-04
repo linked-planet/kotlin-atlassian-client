@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlininsightclient.repositories
 
 import arrow.core.Either
-import arrow.core.computations.either
+import arrow.core.raise.either
 import arrow.core.right
 import com.linkedplanet.kotlininsightclient.Company
 import com.linkedplanet.kotlininsightclient.InsightObjectType
@@ -50,7 +50,7 @@ class CompanyTestRepositoryManualImpl(
 
     private suspend fun toDomain(insightObject: InsightObject) = Company(
         name = insightObject.getStringValue(name)!!,
-        country = countryTestRepositoryManualImpl.getById(insightObject.getSingleReferenceValue(countryRef)!!.objectId).orNull()!!,
+        country = countryTestRepositoryManualImpl.getById(insightObject.getSingleReferenceValue(countryRef)!!.objectId).getOrNull()!!,
     ).right()
 
     override suspend fun create(domainObject: Company): Either<InsightClientError, Company> = either {
