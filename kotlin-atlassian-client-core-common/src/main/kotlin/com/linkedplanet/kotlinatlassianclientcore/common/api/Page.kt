@@ -28,6 +28,8 @@ open class Page<T> (
     @field:NotNull val currentPageIndex: Int,
     @field:NotNull val pageSize: Int
 ) {
+    constructor() : this(emptyList<T>(), 0, 0, 0, 1)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Page<*>) return false
