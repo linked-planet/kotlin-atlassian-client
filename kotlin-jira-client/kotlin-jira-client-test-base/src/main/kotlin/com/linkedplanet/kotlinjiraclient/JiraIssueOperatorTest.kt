@@ -368,7 +368,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         }.orFail()
 
         val issuesAfterDeletion = runBlocking {
-            issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).orFail()
+            issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).getOrNull()
         }
         assertThat(issuesAfterDeletion, equalTo(null))
     }
