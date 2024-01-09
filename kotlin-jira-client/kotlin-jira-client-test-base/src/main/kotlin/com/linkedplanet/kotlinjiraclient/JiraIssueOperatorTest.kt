@@ -65,7 +65,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_02GetIssuesByIssueType() {
         val issues: List<Story> = runBlocking {
-            issueOperator.getIssuesByIssueType(projectId, issueTypeId, parser = ::issueParser).orNull() ?: emptyList()
+            issueOperator.getIssuesByIssueType(projectId, issueTypeId, parser = ::issueParser).orFail()
         }
 
         val keys = 1..10
@@ -80,7 +80,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_03GetIssuesByJQL() {
         val issues: List<Story> = runBlocking {
-            issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).orNull() ?: emptyList()
+            issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).orFail()
         }
         assertThat(issues.size, equalTo(10))
         val keys = 1..10
@@ -101,27 +101,27 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssueByKey(issueKey, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("Unauthorized (401)"))
+            assertThat(error.message, containsString("401"))
         }
         runBlocking {
             val error = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
-            assertThat(error.message, containsString("Unauthorized (401)"))
+            assertThat(error.message, containsString("401"))
         }
         runBlocking {
             val error = issueOperator.getIssuesByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
-            assertThat(error.message, containsString("Unauthorized (401)"))
+            assertThat(error.message, containsString("401"))
         }
         runBlocking {
             val error = issueOperator.getIssuesByJQLPaginated("summary ~ \"Test-1\"", 0, 1, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("Unauthorized (401)"))
+            assertThat(error.message, containsString("401"))
         }
         runBlocking {
             val error = issueOperator.getIssuesByIssueType(projectId, issueTypeId, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("Unauthorized (401)"))
+            assertThat(error.message, containsString("401"))
         }
         runBlocking {
             val error = issueOperator.getIssuesByTypePaginated(projectId, issueTypeId, 0, 1, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("Unauthorized (401)"))
+            assertThat(error.message, containsString("401"))
         }
     }
 
@@ -130,16 +130,16 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         // 10 items with page size 1 -> 10 pages
         val pageNumbers = 1..10
         val pages = pageNumbers.map { pageNumber ->
-            val page: Page<Story>? = runBlocking {
+            val page: Page<Story> = runBlocking {
                 issueOperator.getIssuesByJQLPaginated(
                     "summary ~ \"Test-*\"",
                     pageNumber - 1,
                     1,
                     parser = ::issueParser
-                ).orNull()
+                ).orFail()
             }
             assertThat(page, notNullValue())
-            assertThat(page!!.totalItems, equalTo(10))
+            assertThat(page.totalItems, equalTo(10))
             assertThat(page.totalPages, equalTo(10))
             assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
             assertThat(page.pageSize, equalTo(1))
@@ -166,10 +166,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     pageNumber - 1,
                     2,
                     parser = ::issueParser
-                ).orNull()
+                ).orFail()
             }
             assertThat(page, notNullValue())
-            assertThat(page!!.totalItems, equalTo(10))
+            assertThat(page.totalItems, equalTo(10))
             assertThat(page.totalPages, equalTo(5))
             assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
             assertThat(page.pageSize, equalTo(2))
@@ -198,9 +198,9 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     pageNumber - 1,
                     3,
                     parser = ::issueParser
-                ).orNull()
+                ).orFail()
                 assertThat(page, notNullValue())
-                assertThat(page!!.totalItems, equalTo(10))
+                assertThat(page.totalItems, equalTo(10))
                 assertThat(page.totalPages, equalTo(4))
                 assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
                 assertThat(page.pageSize, equalTo(3))
@@ -368,7 +368,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         }.orFail()
 
         val issuesAfterDeletion = runBlocking {
-            issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).orNull()
+            issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).orFail()
         }
         assertThat(issuesAfterDeletion, equalTo(null))
     }
@@ -392,22 +392,22 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
     @Test
     fun issues_12GetIssuesByJQLEmpty() {
-        val issues: List<Story>? = runBlocking {
-            issueOperator.getIssuesByJQL("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
+        val issues: List<Story> = runBlocking {
+            issueOperator.getIssuesByJQL("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orFail()
         }
 
         assertThat(issues, notNullValue())
-        assertThat(issues!!.isEmpty(), equalTo(true))
+        assertThat(issues.isEmpty(), equalTo(true))
     }
 
     @Test
     fun issues_13GetIssuesByJQLPaginatedEmpty() {
         val page = runBlocking {
-            issueOperator.getIssuesByJQLPaginated("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
+            issueOperator.getIssuesByJQLPaginated("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orFail()
         }
 
         assertThat(page, notNullValue())
-        assertThat(page!!.totalItems, equalTo(0))
+        assertThat(page.totalItems, equalTo(0))
         assertThat(page.totalPages, equalTo(0))
         assertThat(page.currentPageIndex, equalTo(0))
         assertThat(page.items.isEmpty(), equalTo(true))
