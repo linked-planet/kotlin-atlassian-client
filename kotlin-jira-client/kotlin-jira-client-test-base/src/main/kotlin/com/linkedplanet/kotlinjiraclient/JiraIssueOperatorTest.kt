@@ -92,6 +92,40 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
+    fun issues_03aGetIssueWithoutPermission() {
+        loginAsUser("admin")
+        val issueKey = runBlocking {
+            issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser)
+        }.rightAssertedJiraClientError().key
+
+        loginAsUser("EveTheEvilHacker")
+        runBlocking {
+            val error = issueOperator.getIssueByKey(issueKey, ::issueParser).assertLeft()
+            assertThat(error.message, containsString("Unauthorized (401)"))
+        }
+        runBlocking {
+            val error = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
+            assertThat(error.message, containsString("Unauthorized (401)"))
+        }
+        runBlocking {
+            val error = issueOperator.getIssuesByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
+            assertThat(error.message, containsString("Unauthorized (401)"))
+        }
+        runBlocking {
+            val error = issueOperator.getIssuesByJQLPaginated("summary ~ \"Test-1\"", 0, 1, ::issueParser).assertLeft()
+            assertThat(error.message, containsString("Unauthorized (401)"))
+        }
+        runBlocking {
+            val error = issueOperator.getIssuesByIssueType(projectId, issueTypeId, ::issueParser).assertLeft()
+            assertThat(error.message, containsString("Unauthorized (401)"))
+        }
+        runBlocking {
+            val error = issueOperator.getIssuesByTypePaginated(projectId, issueTypeId, 0, 1, ::issueParser).assertLeft()
+            assertThat(error.message, containsString("Unauthorized (401)"))
+        }
+    }
+
+    @Test
     fun issues_04GetIssuesByJQLPaginated() {
         // 10 items with page size 1 -> 10 pages
         val pageNumbers = 1..10
@@ -182,25 +216,6 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
-    }
-
-    @Test
-    fun issues_06aGetIssueWithoutPermission() {
-        loginAsUser("EveTheEvilHacker")
-        runBlocking {
-            val error = issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser).assertLeft()
-            assertThat(error.message, containsString("Unauthorized (401)"))
-        }
-        loginAsUser("admin")
-        val issue = runBlocking {
-            issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser)
-        }.rightAssertedJiraClientError()
-        assertThat(issue.key, notNullValue())
-        runBlocking {
-            val error = issueOperator.getIssueByKey(issue.key, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("Unauthorized (401)"))
-        }
-        loginAsUser("admin")
     }
 
     @Test
