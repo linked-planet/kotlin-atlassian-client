@@ -51,9 +51,14 @@ class JiraSdkClientTest : JiraClientTest<SdkJiraField>() {
     override val projectId: Long get() = 10000
     override val projectKey: String get() = "TEST"
 
+    override fun loginAsUser(userName: String) {
+        val user = userManager.getUserByName(userName)
+        jiraAuthenticationContext.loggedInUser = user
+    }
+
     @Before
     fun initTest() {
-        val admin = userManager.getUserByName("admin")
-        jiraAuthenticationContext.loggedInUser = admin
+        loginAsUser("admin")
     }
+
 }

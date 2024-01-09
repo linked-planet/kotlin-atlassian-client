@@ -26,8 +26,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
@@ -183,6 +182,25 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             assertThat(issue!!.insightObjectKey, equalTo("IT-1"))
             assertThat(issue.status.name, equalTo("To Do"))
         }
+    }
+
+    @Test
+    fun issues_06aGetIssueWithoutPermission() {
+        loginAsUser("EveTheEvilHacker")
+        runBlocking {
+            val error = issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser).assertLeft()
+            assertThat(error.message, containsString("Unauthorized (401)"))
+        }
+        loginAsUser("admin")
+        val issue = runBlocking {
+            issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser)
+        }.rightAssertedJiraClientError()
+        assertThat(issue.key, notNullValue())
+        runBlocking {
+            val error = issueOperator.getIssueByKey(issue.key, ::issueParser).assertLeft()
+            assertThat(error.message, containsString("Unauthorized (401)"))
+        }
+        loginAsUser("admin")
     }
 
     @Test

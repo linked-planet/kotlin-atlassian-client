@@ -28,6 +28,7 @@ import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraFieldFactory
 class JiraKtorClientTest : JiraClientTest<HttpJiraField>() {
 
     override val issueOperator: JiraIssueOperator<HttpJiraField> get() = HttpJiraIssueOperator(clientContext)
+
     override val fieldFactory: JiraFieldFactory<HttpJiraField> get() = HttpJiraFieldFactory
 
     override val projectOperator: JiraProjectOperator get() = HttpJiraProjectOperator(clientContext)
@@ -42,14 +43,18 @@ class JiraKtorClientTest : JiraClientTest<HttpJiraField>() {
     override val projectId: Long get() = 10000
     override val projectKey: String get() = "TEST"
 
-    private val clientContext: HttpJiraClientContext
+    private lateinit var clientContext: HttpJiraClientContext
 
-    init {
+    override fun loginAsUser(userName: String) {
         val httpClient = KtorHttpClient(
             "http://localhost:2990",
-            "admin",
-            "admin"
+            userName,
+            userName
         )
         clientContext = HttpJiraClientContext("http://localhost:2990", httpClient)
+    }
+
+    init {
+        loginAsUser("admin")
     }
 }
