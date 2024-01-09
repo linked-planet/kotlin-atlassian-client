@@ -19,21 +19,24 @@
  */
 package com.linkedplanet.kotlinjiraclient.sdk
 
-import arrow.core.*
+import arrow.core.Either
 import arrow.core.raise.either
+import com.atlassian.jira.bc.ServiceResult
 import com.atlassian.jira.bc.issue.search.SearchService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.event.type.EventDispatchOption
 import com.atlassian.jira.issue.Issue
 import com.atlassian.jira.issue.MutableIssue
 import com.atlassian.jira.jql.parser.JqlQueryParser
+import com.atlassian.jira.util.ErrorCollection
+import com.atlassian.jira.util.ErrorCollection.Reason
 import com.atlassian.jira.web.bean.PagerFilter
 import com.google.gson.JsonObject
+import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
+import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
-import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
-import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraField
 import com.linkedplanet.kotlinjiraclient.sdk.util.IssueJsonConverter
 import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
@@ -69,6 +72,7 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
             field.render(freshIssue)
         }
         val createdIssue: Issue = issueManager.createIssueObject(user(), freshIssue)
+
         val basePath = applicationProperties.jiraBaseUrl
         val contextPath = webResourceUrlProvider.baseUrl
         val fullPath = if (contextPath.isNotEmpty()) "$basePath/$contextPath" else basePath
@@ -92,11 +96,33 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     }
 
     override suspend fun deleteIssue(issueKey: String): Either<JiraClientError, Unit> =
-        Either.catchJiraClientError {
-            val issue: Issue = issueManager.getIssueByCurrentKey(issueKey)
-            val sendMail = false
-            issueManager.deleteIssue(user(), issue, EventDispatchOption.ISSUE_DELETED, sendMail)
+        either {
+            Either.catchJiraClientError {
+                val issueToDelete = issueService.getIssue(user(), issueKey).toEither().bind()
+                val validateDelete = issueService.validateDelete(user(), issueToDelete.issue.id).toEither().bind()
+                issueService.delete(user(), validateDelete, EventDispatchOption.ISSUE_DELETED, false).toEither().bind()
+            }.bind()
         }
+
+    private fun <T : ServiceResult> T.toEither() : Either<JiraClientError, T> =
+        when {
+            this.isValid -> Either.Right(this)
+            else -> Either.Left(jiraClientError(this.errorCollection))
+        }
+
+    private fun ErrorCollection.toEither() : Either<JiraClientError, Unit> =
+        when {
+            this.hasAnyErrors() -> Either.Left(jiraClientError(this))
+            else -> Either.Right(Unit)
+        }
+
+    private fun jiraClientError(errorCollection: ErrorCollection): JiraClientError {
+        val worstReason = Reason.getWorstReason(errorCollection.reasons)
+        return JiraClientError(
+            "DeleteFailed",
+            errorCollection.errorMessages.joinToString() + " (${worstReason.httpStatusCode})"
+        )
+    }
 
     override suspend fun <T> getIssueById(
         id: Int,
@@ -134,12 +160,12 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     override suspend fun <T> getIssueByKey(
         key: String,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, T?> = Either.catchJiraClientError {
-
-        val issue = issueService.getIssue(user(), key).issue
-            ?: return@catchJiraClientError null
-
-        return issueToConcreteType(issue, parser)
+    ): Either<JiraClientError, T?> = either {
+        Either.catchJiraClientError {
+            val issue = issueService.getIssue(user(), key).toEither().bind().issue
+                ?: return@catchJiraClientError null
+            issueToConcreteType(issue, parser).bind()
+        }.bind()
     }
 
     override suspend fun <T> getIssuesByJQL(
