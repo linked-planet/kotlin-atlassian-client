@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlinjiraclient
 
 import arrow.core.*
+import arrow.core.raise.either
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlinjiraclient.util.*
 import java.time.ZoneOffset
@@ -34,32 +35,32 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
     @Test
     fun issues_01DeleteAllIssuesAndCreateTenTestIssues() {
-        val success = runBlocking {
-            val existingIssueIds = issueOperator.getIssuesByJQL("") { jsonObject, _ ->
-                Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
+        runBlocking {
+            val result = either {
+                val existingIssueIds = issueOperator.getIssuesByJQL("") { jsonObject, _ ->
+                    Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
+                }
+
+                existingIssueIds.orFail().forEach {
+                    issueOperator.deleteIssue(it)
+                }
+
+                (1..10).forEach { searchedKeyIndex ->
+                    val fields = listOf<JiraFieldType>(
+                        fieldFactory.jiraProjectField(projectId),
+                        fieldFactory.jiraIssueTypeField(issueTypeId),
+                        fieldFactory.jiraSummaryField("Test-$searchedKeyIndex"),
+                        fieldFactory.jiraCustomInsightObjectField("InsightObject", "IT-1")
+                    )
+                    issueOperator.createIssue(
+                        projectId,
+                        issueTypeId,
+                        fields
+                    ).bind()
+                }
             }
-
-            existingIssueIds.orFail().forEach {
-                issueOperator.deleteIssue(it)
-            }
-
-            val createResult = (1..10).map { searchedKeyIndex ->
-                val fields = listOf<JiraFieldType>(
-                    fieldFactory.jiraProjectField(projectId),
-                    fieldFactory.jiraIssueTypeField(issueTypeId),
-                    fieldFactory.jiraSummaryField("Test-$searchedKeyIndex"),
-                    fieldFactory.jiraCustomInsightObjectField("InsightObject", "IT-1")
-                )
-                issueOperator.createIssue(
-                    projectId,
-                    issueTypeId,
-                    fields
-                )
-            }.sequenceEither()
-
-            createResult.isRight()
+            assertThat(result is Either.Right, equalTo(true))
         }
-        assertThat(success, equalTo(true))
     }
 
     @Test
