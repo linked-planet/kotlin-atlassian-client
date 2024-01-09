@@ -45,6 +45,7 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     override var RESULTS_PER_PAGE: Int = 10
 
     private val issueManager by lazy { ComponentAccessor.getIssueManager() }
+    private val issueService by lazy { ComponentAccessor.getIssueService() }
     private val issueFactory by lazy { ComponentAccessor.getIssueFactory() }
     private val customFieldManager by lazy { ComponentAccessor.getCustomFieldManager() }
     private val searchService: SearchService by lazy { ComponentAccessor.getComponent(SearchService::class.java) }
@@ -134,7 +135,8 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         key: String,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?> = Either.catchJiraClientError {
-        val issue = issueManager.getIssueByCurrentKey(key)
+
+        val issue = issueService.getIssue(user(), key).issue
             ?: return@catchJiraClientError null
 
         return issueToConcreteType(issue, parser)
@@ -174,8 +176,7 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         val search = searchService.search(user(), query, pagerFilter)
         val issues = search.results
             .map { issue -> issueToConcreteType(issue, parser) }
-            .sequenceEither()
-            .bind()
+            .bindAll()
         val totalItems = search.total
         val pageSize = pagerFilter?.pageSize ?: 0
         val totalPages = ceil(totalItems.toDouble() / pageSize.toDouble()).toInt()
