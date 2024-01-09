@@ -36,9 +36,9 @@ class JiraCommentTestHelper<JiraFieldType>(
     fun createIssueWithComment(testName: String): Pair<JiraIssue, JiraIssueComment> {
         val issue = jiraIssueTestHelper.createDefaultIssue(fieldFactory.jiraSummaryField("$testName ticket"))
 
-        runBlocking { commentOperator.createComment(issue.key, testName) }.rightAssertedJiraClientError()
+        runBlocking { commentOperator.createComment(issue.key, testName) }.orFail()
         val commentsBeforeUpdate =
-            runBlocking { commentOperator.getComments(issue.key) }.rightAssertedJiraClientError()
+            runBlocking { commentOperator.getComments(issue.key) }.orFail()
         assertThat(commentsBeforeUpdate.size, equalTo(1))
         val commentToUpdate = commentsBeforeUpdate.first()
         return Pair(issue, commentToUpdate)

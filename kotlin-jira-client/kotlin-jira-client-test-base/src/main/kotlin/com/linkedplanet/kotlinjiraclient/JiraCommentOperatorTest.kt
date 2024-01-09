@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlinjiraclient
 
-import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
+import com.linkedplanet.kotlinjiraclient.util.orFail
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
@@ -43,7 +43,7 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
 
         val comments = runBlocking {
             commentOperator.getComments(issue.key)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         assertThat(comments, notNullValue())
         assertThat(comments.size, equalTo(0))
@@ -56,7 +56,7 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
 
         val comments = runBlocking {
             commentOperator.getComments(issue.key)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         assertThat(comments, notNullValue())
         assertThat(comments.size, equalTo(1))
@@ -76,9 +76,9 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
                 commentToUpdate.id,
                 "Test-Update"
             )
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
-        val comments = runBlocking { commentOperator.getComments(issue.key) }.rightAssertedJiraClientError()
+        val comments = runBlocking { commentOperator.getComments(issue.key) }.orFail()
         assertThat(comments.size, equalTo(1))
         val comment = comments.first()
 
@@ -90,10 +90,10 @@ interface JiraCommentOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFi
     fun comments_05DeleteComment() {
         val (issue, commentToDelete) = jiraCommentTestHelper.createIssueWithComment("comments_05DeleteComment")
 
-        runBlocking { commentOperator.deleteComment(issue.key, commentToDelete.id) }.rightAssertedJiraClientError()
+        runBlocking { commentOperator.deleteComment(issue.key, commentToDelete.id) }.orFail()
 
         val commentsAfterDeletion =
-            runBlocking { commentOperator.getComments(issue.key) }.rightAssertedJiraClientError()
+            runBlocking { commentOperator.getComments(issue.key) }.orFail()
         assertThat(commentsAfterDeletion.size, equalTo(0))
     }
 }

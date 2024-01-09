@@ -50,11 +50,11 @@ class JiraIssueTestHelper<JiraFieldType>(
                 fieldFactory.jiraIssueTypeField(jiraIssueTypeId),
             ).plus(fields)
             issueOperator.createIssue(projectId, jiraIssueTypeId, combinedFields)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
     fun getIssueByKey(key: String) = runBlocking {
         issueOperator.getIssueByKey(key, ::issueParser)
-    }.rightAssertedJiraClientError()
+    }.orFail()
 }
 
 data class Story(

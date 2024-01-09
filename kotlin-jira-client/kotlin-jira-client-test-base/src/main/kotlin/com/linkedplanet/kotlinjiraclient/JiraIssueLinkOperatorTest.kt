@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlinjiraclient
 
-import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
+import com.linkedplanet.kotlinjiraclient.util.orFail
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -39,7 +39,7 @@ interface JiraIssueLinkOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
                 outward.key,
                 "Relates"
             )
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         // Check
         val issueLinks = jiraIssueLinkTestHelper.getIssueLinks(inward.key)
@@ -51,7 +51,7 @@ interface JiraIssueLinkOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         assertThat(outwardIssue.get("key").asString, equalTo(outward.key))
 
         // Delete
-        runBlocking { issueLinkOperator.deleteIssueLink(issueLinkId) }.rightAssertedJiraClientError()
+        runBlocking { issueLinkOperator.deleteIssueLink(issueLinkId) }.orFail()
 
         // Check
         val issueLinksAfterDeletion = jiraIssueLinkTestHelper.getIssueLinks(inward.key)

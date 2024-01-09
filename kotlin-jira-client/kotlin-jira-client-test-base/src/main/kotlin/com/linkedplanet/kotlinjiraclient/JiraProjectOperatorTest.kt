@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlinjiraclient
 
-import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
+import com.linkedplanet.kotlinjiraclient.util.orFail
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -31,7 +31,7 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
     fun projects_01GetProjects() {
         val projects = runBlocking {
             projectOperator.getProjects()
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         assertThat(projects.size, equalTo(1))
         assertThat(projects.first().id, equalTo("10000"))
@@ -43,7 +43,7 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
     fun projects_02GetProject() {
         val project = runBlocking {
             projectOperator.getProject(projectId)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         assertThat(project.id, equalTo("10000"))
         assertThat(project.key, equalTo("TEST"))

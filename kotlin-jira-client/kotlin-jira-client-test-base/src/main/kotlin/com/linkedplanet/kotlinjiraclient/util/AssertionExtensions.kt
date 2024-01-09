@@ -23,14 +23,14 @@ import arrow.core.Either
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import junit.framework.TestCase
 
-internal fun <R> Either<JiraClientError, R?>.rightAssertedJiraClientError(): R {
+internal fun <R> Either<JiraClientError, R?>.orFail(): R {
     this.mapLeft {
         TestCase.fail("Unexpected JiraClientError: ${it.error} - ${it.message}")
     }
     return this.getOrNull()!!
 }
 
-internal fun Either<JiraClientError, Unit>.rightAssertedJiraClientError() {
+internal fun Either<JiraClientError, Unit>.orFail() {
     this.mapLeft {
         TestCase.fail("Unexpected JiraClientError: ${it.error} - ${it.message}")
     }

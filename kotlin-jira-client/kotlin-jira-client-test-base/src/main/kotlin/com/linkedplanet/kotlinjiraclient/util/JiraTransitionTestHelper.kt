@@ -28,9 +28,9 @@ class JiraTransitionTestHelper(
 
     fun getAvailableTransitions(issueKey: String) = runBlocking {
         transitionOperator.getAvailableTransitions(issueKey)
-    }.rightAssertedJiraClientError()
+    }.orFail()
 
     fun doTransition(issueKey: String, transitionId: String) = runBlocking {
         transitionOperator.doTransition(issueKey, transitionId)
-    }.rightAssertedJiraClientError()
+    }.orFail()
 }
