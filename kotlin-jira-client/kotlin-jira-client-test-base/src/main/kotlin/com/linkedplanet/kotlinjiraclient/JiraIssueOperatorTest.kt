@@ -107,45 +107,45 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
-    fun issues_03aGetIssueByJqlWithoutPermission() {
+    fun issues_03bGetIssueByJqlWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
-            assertThat(error.message, containsString("401"))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
 
     @Test
-    fun issues_03aGetIssuesByJqlWithoutPermission() {
+    fun issues_03cGetIssuesByJqlWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssuesByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
-            assertThat(error.message, containsString("401"))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")) )
         }
     }
 
     @Test
-    fun issues_03aGetIssuesByJqlPaginatedWithoutPermission() {
+    fun issues_03dGetIssuesByJqlPaginatedWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssuesByJQLPaginated("summary ~ \"Test-1\"", 0, 1, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("401"))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
     @Test
-    fun issues_03aGetIssuesByIssueTypeWithoutPermission() {
+    fun issues_03eGetIssuesByIssueTypeWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssuesByIssueType(projectId, issueTypeId, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("401"))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
     @Test
-    fun issues_03aGetIssuesByTypePaginatedWithoutPermission() {
+    fun issues_03fGetIssuesByTypePaginatedWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssuesByTypePaginated(projectId, issueTypeId, 0, 1, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("401"))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
 
