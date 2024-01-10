@@ -167,7 +167,11 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?> = either {
         Either.catchJiraClientError {
-            val issue = issueService.getIssue(user(), key).toEither().bind().issue
+            val issueResult = issueService.getIssue(user(), key)
+            if (Reason.getWorstReason(issueResult.errorCollection.reasons) == Reason.NOT_FOUND){
+                return@catchJiraClientError null
+            }
+            val issue = issueResult.toEither().bind().issue
                 ?: return@catchJiraClientError null
             issueToConcreteType(issue, parser).bind()
         }.bind()
