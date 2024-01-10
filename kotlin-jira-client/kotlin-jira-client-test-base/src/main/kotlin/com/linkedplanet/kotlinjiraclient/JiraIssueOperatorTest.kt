@@ -323,7 +323,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
-    fun issues_08UpdateIssueWithourPermission() {
+    fun issues_07xUpdateIssueWithourPermission() {
         val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
         loginAsUser("EveTheEvilHacker")
         val error = runBlocking { issueOperator.updateIssue(projectId, issueTypeId, issue.key, listOf()) }.assertLeft()
@@ -331,7 +331,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
-    fun issues_09bDeleteIssueWithoutPermission() { // throwable wtf
+    fun issues_07xDeleteIssueWithoutPermission() { // throwable wtf
         val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
         loginAsUser("EveTheEvilHacker")
         val permissionError = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
