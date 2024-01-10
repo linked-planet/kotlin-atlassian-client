@@ -24,7 +24,7 @@ import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import org.junit.Assert.fail
 
 
-internal fun <R> Either<JiraClientError, R?>.rightAssertedJiraClientError(): R {
+internal fun <R> Either<JiraClientError, R?>.orFail(): R {
     this.mapLeft {
         fail("Unexpected JiraClientError: ${it.error} - ${it.message}")
     }

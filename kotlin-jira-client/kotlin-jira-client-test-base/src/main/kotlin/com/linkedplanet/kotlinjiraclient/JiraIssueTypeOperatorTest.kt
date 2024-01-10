@@ -20,7 +20,7 @@
 package com.linkedplanet.kotlinjiraclient
 
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
-import com.linkedplanet.kotlinjiraclient.util.rightAssertedJiraClientError
+import com.linkedplanet.kotlinjiraclient.util.orFail
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -31,13 +31,13 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
     @Test
     fun issueTypes_01GetIssueTypes() {
         val issueTypeNames = listOf("Bug", "Epic", "Story", "Sub-task", "Task")
-        val issueTypes = runBlocking { issueTypeOperator.getIssueTypes(projectId) }.rightAssertedJiraClientError()
+        val issueTypes = runBlocking { issueTypeOperator.getIssueTypes(projectId) }.orFail()
         assertThat(issueTypes.map { it.name }.toSet(), equalTo(issueTypeNames.toSet()))
     }
 
     @Test
     fun issueTypes_02GetIssueType() {
-        val issueType = runBlocking { issueTypeOperator.getIssueType(issueTypeId) }.rightAssertedJiraClientError()
+        val issueType = runBlocking { issueTypeOperator.getIssueType(issueTypeId) }.orFail()
         assertThat(issueType.id, equalTo(issueTypeId.toString()))
         assertThat(issueType.name, equalTo("Story"))
     }
@@ -50,7 +50,7 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
                     projectId,
                     issueTypeId
                 )
-            }.rightAssertedJiraClientError()
+            }.orFail()
         val expectedAttributes = listOf(
             "Epic Link", "Summary", "Issue Type", "Reporter", "Component/s", "Description",
             "Fix Version/s", "Priority", "Labels", "Attachment", "Linked Issues", "Assignee",

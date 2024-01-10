@@ -40,7 +40,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                 Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
             }
 
-            existingIssueIds.rightAssertedJiraClientError().forEach {
+            existingIssueIds.orFail().forEach {
                 issueOperator.deleteIssue(it)
             }
 
@@ -222,12 +222,12 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                 issueTypeId,
                 fields
             )
-        }.rightAssertedJiraClientError()
+        }.orFail()
         assertThat(creationResponse.self.endsWith("/rest/api/2/issue/${creationResponse.id}"), equalTo(true))
 
         val createdIssue = runBlocking {
             issueOperator.getIssueByJQL("key = \"${creationResponse.key}\"", ::issueParser)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         assertThat(createdIssue.projectId, equalTo(projectId))
         assertThat(createdIssue.issueTypeId, equalTo(issueTypeId))
@@ -263,7 +263,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
         val issue = runBlocking {
             issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         val summary = "MyNewSummary-update"
         val description = "MyDescription-update"
@@ -300,11 +300,11 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     fieldFactory.jiraCustomInsightObjectsField("InsightObjects", insightObjectsKeys)
                 )
             )
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         val issueAfterUpdate = runBlocking {
             issueOperator.getIssueByKey(issue.key, ::issueParser)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         assertThat(issueAfterUpdate.projectId, equalTo(projectId))
         assertThat(issueAfterUpdate.issueTypeId, equalTo(issueTypeId))
@@ -328,11 +328,11 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
         val searchNewIssue = runBlocking {
             issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", ::issueParser)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         runBlocking {
             issueOperator.deleteIssue(searchNewIssue.key)
-        }.rightAssertedJiraClientError()
+        }.orFail()
 
         val issuesAfterDeletion = runBlocking {
             issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).orNull()
