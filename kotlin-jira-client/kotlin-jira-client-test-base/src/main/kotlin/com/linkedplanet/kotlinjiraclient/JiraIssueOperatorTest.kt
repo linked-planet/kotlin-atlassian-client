@@ -316,6 +316,13 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
+    fun issues_07CreateIssueWithourPermission() {
+        loginAsUser("EveTheEvilHacker")
+        val error = runBlocking { issueOperator.createIssue(projectId, issueTypeId, listOf()) }.assertLeft()
+        assertThat(error.message, containsString("401"))
+    }
+
+    @Test
     fun issues_08UpdateIssue() {
 
         val issue = runBlocking {
@@ -381,8 +388,23 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
-    fun issues_09DeleteIssue() {
+    fun issues_08UpdateIssueWithourPermission() {
+        loginAsUser("EveTheEvilHacker")
+        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
+        val error = runBlocking { issueOperator.updateIssue(projectId, issueTypeId, issue.key, listOf()) }.assertLeft()
+        assertThat(error.message, containsString("401"))
+    }
 
+    @Test
+    fun issues_09bDeleteIssueWithoutPermission() {
+        loginAsUser("EveTheEvilHacker")
+        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", ::issueParser) }.orFail()
+        val permissionError = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
+        assertThat(permissionError.message, containsString("401"))
+    }
+
+    @Test
+    fun issues_09DeleteIssue() {
         val searchNewIssue = runBlocking {
             issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", ::issueParser)
         }.orFail()
