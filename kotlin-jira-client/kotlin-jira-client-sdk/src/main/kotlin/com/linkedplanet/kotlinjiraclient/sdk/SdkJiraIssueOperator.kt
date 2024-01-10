@@ -20,7 +20,9 @@
 package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.raise.either
+import arrow.core.right
 import com.atlassian.jira.bc.ServiceResult
 import com.atlassian.jira.bc.issue.search.SearchService
 import com.atlassian.jira.component.ComponentAccessor
@@ -28,8 +30,11 @@ import com.atlassian.jira.event.type.EventDispatchOption
 import com.atlassian.jira.issue.Issue
 import com.atlassian.jira.issue.MutableIssue
 import com.atlassian.jira.jql.parser.JqlQueryParser
+import com.atlassian.jira.user.ApplicationUser
 import com.atlassian.jira.util.ErrorCollection
 import com.atlassian.jira.util.ErrorCollection.Reason
+import com.atlassian.jira.util.ErrorCollections
+import com.atlassian.jira.web.bean.I18nBean
 import com.atlassian.jira.web.bean.PagerFilter
 import com.google.gson.JsonObject
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
@@ -198,8 +203,9 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         pagerFilter: PagerFilter<*>?,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>> = either {
+        val user = userOrError().bind()
         val query = jqlParser.parseQuery(jql)
-        val search = searchService.search(user(), query, pagerFilter)
+        val search = searchService.search(user, query, pagerFilter)
         val issues = search.results
             .map { issue -> issueToConcreteType(issue, parser) }
             .bindAll()
@@ -209,4 +215,18 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         val currentPageIndex = pagerFilter?.start?.let { start -> start / pageSize } ?: 0
         Page(issues, totalItems, totalPages, currentPageIndex, pageSize)
     }
+
+    private fun userOrError() : Either<JiraClientError, ApplicationUser> = either {
+        val applicationUser = user()
+        return applicationUser?.right()
+            ?: jiraClientError(
+                ErrorCollections
+                    .create(
+                        I18nBean(I18nBean.getLocaleFromUser(applicationUser))
+                            .getText("admin.errors.issues.no.permission.to.see"),
+                        Reason.NOT_LOGGED_IN
+                    )
+            ).left()
+    }
+
 }
