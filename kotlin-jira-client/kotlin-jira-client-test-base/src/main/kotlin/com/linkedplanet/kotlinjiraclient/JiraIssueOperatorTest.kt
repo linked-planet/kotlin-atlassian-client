@@ -41,7 +41,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
                 }
 
-            existingIssueIds.rightAssertedJiraClientError().forEach {
+            existingIssueIds.orFail().forEach {
                     issueOperator.deleteIssue(it)
                 }
 
