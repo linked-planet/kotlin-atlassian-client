@@ -28,7 +28,7 @@ import com.atlassian.jira.bc.issue.search.SearchService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.event.type.EventDispatchOption
 import com.atlassian.jira.issue.Issue
-import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.issue.IssueInputParameters
 import com.atlassian.jira.jql.parser.JqlQueryParser
 import com.atlassian.jira.user.ApplicationUser
 import com.atlassian.jira.util.ErrorCollection
@@ -52,9 +52,7 @@ import kotlin.math.ceil
 object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     override var RESULTS_PER_PAGE: Int = 10
 
-    private val issueManager by lazy { ComponentAccessor.getIssueManager() }
     private val issueService by lazy { ComponentAccessor.getIssueService() }
-    private val issueFactory by lazy { ComponentAccessor.getIssueFactory() }
     private val customFieldManager by lazy { ComponentAccessor.getCustomFieldManager() }
     private val searchService: SearchService by lazy { ComponentAccessor.getComponent(SearchService::class.java) }
     private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
@@ -69,20 +67,25 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         projectId: Long,
         issueTypeId: Int,
         fields: List<SdkJiraField>
-    ): Either<JiraClientError, JiraIssue?> = Either.catchJiraClientError {
-        val freshIssue: MutableIssue = issueFactory.issue
-        freshIssue.projectId = projectId
-        freshIssue.issueTypeId = issueTypeId.toString()
-        fields.forEach { field ->
-            field.render(freshIssue)
-        }
-        val createdIssue: Issue = issueManager.createIssueObject(user(), freshIssue)
+    ): Either<JiraClientError, JiraIssue?> = either {
+        Either.catchJiraClientError {
+            val freshIssue: IssueInputParameters = issueService.newIssueInputParameters()
+            freshIssue.projectId = projectId
+            freshIssue.issueTypeId = issueTypeId.toString()
+            fields.forEach { field ->
+                field.render(freshIssue)
+            }
+            val createValidationResult = issueService.validateCreate(user(), freshIssue)
+            val validateCreate = createValidationResult.toEither().bind()
+            val createResult = issueService.create(user(), validateCreate).toEither().bind()
+            val createdIssue = createResult.issue
 
-        val basePath = applicationProperties.jiraBaseUrl
-        val contextPath = webResourceUrlProvider.baseUrl
-        val fullPath = if (contextPath.isNotEmpty()) "$basePath/$contextPath" else basePath
-        val selfLink = fullPath + "/rest/api/2/issue/" + createdIssue.id
-        JiraIssue(createdIssue.id.toString(), createdIssue.key, selfLink)
+            val basePath = applicationProperties.jiraBaseUrl
+            val contextPath = webResourceUrlProvider.baseUrl
+            val fullPath = if (contextPath.isNotEmpty()) "$basePath/$contextPath" else basePath
+            val selfLink = fullPath + "/rest/api/2/issue/" + createdIssue.id
+            JiraIssue(createdIssue.id.toString(), createdIssue.key, selfLink)
+        }.bind()
     }
 
     override suspend fun updateIssue(
@@ -90,24 +93,27 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         issueTypeId: Int,
         issueKey: String,
         fields: List<SdkJiraField>
-    ): Either<JiraClientError, Unit> = Either.catchJiraClientError {
-        val issue = issueManager.getIssueByCurrentKey(issueKey)
-        issue.projectId = projectId
-        issue.issueTypeId = issueTypeId.toString()
-        fields.forEach { field ->
-            field.render(issue)
-        }
-        issueManager.updateIssue(user(), issue, EventDispatchOption.ISSUE_UPDATED, false)
+    ): Either<JiraClientError, Unit> = either {
+        Either.catchJiraClientError {
+            val issueId = issueService.getIssue(user(), issueKey).toEither().bind().issue.id
+            val issueInput: IssueInputParameters = issueService.newIssueInputParameters()
+            issueInput.projectId = projectId
+            issueInput.issueTypeId = issueTypeId.toString()
+            fields.forEach { field ->
+                field.render(issueInput)
+            }
+            val validationResult = issueService.validateUpdate(user(), issueId, issueInput).toEither().bind()
+            issueService.update(user(), validationResult, EventDispatchOption.ISSUE_UPDATED, false).toEither().bind()
+        }.bind()
     }
 
-    override suspend fun deleteIssue(issueKey: String): Either<JiraClientError, Unit> =
-        either {
-            Either.catchJiraClientError {
-                val issueToDelete = issueService.getIssue(user(), issueKey).toEither().bind()
-                val validateDelete = issueService.validateDelete(user(), issueToDelete.issue.id).toEither().bind()
-                issueService.delete(user(), validateDelete, EventDispatchOption.ISSUE_DELETED, false).toEither().bind()
-            }.bind()
-        }
+    override suspend fun deleteIssue(issueKey: String): Either<JiraClientError, Unit> = either {
+        Either.catchJiraClientError {
+            val issueToDelete = issueService.getIssue(user(), issueKey).toEither().bind()
+            val validateDelete = issueService.validateDelete(user(), issueToDelete.issue.id).toEither().bind()
+            issueService.delete(user(), validateDelete, EventDispatchOption.ISSUE_DELETED, false).toEither().bind()
+        }.bind()
+    }
 
     private fun <T : ServiceResult> T.toEither() : Either<JiraClientError, T> =
         when {
@@ -117,8 +123,8 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
 
     private fun ErrorCollection.toEither() : Either<JiraClientError, Unit> =
         when {
-            this.hasAnyErrors() -> Either.Left(jiraClientError(this))
-            else -> Either.Right(Unit)
+            this.hasAnyErrors() -> jiraClientError(this).left()
+            else -> Unit.right()
         }
 
     private fun jiraClientError(errorCollection: ErrorCollection): JiraClientError {

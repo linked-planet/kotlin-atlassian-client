@@ -46,9 +46,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                 }
 
                 (1..10).forEach { searchedKeyIndex ->
-                    val fields = listOf<JiraFieldType>(
+                    val fields = listOf(
                         fieldFactory.jiraProjectField(projectId),
                         fieldFactory.jiraIssueTypeField(issueTypeId),
+                        fieldFactory.jiraReporterField("test2"),
                         fieldFactory.jiraSummaryField("Test-$searchedKeyIndex"),
                         fieldFactory.jiraCustomInsightObjectField("InsightObject", "IT-1")
                     )
@@ -316,7 +317,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
-    fun issues_07CreateIssueWithourPermission() {
+    fun issues_07CreateIssueWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         val error = runBlocking { issueOperator.createIssue(projectId, issueTypeId, listOf()) }.assertLeft()
         assertThat(error.message, anyOf(containsString("401"), containsString("400")))
@@ -334,8 +335,8 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_07xDeleteIssueWithoutPermission() { // throwable wtf
         val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
         loginAsUser("EveTheEvilHacker")
-        val permissionError = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
-        assertThat(permissionError.message, containsString("401"))
+        val error = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
+        assertThat(error.message, containsString("401"))
     }
 
     @Test
