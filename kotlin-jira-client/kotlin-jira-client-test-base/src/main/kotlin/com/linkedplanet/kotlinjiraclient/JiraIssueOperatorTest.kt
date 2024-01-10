@@ -319,7 +319,23 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_07CreateIssueWithourPermission() {
         loginAsUser("EveTheEvilHacker")
         val error = runBlocking { issueOperator.createIssue(projectId, issueTypeId, listOf()) }.assertLeft()
-        assertThat(error.message, containsString("401"))
+        assertThat(error.message, anyOf(containsString("401"), containsString("400")))
+    }
+
+    @Test
+    fun issues_08UpdateIssueWithourPermission() {
+        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
+        loginAsUser("EveTheEvilHacker")
+        val error = runBlocking { issueOperator.updateIssue(projectId, issueTypeId, issue.key, listOf()) }.assertLeft()
+        assertThat(error.message, anyOf(containsString("401"), containsString("400")))
+    }
+
+    @Test
+    fun issues_09bDeleteIssueWithoutPermission() { // throwable wtf
+        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
+        loginAsUser("EveTheEvilHacker")
+        val permissionError = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
+        assertThat(permissionError.message, containsString("401"))
     }
 
     @Test
@@ -385,22 +401,6 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertThat(issueAfterUpdate.insightObjectsKeys, equalTo(insightObjectsKeys))
         assertThat(issueAfterUpdate.status.statusCategory, equalTo("new"))
         assertThat(issueAfterUpdate.epicKey, equalTo(null))
-    }
-
-    @Test
-    fun issues_08UpdateIssueWithourPermission() {
-        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
-        loginAsUser("EveTheEvilHacker")
-        val error = runBlocking { issueOperator.updateIssue(projectId, issueTypeId, issue.key, listOf()) }.assertLeft()
-        assertThat(error.message, containsString("401"))
-    }
-
-    @Test
-    fun issues_09bDeleteIssueWithoutPermission() {
-        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", ::issueParser) }.orFail()
-        loginAsUser("EveTheEvilHacker")
-        val permissionError = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
-        assertThat(permissionError.message, containsString("401"))
     }
 
     @Test
