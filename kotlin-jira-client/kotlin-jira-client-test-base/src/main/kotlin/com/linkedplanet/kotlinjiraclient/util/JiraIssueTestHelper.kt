@@ -48,6 +48,7 @@ class JiraIssueTestHelper<JiraFieldType>(
             val combinedFields = listOf(
                 fieldFactory.jiraProjectField(projectId),
                 fieldFactory.jiraIssueTypeField(jiraIssueTypeId),
+                fieldFactory.jiraReporterField("test2")
             ).plus(fields)
             issueOperator.createIssue(projectId, jiraIssueTypeId, combinedFields)
         }.orFail()

@@ -21,76 +21,86 @@ package com.linkedplanet.kotlinjiraclient.sdk.field
 
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.config.IssueTypeManager
-import com.atlassian.jira.issue.IssueManager
-import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.issue.IssueInputParameters
+import com.atlassian.jira.issue.context.IssueContext
+import com.atlassian.jira.issue.context.IssueContextImpl
 import com.atlassian.jira.issue.fields.CustomField
 import com.atlassian.jira.timezone.TimeZoneManager
-import com.linkedplanet.kotlinjiraclient.api.field.*
-import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
-import java.sql.Timestamp
+import com.linkedplanet.kotlinjiraclient.api.field.JiraAssigneeField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomDateTimeField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomInsightObjectField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomInsightObjectsField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomNumberField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomRadioField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomTextField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraDescriptionField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraEpicLinkField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraEpicNameField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraIssueTypeField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraIssueTypeNameField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraProjectField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraReporterField
+import com.linkedplanet.kotlinjiraclient.api.field.JiraSummaryField
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 private val customFieldManager by lazy { ComponentAccessor.getCustomFieldManager() }
-private val userManager by lazy { ComponentAccessor.getUserManager() }
-private val issueManager by lazy { ComponentAccessor.getComponent(IssueManager::class.java) }
 private val issueTypeManager by lazy { ComponentAccessor.getComponent(IssueTypeManager::class.java) }
 private val optionsManager by lazy { ComponentAccessor.getOptionsManager() }
 private val timezoneManager by lazy { ComponentAccessor.getComponent(TimeZoneManager::class.java) }
 
-// Service interface to access and manage Insight objects
-private val objectFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
-
 interface SdkJiraField {
-    fun render(issue: MutableIssue)
+    fun render(issue: IssueInputParameters)
 }
 
 class SdkJiraSummaryField(summary: String) : JiraSummaryField(summary), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+    override fun render(issue: IssueInputParameters) {
         issue.summary = summary
     }
 }
 
 class SdkJiraDescriptionField(description: String) : JiraDescriptionField(description), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+    override fun render(issue: IssueInputParameters) {
         issue.description = description
     }
 }
 
 class SdkJiraProjectField(projectId: Long) : JiraProjectField(projectId), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+    override fun render(issue: IssueInputParameters) {
         issue.projectId = projectId
     }
 }
 
 class SdkJiraIssueTypeField(issueTypeId: Int) : JiraIssueTypeField(issueTypeId), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+    override fun render(issue: IssueInputParameters) {
         issue.issueTypeId = issueTypeId.toString()
     }
 }
 
 class SdkJiraIssueTypeNameField(issueTypeName: String) : JiraIssueTypeNameField(issueTypeName), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+    override fun render(issue: IssueInputParameters) {
         issue.setIssueType(this)
     }
 }
 
 class SdkJiraAssigneeField(username: String) : JiraAssigneeField(username), SdkJiraField {
-    override fun render(issue: MutableIssue) {
-        issue.assignee = userManager.getUserByName(username)
+    override fun render(issue: IssueInputParameters) {
+        issue.assigneeId = username
     }
 }
 
 class SdkJiraReporterField(username: String) : JiraReporterField(username), SdkJiraField {
-    override fun render(issue: MutableIssue) {
-        issue.reporter = userManager.getUserByName(username)
+    override fun render(issue: IssueInputParameters) {
+        issue.reporterId = username
     }
 }
 
 class SdkJiraEpicLinkField(epicIssueKey: String?) : JiraEpicLinkField(epicIssueKey), SdkJiraField {
-    override fun render(issue: MutableIssue) {
-        issue.setCustomFieldValue(
-            customField(),
-            epicIssueKey?.let { issueManager.getIssueByCurrentKey(it) }
+    override fun render(issue: IssueInputParameters) {
+        issue.addCustomFieldValue(
+            customField().id,
+            epicIssueKey
         )
     }
 }
@@ -99,7 +109,7 @@ class SdkJiraCustomInsightObjectField(
     customFieldName: String,
     insightKey: String?
 ) : JiraCustomInsightObjectField(customFieldName, insightKey), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+    override fun render(issue: IssueInputParameters) {
         issue.setInsightObjects(this, insightKey?.let { listOf(it) })
     }
 }
@@ -108,7 +118,7 @@ class SdkJiraCustomInsightObjectsField(
     customFieldName: String,
     insightKeys: List<String>
 ) : JiraCustomInsightObjectsField(customFieldName, insightKeys), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+    override fun render(issue: IssueInputParameters) {
         issue.setInsightObjects(this, insightKeys)
     }
 }
@@ -116,8 +126,8 @@ class SdkJiraCustomInsightObjectsField(
 class SdkJiraEpicNameField(
     epicName: String
 ) : JiraEpicNameField(epicName), SdkJiraField {
-    override fun render(issue: MutableIssue) {
-        issue.setCustomFieldValue(customField(), epicName)
+    override fun render(issue: IssueInputParameters) {
+        issue.addCustomFieldValue(customField().id, epicName)
     }
 }
 
@@ -125,8 +135,8 @@ class SdkJiraCustomTextField(
     customFieldName: String,
     text: String
 ) : JiraCustomTextField(customFieldName, text), SdkJiraField {
-    override fun render(issue: MutableIssue) {
-        issue.setCustomFieldValue(customField(), text)
+    override fun render(issue: IssueInputParameters) {
+        issue.addCustomFieldValue(customField().id, text)
     }
 }
 
@@ -134,8 +144,8 @@ class SdkJiraCustomNumberField(
     customFieldName: String,
     value: Number
 ) : JiraCustomNumberField(customFieldName, value), SdkJiraField {
-    override fun render(issue: MutableIssue) {
-        issue.setCustomFieldValue(customField(), number.toDouble())
+    override fun render(issue: IssueInputParameters) {
+        issue.addCustomFieldValue(customField().id, number.toString())
     }
 }
 
@@ -143,11 +153,14 @@ class SdkJiraCustomDateTimeField(
     customFieldName: String,
     dateTime: ZonedDateTime
 ) : JiraCustomDateTimeField(customFieldName, dateTime), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+
+    private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MMM/yy h:mm a")
+
+    override fun render(issue: IssueInputParameters) {
         val dateTimeInUserTimeZone = dateTime.withZoneSameInstant(timezoneManager.loggedInUserTimeZone.toZoneId())
-        issue.setCustomFieldValue(
-            customField(),
-            Timestamp.from(dateTimeInUserTimeZone.toInstant())
+        issue.addCustomFieldValue(
+            customField().id,
+            dateTimeInUserTimeZone.format(dateTimeFormatter)
         )
     }
 }
@@ -156,15 +169,17 @@ class SdkJiraCustomRadioField(
     customFieldName: String,
     value: String
 ) : JiraCustomRadioField(customFieldName, value), SdkJiraField {
-    override fun render(issue: MutableIssue) {
+    override fun render(issue: IssueInputParameters) {
         val customField = customFieldManager.getCustomFieldObjectsByName(customFieldName).single()
-        val option = optionsManager.getOptions(customField.getRelevantConfig(issue)).getOptionForValue(value, null)
-        issue.setCustomFieldValue(customField(), option)
+        val issueContext: IssueContext = IssueContextImpl(issue.projectId, issue.issueTypeId)
+        val relevantConfig = customField.getRelevantConfig(issueContext)
+        val option = optionsManager.getOptions(relevantConfig).getOptionForValue(value, null)
+        issue.addCustomFieldValue(customField.id, option.optionId.toString())
     }
 }
 
-private fun MutableIssue.setIssueType(field: JiraIssueTypeNameField) {
-    issueType = issueTypeManager.issueTypes.firstOrNull { it.name == field.issueTypeName }
+private fun IssueInputParameters.setIssueType(field: JiraIssueTypeNameField) {
+    this.issueTypeId = issueTypeManager.issueTypes.firstOrNull { it.name == field.issueTypeName }?.id
         ?: throw IllegalArgumentException("Unknown Issue Type ${field.issueTypeName}")
 }
 
@@ -177,7 +192,6 @@ private fun JiraCustomField.customField(): CustomField {
     }
 }
 
-private fun MutableIssue.setInsightObjects(field: JiraCustomField, objectKeys: List<String>?) {
-    val beans = objectKeys?.map { objectKey -> objectFacade.loadObjectBean(objectKey) }
-    setCustomFieldValue(field.customField(), beans)
+private fun IssueInputParameters.setInsightObjects(field: JiraCustomField, objectKeys: List<String>?) {
+    addCustomFieldValue(field.customField().id, *(objectKeys?.toTypedArray() ?: emptyArray()))
 }

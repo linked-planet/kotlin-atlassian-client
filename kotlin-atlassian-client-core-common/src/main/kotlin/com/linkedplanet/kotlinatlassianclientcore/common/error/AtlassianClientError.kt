@@ -29,6 +29,29 @@ open class AtlassianClientError(
     @field:NotNull val message: String,
     @field:NotNull val stacktrace: String = ""
 ) {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AtlassianClientError) return false
+
+        if (error != other.error) return false
+        if (message != other.message) return false
+        if (stacktrace != other.stacktrace) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = error.hashCode()
+        result = 31 * result + message.hashCode()
+        result = 31 * result + stacktrace.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "AtlassianClientError(error='$error', message='$message', stacktrace='$stacktrace')"
+    }
+
     companion object
 }
 

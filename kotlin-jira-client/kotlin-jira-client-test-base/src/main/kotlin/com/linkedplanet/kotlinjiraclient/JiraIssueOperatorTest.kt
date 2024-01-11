@@ -20,14 +20,14 @@
 package com.linkedplanet.kotlinjiraclient
 
 import arrow.core.*
+import arrow.core.raise.either
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlinjiraclient.util.*
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
@@ -35,38 +35,39 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
     @Test
     fun issues_01DeleteAllIssuesAndCreateTenTestIssues() {
-        val success = runBlocking {
-            val existingIssueIds = issueOperator.getIssuesByJQL("") { jsonObject, _ ->
-                Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
-            }
+        runBlocking {
+            val result = either {
+                val existingIssueIds = issueOperator.getIssuesByJQL("") { jsonObject, _ ->
+                    Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
+                }
 
             existingIssueIds.orFail().forEach {
-                issueOperator.deleteIssue(it)
+                    issueOperator.deleteIssue(it)
+                }
+
+                (1..10).forEach { searchedKeyIndex ->
+                    val fields = listOf(
+                        fieldFactory.jiraProjectField(projectId),
+                        fieldFactory.jiraIssueTypeField(issueTypeId),
+                        fieldFactory.jiraReporterField("test2"),
+                        fieldFactory.jiraSummaryField("Test-$searchedKeyIndex"),
+                        fieldFactory.jiraCustomInsightObjectField("InsightObject", "IT-1")
+                    )
+                    issueOperator.createIssue(
+                        projectId,
+                        issueTypeId,
+                        fields
+                    ).bind()
+                }
             }
-
-            val createResult = (1..10).map { searchedKeyIndex ->
-                val fields = listOf<JiraFieldType>(
-                    fieldFactory.jiraProjectField(projectId),
-                    fieldFactory.jiraIssueTypeField(issueTypeId),
-                    fieldFactory.jiraSummaryField("Test-$searchedKeyIndex"),
-                    fieldFactory.jiraCustomInsightObjectField("InsightObject", "IT-1")
-                )
-                issueOperator.createIssue(
-                    projectId,
-                    issueTypeId,
-                    fields
-                )
-            }.sequenceEither()
-
-            createResult.isRight()
+            assertThat(result is Either.Right, equalTo(true))
         }
-        assertThat(success, equalTo(true))
     }
 
     @Test
     fun issues_02GetIssuesByIssueType() {
         val issues: List<Story> = runBlocking {
-            issueOperator.getIssuesByIssueType(projectId, issueTypeId, parser = ::issueParser).orNull() ?: emptyList()
+            issueOperator.getIssuesByIssueType(projectId, issueTypeId, parser = ::issueParser).orFail()
         }
 
         val keys = 1..10
@@ -81,7 +82,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_03GetIssuesByJQL() {
         val issues: List<Story> = runBlocking {
-            issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).orNull() ?: emptyList()
+            issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).orFail()
         }
         assertThat(issues.size, equalTo(10))
         val keys = 1..10
@@ -93,20 +94,77 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
+    fun issues_03aGetIssueByKeyWithoutPermission() {
+        loginAsUser("admin")
+        val issueKey = runBlocking {
+            issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser)
+        }.orFail().key
+
+        loginAsUser("EveTheEvilHacker")
+        runBlocking {
+            val error = issueOperator.getIssueByKey(issueKey, ::issueParser).assertLeft()
+            assertThat(error.message, containsString("401"))
+        }
+    }
+
+    @Test
+    fun issues_03bGetIssueByJqlWithoutPermission() {
+        loginAsUser("EveTheEvilHacker")
+        runBlocking {
+            val error = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
+        }
+    }
+
+    @Test
+    fun issues_03cGetIssuesByJqlWithoutPermission() {
+        loginAsUser("EveTheEvilHacker")
+        runBlocking {
+            val error = issueOperator.getIssuesByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")) )
+        }
+    }
+
+    @Test
+    fun issues_03dGetIssuesByJqlPaginatedWithoutPermission() {
+        loginAsUser("EveTheEvilHacker")
+        runBlocking {
+            val error = issueOperator.getIssuesByJQLPaginated("summary ~ \"Test-1\"", 0, 1, ::issueParser).assertLeft()
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
+        }
+    }
+    @Test
+    fun issues_03eGetIssuesByIssueTypeWithoutPermission() {
+        loginAsUser("EveTheEvilHacker")
+        runBlocking {
+            val error = issueOperator.getIssuesByIssueType(projectId, issueTypeId, ::issueParser).assertLeft()
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
+        }
+    }
+    @Test
+    fun issues_03fGetIssuesByTypePaginatedWithoutPermission() {
+        loginAsUser("EveTheEvilHacker")
+        runBlocking {
+            val error = issueOperator.getIssuesByTypePaginated(projectId, issueTypeId, 0, 1, ::issueParser).assertLeft()
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
+        }
+    }
+
+    @Test
     fun issues_04GetIssuesByJQLPaginated() {
         // 10 items with page size 1 -> 10 pages
         val pageNumbers = 1..10
         val pages = pageNumbers.map { pageNumber ->
-            val page: Page<Story>? = runBlocking {
+            val page: Page<Story> = runBlocking {
                 issueOperator.getIssuesByJQLPaginated(
                     "summary ~ \"Test-*\"",
                     pageNumber - 1,
                     1,
                     parser = ::issueParser
-                ).orNull()
+                ).orFail()
             }
             assertThat(page, notNullValue())
-            assertThat(page!!.totalItems, equalTo(10))
+            assertThat(page.totalItems, equalTo(10))
             assertThat(page.totalPages, equalTo(10))
             assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
             assertThat(page.pageSize, equalTo(1))
@@ -133,10 +191,10 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     pageNumber - 1,
                     2,
                     parser = ::issueParser
-                ).orNull()
+                ).orFail()
             }
             assertThat(page, notNullValue())
-            assertThat(page!!.totalItems, equalTo(10))
+            assertThat(page.totalItems, equalTo(10))
             assertThat(page.totalPages, equalTo(5))
             assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
             assertThat(page.pageSize, equalTo(2))
@@ -165,9 +223,9 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     pageNumber - 1,
                     3,
                     parser = ::issueParser
-                ).orNull()
+                ).orFail()
                 assertThat(page, notNullValue())
-                assertThat(page!!.totalItems, equalTo(10))
+                assertThat(page.totalItems, equalTo(10))
                 assertThat(page.totalPages, equalTo(4))
                 assertThat(page.currentPageIndex, equalTo(pageNumber - 1))
                 assertThat(page.pageSize, equalTo(3))
@@ -259,6 +317,29 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     }
 
     @Test
+    fun issues_07CreateIssueWithoutPermission() {
+        loginAsUser("EveTheEvilHacker")
+        val error = runBlocking { issueOperator.createIssue(projectId, issueTypeId, listOf()) }.assertLeft()
+        assertThat(error.message, anyOf(containsString("401"), containsString("400")))
+    }
+
+    @Test
+    fun issues_07xUpdateIssueWithourPermission() {
+        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
+        loginAsUser("EveTheEvilHacker")
+        val error = runBlocking { issueOperator.updateIssue(projectId, issueTypeId, issue.key, listOf()) }.assertLeft()
+        assertThat(error.message, anyOf(containsString("401"), containsString("400")))
+    }
+
+    @Test
+    fun issues_07xDeleteIssueWithoutPermission() { // throwable wtf
+        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
+        loginAsUser("EveTheEvilHacker")
+        val error = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
+        assertThat(error.message, containsString("401"))
+    }
+
+    @Test
     fun issues_08UpdateIssue() {
 
         val issue = runBlocking {
@@ -325,7 +406,6 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
     @Test
     fun issues_09DeleteIssue() {
-
         val searchNewIssue = runBlocking {
             issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", ::issueParser)
         }.orFail()
@@ -335,7 +415,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         }.orFail()
 
         val issuesAfterDeletion = runBlocking {
-            issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).orNull()
+            issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).getOrNull()
         }
         assertThat(issuesAfterDeletion, equalTo(null))
     }
@@ -359,22 +439,22 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
     @Test
     fun issues_12GetIssuesByJQLEmpty() {
-        val issues: List<Story>? = runBlocking {
-            issueOperator.getIssuesByJQL("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
+        val issues: List<Story> = runBlocking {
+            issueOperator.getIssuesByJQL("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orFail()
         }
 
         assertThat(issues, notNullValue())
-        assertThat(issues!!.isEmpty(), equalTo(true))
+        assertThat(issues.isEmpty(), equalTo(true))
     }
 
     @Test
     fun issues_13GetIssuesByJQLPaginatedEmpty() {
         val page = runBlocking {
-            issueOperator.getIssuesByJQLPaginated("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orNull()
+            issueOperator.getIssuesByJQLPaginated("summary ~ \"Emptyyyyy-*\"", parser = ::issueParser).orFail()
         }
 
         assertThat(page, notNullValue())
-        assertThat(page!!.totalItems, equalTo(0))
+        assertThat(page.totalItems, equalTo(0))
         assertThat(page.totalPages, equalTo(0))
         assertThat(page.currentPageIndex, equalTo(0))
         assertThat(page.items.isEmpty(), equalTo(true))

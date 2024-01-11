@@ -39,6 +39,8 @@ interface BaseTestConfigProvider<JiraFieldType> {
     val projectId: Long
     val projectKey: String
 
+    fun loginAsUser(userName: String)
+
     val jiraIssueTestHelper: JiraIssueTestHelper<JiraFieldType>
         get() = JiraIssueTestHelper(issueOperator, fieldFactory, issueTypeId, epicIssueTypeId, projectId)
 

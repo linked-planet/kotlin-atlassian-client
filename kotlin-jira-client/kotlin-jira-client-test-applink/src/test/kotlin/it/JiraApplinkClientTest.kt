@@ -67,9 +67,14 @@ class JiraApplinkClientTest constructor(
         clientContext = HttpJiraClientContext(primaryApplicationLink.rpcUrl.toString(), httpClient)
     }
 
+    override fun loginAsUser(userName: String) {
+        val user = userAccessor.getUserByName(userName)
+        AuthenticatedUserThreadLocal.asUser(user)
+    }
+
     @Before
     fun initTest() {
-        val serviceUser = userAccessor.getUserByName("admin")
-        AuthenticatedUserThreadLocal.asUser(serviceUser)
+        loginAsUser("admin")
     }
+
 }
