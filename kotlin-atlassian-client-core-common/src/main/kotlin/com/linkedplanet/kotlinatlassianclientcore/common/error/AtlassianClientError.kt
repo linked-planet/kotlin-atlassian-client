@@ -48,6 +48,10 @@ open class AtlassianClientError(
         return result
     }
 
+    override fun toString(): String {
+        return "AtlassianClientError(error='$error', message='$message', stacktrace='$stacktrace')"
+    }
+
     companion object
 }
 
