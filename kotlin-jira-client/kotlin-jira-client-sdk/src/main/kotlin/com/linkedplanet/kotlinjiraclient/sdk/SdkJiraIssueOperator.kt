@@ -29,6 +29,7 @@ import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.event.type.EventDispatchOption
 import com.atlassian.jira.issue.Issue
 import com.atlassian.jira.issue.IssueInputParameters
+import com.atlassian.jira.issue.MutableIssue
 import com.atlassian.jira.jql.parser.JqlQueryParser
 import com.atlassian.jira.user.ApplicationUser
 import com.atlassian.jira.util.ErrorCollection
@@ -69,23 +70,19 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         fields: List<SdkJiraField>
     ): Either<JiraClientError, JiraIssue?> = either {
         Either.catchJiraClientError {
-            val freshIssue: IssueInputParameters = issueService.newIssueInputParameters()
-            freshIssue.projectId = projectId
-            freshIssue.issueTypeId = issueTypeId.toString()
-            fields.forEach { field ->
-                field.render(freshIssue)
-            }
-            val createValidationResult = issueService.validateCreate(user(), freshIssue)
-            val validateCreate = createValidationResult.toEither().bind()
+            val inputParameters = issueInputParameters(projectId, issueTypeId, fields)
+            val validateCreate = issueService.validateCreate(user(), inputParameters).toEither().bind()
             val createResult = issueService.create(user(), validateCreate).toEither().bind()
-            val createdIssue = createResult.issue
-
-            val basePath = applicationProperties.jiraBaseUrl
-            val contextPath = webResourceUrlProvider.baseUrl
-            val fullPath = if (contextPath.isNotEmpty()) "$basePath/$contextPath" else basePath
-            val selfLink = fullPath + "/rest/api/2/issue/" + createdIssue.id
-            JiraIssue(createdIssue.id.toString(), createdIssue.key, selfLink)
+            toBasicReturnTypeIssue(createResult.issue)
         }.bind()
+    }
+
+    private fun toBasicReturnTypeIssue(createdIssue: MutableIssue): JiraIssue {
+        val basePath = applicationProperties.jiraBaseUrl
+        val contextPath = webResourceUrlProvider.baseUrl
+        val fullPath = if (contextPath.isNotEmpty()) "$basePath/$contextPath" else basePath
+        val selfLink = fullPath + "/rest/api/2/issue/" + createdIssue.id
+        return JiraIssue(createdIssue.id.toString(), createdIssue.key, selfLink)
     }
 
     override suspend fun updateIssue(
@@ -96,15 +93,24 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     ): Either<JiraClientError, Unit> = either {
         Either.catchJiraClientError {
             val issueId = issueService.getIssue(user(), issueKey).toEither().bind().issue.id
-            val issueInput: IssueInputParameters = issueService.newIssueInputParameters()
-            issueInput.projectId = projectId
-            issueInput.issueTypeId = issueTypeId.toString()
-            fields.forEach { field ->
-                field.render(issueInput)
-            }
-            val validationResult = issueService.validateUpdate(user(), issueId, issueInput).toEither().bind()
+            val inputParameters = issueInputParameters(projectId, issueTypeId, fields)
+            val validationResult = issueService.validateUpdate(user(), issueId, inputParameters).toEither().bind()
             issueService.update(user(), validationResult, EventDispatchOption.ISSUE_UPDATED, false).toEither().bind()
         }.bind()
+    }
+
+    private fun issueInputParameters(
+        projectId: Long,
+        issueTypeId: Int,
+        fields: List<SdkJiraField>
+    ): IssueInputParameters? {
+        val issueInput = issueService.newIssueInputParameters()
+        issueInput.projectId = projectId
+        issueInput.issueTypeId = issueTypeId.toString()
+        fields.forEach { field ->
+            field.render(issueInput)
+        }
+        return issueInput
     }
 
     override suspend fun deleteIssue(issueKey: String): Either<JiraClientError, Unit> = either {
