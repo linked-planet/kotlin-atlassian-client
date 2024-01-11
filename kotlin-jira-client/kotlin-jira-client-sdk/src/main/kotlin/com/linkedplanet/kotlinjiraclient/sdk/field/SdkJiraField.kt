@@ -153,11 +153,14 @@ class SdkJiraCustomDateTimeField(
     customFieldName: String,
     dateTime: ZonedDateTime
 ) : JiraCustomDateTimeField(customFieldName, dateTime), SdkJiraField {
+
+    private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MMM/yy h:mm a")
+
     override fun render(issue: IssueInputParameters) {
         val dateTimeInUserTimeZone = dateTime.withZoneSameInstant(timezoneManager.loggedInUserTimeZone.toZoneId())
         issue.addCustomFieldValue(
             customField().id,
-            dateTimeInUserTimeZone.format(DateTimeFormatter.ofPattern("dd/MMM/yy h:mm a"))
+            dateTimeInUserTimeZone.format(dateTimeFormatter)
         )
     }
 }
