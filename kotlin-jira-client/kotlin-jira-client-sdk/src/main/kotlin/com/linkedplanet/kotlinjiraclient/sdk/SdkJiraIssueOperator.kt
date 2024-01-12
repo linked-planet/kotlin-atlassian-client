@@ -46,6 +46,7 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraField
 import com.linkedplanet.kotlinjiraclient.sdk.util.IssueJsonConverter
 import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
+import org.jetbrains.kotlin.util.removeSuffixIfPresent
 import javax.inject.Named
 import kotlin.math.ceil
 
@@ -94,7 +95,8 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         Either.catchJiraClientError {
             val issueId = issueService.getIssue(user(), issueKey).toEither().bind().issue.id
             val inputParameters = issueInputParameters(projectId, issueTypeId, fields)
-            val validationResult = issueService.validateUpdate(user(), issueId, inputParameters).toEither().bind()
+            val validateUpdate = issueService.validateUpdate(user(), issueId, inputParameters)
+            val validationResult = validateUpdate.toEither().bind()
             issueService.update(user(), validationResult, EventDispatchOption.ISSUE_UPDATED, false).toEither().bind()
         }.bind()
     }
@@ -105,6 +107,11 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         fields: List<SdkJiraField>
     ): IssueInputParameters? {
         val issueInput = issueService.newIssueInputParameters()
+        issueInput.setSkipScreenCheck(true)
+        issueInput.setSkipLicenceCheck(true)
+        issueInput.setApplyDefaultValuesWhenParameterNotProvided(true)
+        issueInput.setRetainExistingValuesWhenParameterNotProvided(true)
+
         issueInput.projectId = projectId
         issueInput.issueTypeId = issueTypeId.toString()
         fields.forEach { field ->
@@ -121,22 +128,23 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         }.bind()
     }
 
-    private fun <T : ServiceResult> T.toEither() : Either<JiraClientError, T> =
+    private fun <T : ServiceResult> T.toEither(errorTitle: String? = null): Either<JiraClientError, T> =
         when {
             this.isValid -> Either.Right(this)
-            else -> Either.Left(jiraClientError(this.errorCollection))
+            else -> Either.Left(jiraClientError(this.errorCollection, errorTitle
+                        ?: "${this::class.simpleName?.removeSuffixIfPresent("ServiceResult")}Error"))
         }
 
-    private fun ErrorCollection.toEither() : Either<JiraClientError, Unit> =
+    private fun ErrorCollection.toEither(errorTitle: String = "SdkError") : Either<JiraClientError, Unit> =
         when {
-            this.hasAnyErrors() -> jiraClientError(this).left()
+            this.hasAnyErrors() -> jiraClientError(this, errorTitle).left()
             else -> Unit.right()
         }
 
-    private fun jiraClientError(errorCollection: ErrorCollection): JiraClientError {
+    private fun jiraClientError(errorCollection: ErrorCollection, errorTitle: String = "SdkError"): JiraClientError {
         val worstReason = Reason.getWorstReason(errorCollection.reasons)
         return JiraClientError(
-            "DeleteFailed",
+            errorTitle,
             errorCollection.errorMessages.joinToString() + " (${worstReason.httpStatusCode})"
         )
     }
