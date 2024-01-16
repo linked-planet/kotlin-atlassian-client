@@ -24,6 +24,7 @@ import com.atlassian.jira.config.IssueTypeManager
 import com.atlassian.jira.issue.IssueInputParameters
 import com.atlassian.jira.issue.context.IssueContext
 import com.atlassian.jira.issue.context.IssueContextImpl
+import com.atlassian.jira.issue.customfields.CustomFieldTypes
 import com.atlassian.jira.issue.fields.CustomField
 import com.atlassian.jira.timezone.TimeZoneManager
 import com.linkedplanet.kotlinjiraclient.api.field.JiraAssigneeField
@@ -42,13 +43,13 @@ import com.linkedplanet.kotlinjiraclient.api.field.JiraIssueTypeNameField
 import com.linkedplanet.kotlinjiraclient.api.field.JiraProjectField
 import com.linkedplanet.kotlinjiraclient.api.field.JiraReporterField
 import com.linkedplanet.kotlinjiraclient.api.field.JiraSummaryField
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 private val customFieldManager by lazy { ComponentAccessor.getCustomFieldManager() }
 private val issueTypeManager by lazy { ComponentAccessor.getComponent(IssueTypeManager::class.java) }
 private val optionsManager by lazy { ComponentAccessor.getOptionsManager() }
-private val timezoneManager by lazy { ComponentAccessor.getComponent(TimeZoneManager::class.java) }
 
 interface SdkJiraField {
     fun render(issue: IssueInputParameters)
@@ -155,13 +156,24 @@ class SdkJiraCustomDateTimeField(
 ) : JiraCustomDateTimeField(customFieldName, dateTime), SdkJiraField {
 
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MMM/yy h:mm a")
+    private val timezoneManager by lazy { ComponentAccessor.getComponent(TimeZoneManager::class.java) }
 
     override fun render(issue: IssueInputParameters) {
-        val dateTimeInUserTimeZone = dateTime.withZoneSameInstant(timezoneManager.loggedInUserTimeZone.toZoneId())
-        issue.addCustomFieldValue(
-            customField().id,
-            dateTimeInUserTimeZone.format(dateTimeFormatter)
-        )
+        val customField = customField()
+        val zonedDateTime = when (customField.customFieldType.key) {
+            CustomFieldTypes.DATEPICKER.key -> {
+                // dateTime represents a date with day precision.
+                // Jira uses DateCFType internally for days that uses a dateConverter using system time,
+                // so it stores selected date at 00:00 in system time.
+                dateTime.withZoneSameLocal(ZoneId.systemDefault())
+            }
+            else -> {
+                // dateTime actually represents a DateTime, so we want to store date and time with minute precision
+                // the dateFormat has no Zone or Offset, so we need to convert to userTime first
+                dateTime.withZoneSameInstant(timezoneManager.loggedInUserTimeZone.toZoneId())
+            }
+        }
+        issue.addCustomFieldValue(customField.id, zonedDateTime.format(dateTimeFormatter))
     }
 }
 
@@ -170,7 +182,7 @@ class SdkJiraCustomRadioField(
     value: String
 ) : JiraCustomRadioField(customFieldName, value), SdkJiraField {
     override fun render(issue: IssueInputParameters) {
-        val customField = customFieldManager.getCustomFieldObjectsByName(customFieldName).single()
+        val customField = customField()
         val issueContext: IssueContext = IssueContextImpl(issue.projectId, issue.issueTypeId)
         val relevantConfig = customField.getRelevantConfig(issueContext)
         val option = optionsManager.getOptions(relevantConfig).getOptionForValue(value, null)
