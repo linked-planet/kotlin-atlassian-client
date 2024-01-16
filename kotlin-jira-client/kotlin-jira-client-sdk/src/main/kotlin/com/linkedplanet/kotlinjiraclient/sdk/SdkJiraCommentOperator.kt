@@ -50,20 +50,11 @@ object SdkJiraCommentOperator : JiraCommentOperator {
     override suspend fun createComment(issueKey: String, content: String): Either<JiraClientError, Unit> =
         eitherAndCatch {
             val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
-            val commentParameters = commentParameters(issue, content)
-            val validateComment = commentService.validateCommentCreate(user(), commentParameters)
+            val commentParameters = newCommentParameters(issue, content)
+            val validateComment = commentService.validateCommentCreate(user(), commentParameters).toEither().bind()
             commentService.create(user(), validateComment, dispatchEvent)
+            validateComment.toEither().bind()
         }
-
-    private fun commentParameters(
-        issue: MutableIssue,
-        content: String
-    ): CommentParameters = CommentParameters.CommentParametersBuilder()
-        .issue(issue)
-        .body(content)
-        .author(user())
-        .build()
-
 
     override suspend fun updateComment(
         issueKey: String,
@@ -71,7 +62,7 @@ object SdkJiraCommentOperator : JiraCommentOperator {
         content: String
     ): Either<JiraClientError, Unit> = eitherAndCatch {
         val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
-        val commentParameters = commentParameters(issue, content)
+        val commentParameters = newCommentParameters(issue, content)
         commentService.validateCommentUpdate(user(), commentId.toLong(), commentParameters).toEither().bind()
     }
 
@@ -84,4 +75,14 @@ object SdkJiraCommentOperator : JiraCommentOperator {
             commentService.delete(jiraServiceContextImpl, comment, dispatchEvent)
             jiraServiceContextImpl.errorCollection.toEither().bind()
         }
+
+    private fun newCommentParameters(
+        issue: MutableIssue,
+        content: String
+    ): CommentParameters = CommentParameters.CommentParametersBuilder()
+        .issue(issue)
+        .body(content)
+        .author(user())
+        .build()
+
 }
