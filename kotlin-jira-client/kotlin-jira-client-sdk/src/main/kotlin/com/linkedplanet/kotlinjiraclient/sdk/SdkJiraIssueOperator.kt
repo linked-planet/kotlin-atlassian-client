@@ -46,7 +46,8 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraField
 import com.linkedplanet.kotlinjiraclient.sdk.util.IssueJsonConverter
 import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
-import org.jetbrains.kotlin.util.removeSuffixIfPresent
+import com.linkedplanet.kotlinjiraclient.sdk.util.jiraClientError
+import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import javax.inject.Named
 import kotlin.math.ceil
 
@@ -126,27 +127,6 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
             val validateDelete = issueService.validateDelete(user(), issueToDelete.issue.id).toEither().bind()
             issueService.delete(user(), validateDelete, EventDispatchOption.ISSUE_DELETED, false).toEither().bind()
         }.bind()
-    }
-
-    private fun <T : ServiceResult> T.toEither(errorTitle: String? = null): Either<JiraClientError, T> =
-        when {
-            this.isValid -> Either.Right(this)
-            else -> Either.Left(jiraClientError(this.errorCollection, errorTitle
-                        ?: "${this::class.simpleName?.removeSuffixIfPresent("ServiceResult")}Error"))
-        }
-
-    private fun ErrorCollection.toEither(errorTitle: String = "SdkError") : Either<JiraClientError, Unit> =
-        when {
-            this.hasAnyErrors() -> jiraClientError(this, errorTitle).left()
-            else -> Unit.right()
-        }
-
-    private fun jiraClientError(errorCollection: ErrorCollection, errorTitle: String = "SdkError"): JiraClientError {
-        val worstReason = Reason.getWorstReason(errorCollection.reasons)
-        return JiraClientError(
-            errorTitle,
-            errorCollection.errorMessages.joinToString() + " (${worstReason.httpStatusCode})"
-        )
     }
 
     override suspend fun <T> getIssueById(
