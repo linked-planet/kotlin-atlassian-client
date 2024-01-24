@@ -142,10 +142,11 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         }
 
     private fun jiraClientError(errorCollection: ErrorCollection, errorTitle: String = "SdkError"): JiraClientError {
-        val worstReason = Reason.getWorstReason(errorCollection.reasons)
+        val worstReason: Reason? = Reason.getWorstReason(errorCollection.reasons)
+        val httpStatusSuffix = worstReason?.let { " (${it.httpStatusCode})" } ?: ""
         return JiraClientError(
             errorTitle,
-            errorCollection.errorMessages.joinToString() + " (${worstReason.httpStatusCode})"
+            errorCollection.errorMessages.joinToString() + httpStatusSuffix
         )
     }
 
