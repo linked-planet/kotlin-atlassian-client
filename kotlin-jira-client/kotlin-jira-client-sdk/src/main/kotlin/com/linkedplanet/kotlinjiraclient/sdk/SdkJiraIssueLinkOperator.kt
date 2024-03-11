@@ -20,29 +20,31 @@
 package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
+import com.atlassian.jira.bc.issue.IssueService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.issue.link.IssueLinkTypeManager
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueLinkOperator
-import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
+import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 
 object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
 
-    private val issueManager by lazy { ComponentAccessor.getIssueManager() }
-    private val issueLinkManager by lazy { ComponentAccessor.getIssueLinkManager() }
-    private val issueLinkTypeManager by lazy { ComponentAccessor.getComponent(IssueLinkTypeManager::class.java) }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
+    private val issueService: IssueService = ComponentAccessor.getIssueService()
+    private val issueLinkManager = ComponentAccessor.getIssueLinkManager()
+    private val issueLinkTypeManager = ComponentAccessor.getComponent(IssueLinkTypeManager::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
 
-    private fun loggedInUser() = jiraAuthenticationContext.loggedInUser
+    private fun user() = jiraAuthenticationContext.loggedInUser
 
     override suspend fun createIssueLink(
         inwardIssueKey: String,
         outwardIssueKey: String,
         relationName: String
     ): Either<JiraClientError, Unit> =
-        Either.catchJiraClientError {
-            val inwardSourceIssue = issueManager.getIssueByCurrentKey(inwardIssueKey)
-            val outwardIssue = issueManager.getIssueByCurrentKey(outwardIssueKey)
+        eitherAndCatch {
+            val inwardSourceIssue = issueService.getIssue(user(), inwardIssueKey).toEither().bind().issue
+            val outwardIssue = issueService.getIssue(user(), outwardIssueKey).toEither().bind().issue
             val linkType = issueLinkTypeManager.getIssueLinkTypesByName(relationName).firstOrNull()
                 ?: return issueLinkTypeNotFound(relationName)
             val sequence: Long? = null // For UI ordering. Sequence on links does not matter
@@ -52,7 +54,7 @@ object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
                 outwardIssue.id,
                 linkType.id,
                 sequence,
-                loggedInUser()
+                user()
             )
         }
 
@@ -61,8 +63,8 @@ object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
     )
 
     override suspend fun deleteIssueLink(linkId: String): Either<JiraClientError, Unit> =
-        Either.catchJiraClientError {
+        eitherAndCatch {
             val issueLink = issueLinkManager.getIssueLink(linkId.toLong())
-            issueLinkManager.removeIssueLink(issueLink, loggedInUser())
+            issueLinkManager.removeIssueLink(issueLink, user())
         }
 }
