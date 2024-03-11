@@ -146,7 +146,10 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         val httpStatusSuffix = worstReason?.let { " (${it.httpStatusCode})" } ?: ""
         return JiraClientError(
             errorTitle,
-            errorCollection.errorMessages.joinToString() + httpStatusSuffix
+            errorCollection.errorMessages.joinToString(",\n")
+                    + errorCollection.errors.map { "'$it.key':${it.value}" }.joinToString(",\n")
+                    + httpStatusSuffix,
+            statusCode = worstReason?.httpStatusCode
         )
     }
 
