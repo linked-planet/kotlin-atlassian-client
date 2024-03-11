@@ -34,9 +34,9 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.*
 
 object SdkJiraCommentOperator : JiraCommentOperator {
 
-    private val issueService: IssueService by lazy { ComponentAccessor.getIssueService() }
-    private val commentService : CommentService by lazy { ComponentAccessor.getComponent(CommentService::class.java) }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
+    private val issueService: IssueService = ComponentAccessor.getIssueService()
+    private val commentService : CommentService = ComponentAccessor.getComponent(CommentService::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
     private fun user() = jiraAuthenticationContext.loggedInUser
     private val dispatchEvent: Boolean = true // default dispatch behaviour for this operator
 
