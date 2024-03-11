@@ -220,7 +220,7 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     private suspend fun <T> issueToConcreteType(
         issue: Issue,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, T> {
+    ): Either<JiraClientError, T> = Either.catchJiraClientError {
         val jsonIssue: JsonObject = issueJsonConverter.createJsonIssue(issue)
         val customFieldMap = customFieldManager.getCustomFieldObjects(issue).associate { it.name to it.id }
         return parser(jsonIssue, customFieldMap)
@@ -232,8 +232,8 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>> = either {
         val user = userOrError().bind()
-        val query = jqlParser.parseQuery(jql)
-        val search = searchService.search(user, query, pagerFilter)
+        val query = Either.catchJiraClientError { jqlParser.parseQuery(jql) }.bind()
+        val search = Either.catchJiraClientError { searchService.search(user, query, pagerFilter) }.bind()
         val issues = search.results
             .map { issue -> issueToConcreteType(issue, parser) }
             .bindAll()

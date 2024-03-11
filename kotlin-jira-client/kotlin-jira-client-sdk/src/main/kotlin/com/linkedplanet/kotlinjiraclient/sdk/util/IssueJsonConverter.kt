@@ -59,7 +59,6 @@ class IssueJsonConverter {
             .build(issue)
         this.addOrderableFieldsToBean(issueBean, issue)
         this.addAvailableNavigableFieldsToBean(issueBean, issue)
-        this.apply { }
 
         return gson.toJsonTree(issueBean).asJsonObject
     }
