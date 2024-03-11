@@ -89,7 +89,8 @@ object SdkJiraUserOperator : JiraUserOperator {
 
     private fun createProjectNotFoundError(projectKey: String) = JiraClientError(
         "Project not found",
-        "No Project with projectKey $projectKey found."
+        "No Project with projectKey $projectKey found.",
+        statusCode = 404
     )
 
     private fun ApplicationUser.hasPermissionWithName(permissionName: String, project: Project): Boolean {

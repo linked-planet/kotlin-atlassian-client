@@ -46,10 +46,14 @@ fun ErrorCollection.toEither(errorTitle: String = "SdkError") : Either<JiraClien
     }
 
 fun jiraClientError(errorCollection: ErrorCollection, errorTitle: String = "SdkError"): JiraClientError {
-    val worstReason = ErrorCollection.Reason.getWorstReason(errorCollection.reasons)
+    val worstReason: ErrorCollection.Reason? = ErrorCollection.Reason.getWorstReason(errorCollection.reasons)
+    val httpStatusSuffix = worstReason?.let { " (${it.httpStatusCode})" } ?: ""
     return JiraClientError(
         errorTitle,
-        errorCollection.errorMessages.joinToString() + " (${worstReason.httpStatusCode})"
+        errorCollection.errorMessages.joinToString(",\n")
+                + errorCollection.errors.map { "'$it.key':${it.value}" }.joinToString(",\n")
+                + httpStatusSuffix,
+        statusCode = worstReason?.httpStatusCode
     )
 }
 
@@ -61,7 +65,8 @@ inline fun <B> Either.Companion.catchJiraClientError(
     JiraClientError(
         error = error ?: "Jira-Fehler",
         message = message ?: it.message ?: "-",
-        stacktrace = it.stackTraceToString()
+        stacktrace = it.stackTraceToString(),
+        500
     )
 }
 

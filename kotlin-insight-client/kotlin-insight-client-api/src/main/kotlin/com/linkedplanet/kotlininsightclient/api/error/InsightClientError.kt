@@ -47,8 +47,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 sealed class InsightClientError(
     error: String,
     message: String,
-    stacktrace: String = ""
-) : AtlassianClientError(error, message, stacktrace) {
+    stacktrace: String = "",
+    statusCode: Int? = null
+) : AtlassianClientError(error, message, stacktrace, statusCode) {
 
     companion object {
         private const val internalErrorString = "Jira/Insight hat ein internes Problem festgestellt"
@@ -81,6 +82,9 @@ open class OtherInsightClientError(error: String, message: String) : InsightClie
 /**
  * Somewhere inside an HTTP connection failed.
  */
-class HttpInsightClientError(val statusCode: Int, error: String, message: String) : InsightClientError(error,
-    "$message StatusCode:$statusCode"
+class HttpInsightClientError(statusCode: Int, error: String, message: String) :
+    InsightClientError(
+        error = error,
+        message = "$message StatusCode:$statusCode",
+        statusCode = statusCode
 )

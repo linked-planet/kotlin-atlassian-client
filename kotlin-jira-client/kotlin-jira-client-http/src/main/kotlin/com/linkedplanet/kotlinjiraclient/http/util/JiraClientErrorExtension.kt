@@ -23,4 +23,4 @@ import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 
 fun JiraClientError.Companion.fromHttpDomainError(e: HttpDomainError): JiraClientError =
-    JiraClientError(e.error, e.message, "HttpStatusCode-${e.statusCode}")
+    JiraClientError(e.error, e.message, "HttpStatusCode-${e.statusCode}", statusCode = e.statusCode)

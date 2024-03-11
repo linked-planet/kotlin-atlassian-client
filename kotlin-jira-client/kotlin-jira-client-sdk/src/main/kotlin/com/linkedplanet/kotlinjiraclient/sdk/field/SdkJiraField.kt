@@ -21,12 +21,13 @@ package com.linkedplanet.kotlinjiraclient.sdk.field
 
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.config.IssueTypeManager
+import com.atlassian.jira.datetime.DateTimeFormatterFactory
+import com.atlassian.jira.datetime.DateTimeStyle
 import com.atlassian.jira.issue.IssueInputParameters
 import com.atlassian.jira.issue.context.IssueContext
 import com.atlassian.jira.issue.context.IssueContextImpl
 import com.atlassian.jira.issue.customfields.CustomFieldTypes
 import com.atlassian.jira.issue.fields.CustomField
-import com.atlassian.jira.timezone.TimeZoneManager
 import com.linkedplanet.kotlinjiraclient.api.field.JiraAssigneeField
 import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomDateTimeField
 import com.linkedplanet.kotlinjiraclient.api.field.JiraCustomField
@@ -43,13 +44,11 @@ import com.linkedplanet.kotlinjiraclient.api.field.JiraIssueTypeNameField
 import com.linkedplanet.kotlinjiraclient.api.field.JiraProjectField
 import com.linkedplanet.kotlinjiraclient.api.field.JiraReporterField
 import com.linkedplanet.kotlinjiraclient.api.field.JiraSummaryField
-import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
-private val customFieldManager by lazy { ComponentAccessor.getCustomFieldManager() }
-private val issueTypeManager by lazy { ComponentAccessor.getComponent(IssueTypeManager::class.java) }
-private val optionsManager by lazy { ComponentAccessor.getOptionsManager() }
+private val customFieldManager = ComponentAccessor.getCustomFieldManager()
+private val issueTypeManager = ComponentAccessor.getComponent(IssueTypeManager::class.java)
+private val optionsManager = ComponentAccessor.getOptionsManager()
 
 interface SdkJiraField {
     fun render(issue: IssueInputParameters)
@@ -155,25 +154,18 @@ class SdkJiraCustomDateTimeField(
     dateTime: ZonedDateTime
 ) : JiraCustomDateTimeField(customFieldName, dateTime), SdkJiraField {
 
-    private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MMM/yy h:mm a")
-    private val timezoneManager by lazy { ComponentAccessor.getComponent(TimeZoneManager::class.java) }
+    private val formatterFactory = ComponentAccessor.getComponent(DateTimeFormatterFactory::class.java)
 
     override fun render(issue: IssueInputParameters) {
         val customField = customField()
-        val zonedDateTime = when (customField.customFieldType.key) {
-            CustomFieldTypes.DATEPICKER.key -> {
-                // dateTime represents a date with day precision.
-                // Jira uses DateCFType internally for days that uses a dateConverter using system time,
-                // so it stores selected date at 00:00 in system time.
-                dateTime.withZoneSameLocal(ZoneId.systemDefault())
-            }
-            else -> {
-                // dateTime actually represents a DateTime, so we want to store date and time with minute precision
-                // the dateFormat has no Zone or Offset, so we need to convert to userTime first
-                dateTime.withZoneSameInstant(timezoneManager.loggedInUserTimeZone.toZoneId())
-            }
+
+        val dateTimeStyle = when (customField.customFieldType.key) {
+            CustomFieldTypes.DATEPICKER.key -> DateTimeStyle.DATE_PICKER
+            else -> DateTimeStyle.DATE_TIME_PICKER
         }
-        issue.addCustomFieldValue(customField.id, zonedDateTime.format(dateTimeFormatter))
+        val dateTimeFormatter = formatterFactory.formatter().forLoggedInUser().withStyle(dateTimeStyle)
+        val dateInUserFormat = dateTimeFormatter.format(java.util.Date.from(dateTime.toInstant()))
+        issue.addCustomFieldValue(customField.id, dateInUserFormat)
     }
 }
 
