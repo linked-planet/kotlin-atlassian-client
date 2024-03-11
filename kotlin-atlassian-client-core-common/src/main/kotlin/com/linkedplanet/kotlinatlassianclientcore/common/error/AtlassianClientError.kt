@@ -28,7 +28,7 @@ open class AtlassianClientError(
     @field:NotNull val error: String,
     @field:NotNull val message: String,
     @field:NotNull val stacktrace: String = "",
-    val httpStatusCode: Int? = null
+    val statusCode: Int? = null
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -38,7 +38,7 @@ open class AtlassianClientError(
         if (error != other.error) return false
         if (message != other.message) return false
         if (stacktrace != other.stacktrace) return false
-        if (httpStatusCode != other.httpStatusCode) return false
+        if (statusCode != other.statusCode) return false
 
         return true
     }
@@ -47,12 +47,12 @@ open class AtlassianClientError(
         var result = error.hashCode()
         result = 31 * result + message.hashCode()
         result = 31 * result + stacktrace.hashCode()
-        result = 31 * result + (httpStatusCode ?: 0)
+        result = 31 * result + (statusCode ?: 0)
         return result
     }
 
     override fun toString(): String {
-        return "AtlassianClientError(error='$error', message='$message', stacktrace='$stacktrace')"
+        return "AtlassianClientError(error='$error', message='$message', stacktrace='$stacktrace', httpStatusCode=$statusCode)"
     }
 
     companion object
