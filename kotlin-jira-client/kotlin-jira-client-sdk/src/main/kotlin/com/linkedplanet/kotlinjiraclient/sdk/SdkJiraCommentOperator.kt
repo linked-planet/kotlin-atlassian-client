@@ -38,7 +38,7 @@ object SdkJiraCommentOperator : JiraCommentOperator {
     private val commentService : CommentService = ComponentAccessor.getComponent(CommentService::class.java)
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
     private fun user() = jiraAuthenticationContext.loggedInUser
-    private val dispatchEvent: Boolean = true // default dispatch behaviour for this operator
+    private const val DISPATCH_EVENT: Boolean = true // default dispatch behaviour for this operator
 
     override suspend fun getComments(issueKey: String): Either<JiraClientError, List<JiraIssueComment>> =
         eitherAndCatch {
@@ -52,7 +52,7 @@ object SdkJiraCommentOperator : JiraCommentOperator {
             val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
             val commentParameters = newCommentParameters(issue, content)
             val validateComment = commentService.validateCommentCreate(user(), commentParameters).toEither().bind()
-            commentService.create(user(), validateComment, dispatchEvent)
+            commentService.create(user(), validateComment, DISPATCH_EVENT)
             validateComment.toEither().bind()
         }
 
@@ -64,7 +64,7 @@ object SdkJiraCommentOperator : JiraCommentOperator {
         val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
         val commentParameters = newCommentParameters(issue, content)
         val valid = commentService.validateCommentUpdate(user(), commentId.toLong(), commentParameters).toEither().bind()
-        commentService.update(user(), valid, dispatchEvent)
+        commentService.update(user(), valid, DISPATCH_EVENT)
     }
 
     override suspend fun deleteComment(issueKey: String, id: String): Either<JiraClientError, Unit> =
@@ -73,7 +73,7 @@ object SdkJiraCommentOperator : JiraCommentOperator {
             val comment = commentService.getCommentById(user(), id.toLongOrNull()!!, simpleErrorCollection)
             simpleErrorCollection.toEither().bind()
             val jiraServiceContextImpl = JiraServiceContextImpl(user())
-            commentService.delete(jiraServiceContextImpl, comment, dispatchEvent)
+            commentService.delete(jiraServiceContextImpl, comment, DISPATCH_EVENT)
             jiraServiceContextImpl.errorCollection.toEither().bind()
         }
 
