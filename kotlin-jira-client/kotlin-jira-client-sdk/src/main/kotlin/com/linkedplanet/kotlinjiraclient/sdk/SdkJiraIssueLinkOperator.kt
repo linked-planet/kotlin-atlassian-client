@@ -20,8 +20,9 @@
 package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
-import com.atlassian.jira.bc.issue.IssueService
+import com.atlassian.jira.bc.issue.link.IssueLinkService
 import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.link.Direction
 import com.atlassian.jira.issue.link.IssueLinkTypeManager
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueLinkOperator
@@ -30,12 +31,13 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 
 object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
 
-    private val issueService: IssueService = ComponentAccessor.getIssueService()
-    private val issueLinkManager = ComponentAccessor.getIssueLinkManager()
+    private val issueService = ComponentAccessor.getIssueService()
+    private val issueLinkService = ComponentAccessor.getComponent(IssueLinkService::class.java)
     private val issueLinkTypeManager = ComponentAccessor.getComponent(IssueLinkTypeManager::class.java)
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
 
     private fun user() = jiraAuthenticationContext.loggedInUser
+    private const val DISPATCH_EVENT: Boolean = true // default dispatch behaviour for this operator
 
     override suspend fun createIssueLink(
         inwardIssueKey: String,
@@ -43,19 +45,20 @@ object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
         relationName: String
     ): Either<JiraClientError, Unit> =
         eitherAndCatch {
-            val inwardSourceIssue = issueService.getIssue(user(), inwardIssueKey).toEither().bind().issue
-            val outwardIssue = issueService.getIssue(user(), outwardIssueKey).toEither().bind().issue
+            val user = user()
+            val inwardSourceIssue = issueService.getIssue(user, inwardIssueKey).toEither().bind().issue
+            val outwardIssue = issueService.getIssue(user, outwardIssueKey).toEither().bind().issue
             val linkType = issueLinkTypeManager.getIssueLinkTypesByName(relationName).firstOrNull()
                 ?: return issueLinkTypeNotFound(relationName)
-            val sequence: Long? = null // For UI ordering. Sequence on links does not matter
-
-            issueLinkManager.createIssueLink(
-                inwardSourceIssue.id,
-                outwardIssue.id,
+            val validate = issueLinkService.validateAddIssueLinks(
+                user,
+                outwardIssue,
                 linkType.id,
-                sequence,
-                user()
-            )
+                Direction.OUT,
+                listOf(inwardSourceIssue.key),
+                DISPATCH_EVENT
+            ).toEither().bind()
+            issueLinkService.addIssueLinks(user, validate)
         }
 
     private fun issueLinkTypeNotFound(relationName: String): Either<JiraClientError, Unit> = Either.Left(
@@ -64,7 +67,10 @@ object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
 
     override suspend fun deleteIssueLink(linkId: String): Either<JiraClientError, Unit> =
         eitherAndCatch {
-            val issueLink = issueLinkManager.getIssueLink(linkId.toLong())
-            issueLinkManager.removeIssueLink(issueLink, user())
+            val user = user()
+            val issueLink = issueLinkService.getIssueLink(linkId.toLong(), user).toEither().bind().issueLink
+            val issue = issueService.getIssue(user, issueLink.destinationId).toEither().bind().issue
+            val validate = issueLinkService.validateDelete(user, issue, issueLink).toEither().bind()
+            issueLinkService.delete(validate)
         }
 }
