@@ -63,7 +63,8 @@ object SdkJiraCommentOperator : JiraCommentOperator {
     ): Either<JiraClientError, Unit> = eitherAndCatch {
         val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
         val commentParameters = newCommentParameters(issue, content)
-        commentService.validateCommentUpdate(user(), commentId.toLong(), commentParameters).toEither().bind()
+        val valid = commentService.validateCommentUpdate(user(), commentId.toLong(), commentParameters).toEither().bind()
+        commentService.update(user(), valid, dispatchEvent)
     }
 
     override suspend fun deleteComment(issueKey: String, id: String): Either<JiraClientError, Unit> =
