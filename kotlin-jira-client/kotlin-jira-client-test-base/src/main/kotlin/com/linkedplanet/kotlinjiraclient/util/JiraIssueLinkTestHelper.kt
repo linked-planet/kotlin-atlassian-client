@@ -34,7 +34,7 @@ class JiraIssueLinkTestHelper<JiraFieldType>(
         val jsonResponse = runBlocking {
             issueOperator.getIssueByKey(issueKey) { json, _ ->
                 Either.Right(json)
-            }.orNull()
+            }.getOrNull()
         }
         assertThat(jsonResponse, notNullValue())
 
