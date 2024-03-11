@@ -54,13 +54,13 @@ import kotlin.math.ceil
 object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     override var RESULTS_PER_PAGE: Int = 10
 
-    private val issueService by lazy { ComponentAccessor.getIssueService() }
-    private val customFieldManager by lazy { ComponentAccessor.getCustomFieldManager() }
-    private val searchService: SearchService by lazy { ComponentAccessor.getComponent(SearchService::class.java) }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
-    private val jqlParser by lazy { ComponentAccessor.getComponent(JqlQueryParser::class.java) }
-    private val applicationProperties by lazy { ComponentAccessor.getApplicationProperties() }
-    private val webResourceUrlProvider by lazy { ComponentAccessor.getWebResourceUrlProvider() }
+    private val issueService = ComponentAccessor.getIssueService()
+    private val customFieldManager = ComponentAccessor.getCustomFieldManager()
+    private val searchService: SearchService = ComponentAccessor.getComponent(SearchService::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private val jqlParser = ComponentAccessor.getComponent(JqlQueryParser::class.java)
+    private val applicationProperties = ComponentAccessor.getApplicationProperties()
+    private val webResourceUrlProvider = ComponentAccessor.getWebResourceUrlProvider()
     private val issueJsonConverter = IssueJsonConverter()
 
     private fun user() = jiraAuthenticationContext.loggedInUser
