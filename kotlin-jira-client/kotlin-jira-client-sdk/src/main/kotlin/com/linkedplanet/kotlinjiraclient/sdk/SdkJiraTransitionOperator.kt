@@ -70,7 +70,10 @@ object SdkJiraTransitionOperator : JiraTransitionOperator {
         }
 
     private fun createTransitionIdNoIntError(transitionId: String) =
-        JiraClientError("Illegal Argument", "Transition with id $transitionId must be of type Int.")
+        JiraClientError("Illegal Argument",
+            "Transition with id $transitionId must be of type Int.",
+            statusCode = 400
+        )
 
     private fun createParams(comment: String? = null): IssueInputParameters? =
         issueService.newIssueInputParameters().apply {

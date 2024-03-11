@@ -30,6 +30,7 @@ inline fun <B> Either.Companion.catchJiraClientError(
     JiraClientError(
         error = error ?: "Jira-Fehler",
         message = message ?: it.message ?: "-",
-        stacktrace = it.stackTraceToString()
+        stacktrace = it.stackTraceToString(),
+        500
     )
 }

@@ -57,7 +57,7 @@ object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
         }
 
     private fun issueLinkTypeNotFound(relationName: String): Either<JiraClientError, Unit> = Either.Left(
-        JiraClientError("IssueLinkType not found", "No IssueLinkType named $relationName found.")
+        JiraClientError("IssueLinkType not found", "No IssueLinkType named $relationName found.", statusCode = 404)
     )
 
     override suspend fun deleteIssueLink(linkId: String): Either<JiraClientError, Unit> =

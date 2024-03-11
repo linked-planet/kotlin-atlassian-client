@@ -132,7 +132,8 @@ class HttpJiraUserOperator(private val context: HttpJiraClientContext) : JiraUse
 
             else -> JiraClientError(
                 "Unknown actor type",
-                "Actor type ${actor.type} for actor ${actor.name} is not known."
+                "Actor type ${actor.type} for actor ${actor.name} is not known.",
+                statusCode = 404
             ).left()
         }
 
