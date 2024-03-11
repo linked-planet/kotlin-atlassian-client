@@ -25,8 +25,9 @@ import com.linkedplanet.kotlinatlassianclientcore.common.error.AtlassianClientEr
 open class JiraClientError(
     error: String,
     message: String,
-    stacktrace: String = ""
-) : AtlassianClientError(error, message, stacktrace) {
+    stacktrace: String = "",
+    statusCode: Int? = null // http status code equivalent
+) : AtlassianClientError(error, message, stacktrace, statusCode) {
 
     companion object
 }

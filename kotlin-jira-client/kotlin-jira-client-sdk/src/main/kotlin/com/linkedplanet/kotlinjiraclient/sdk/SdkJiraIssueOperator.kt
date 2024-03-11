@@ -54,13 +54,13 @@ import kotlin.math.ceil
 object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     override var RESULTS_PER_PAGE: Int = 10
 
-    private val issueService by lazy { ComponentAccessor.getIssueService() }
-    private val customFieldManager by lazy { ComponentAccessor.getCustomFieldManager() }
-    private val searchService: SearchService by lazy { ComponentAccessor.getComponent(SearchService::class.java) }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
-    private val jqlParser by lazy { ComponentAccessor.getComponent(JqlQueryParser::class.java) }
-    private val applicationProperties by lazy { ComponentAccessor.getApplicationProperties() }
-    private val webResourceUrlProvider by lazy { ComponentAccessor.getWebResourceUrlProvider() }
+    private val issueService = ComponentAccessor.getIssueService()
+    private val customFieldManager = ComponentAccessor.getCustomFieldManager()
+    private val searchService: SearchService = ComponentAccessor.getComponent(SearchService::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private val jqlParser = ComponentAccessor.getComponent(JqlQueryParser::class.java)
+    private val applicationProperties = ComponentAccessor.getApplicationProperties()
+    private val webResourceUrlProvider = ComponentAccessor.getWebResourceUrlProvider()
     private val issueJsonConverter = IssueJsonConverter()
 
     private fun user() = jiraAuthenticationContext.loggedInUser
@@ -146,7 +146,10 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         val httpStatusSuffix = worstReason?.let { " (${it.httpStatusCode})" } ?: ""
         return JiraClientError(
             errorTitle,
-            errorCollection.errorMessages.joinToString() + httpStatusSuffix
+            errorCollection.errorMessages.joinToString(",\n")
+                    + errorCollection.errors.map { "'$it.key':${it.value}" }.joinToString(",\n")
+                    + httpStatusSuffix,
+            statusCode = worstReason?.httpStatusCode
         )
     }
 
@@ -217,7 +220,7 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     private suspend fun <T> issueToConcreteType(
         issue: Issue,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, T> {
+    ): Either<JiraClientError, T> = Either.catchJiraClientError {
         val jsonIssue: JsonObject = issueJsonConverter.createJsonIssue(issue)
         val customFieldMap = customFieldManager.getCustomFieldObjects(issue).associate { it.name to it.id }
         return parser(jsonIssue, customFieldMap)
@@ -229,8 +232,8 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>> = either {
         val user = userOrError().bind()
-        val query = jqlParser.parseQuery(jql)
-        val search = searchService.search(user, query, pagerFilter)
+        val query = Either.catchJiraClientError { jqlParser.parseQuery(jql) }.bind()
+        val search = Either.catchJiraClientError { searchService.search(user, query, pagerFilter) }.bind()
         val issues = search.results
             .map { issue -> issueToConcreteType(issue, parser) }
             .bindAll()

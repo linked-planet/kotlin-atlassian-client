@@ -56,4 +56,12 @@ open class Page<T> (
         return "Page(items=$items, totalItems=$totalItems, totalPages=$totalPages, currentPageIndex=$currentPageIndex, pageSize=$pageSize)"
     }
 
+    fun <T> copy(items: List<T>): Page<T> =
+        Page(
+            items = items,
+            totalItems = this.totalItems,
+            totalPages = this.totalPages,
+            currentPageIndex = this.currentPageIndex,
+            pageSize = this.pageSize,
+        )
 }
