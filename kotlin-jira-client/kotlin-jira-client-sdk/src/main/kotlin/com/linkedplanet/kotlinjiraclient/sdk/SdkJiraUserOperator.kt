@@ -22,34 +22,37 @@ package com.linkedplanet.kotlinjiraclient.sdk
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.left
+import com.atlassian.jira.bc.project.ProjectService
+import com.atlassian.jira.bc.projectroles.ProjectRoleService
 import com.atlassian.jira.bc.user.search.DefaultAssigneeService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.permission.ProjectPermissions
 import com.atlassian.jira.project.Project
 import com.atlassian.jira.security.roles.ProjectRoleActors
-import com.atlassian.jira.security.roles.ProjectRoleManager
 import com.atlassian.jira.user.ApplicationUser
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraUserOperator
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
-import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
+import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
+import com.linkedplanet.kotlinjiraclient.sdk.util.withErrorCollection
 
 object SdkJiraUserOperator : JiraUserOperator {
 
-    private val projectManager by lazy { ComponentAccessor.getProjectManager() }
-    private val permissionManager by lazy { ComponentAccessor.getPermissionManager() }
-    private val userUtil by lazy { ComponentAccessor.getUserUtil() }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
-    private val projectRoleManager by lazy { ComponentAccessor.getComponent(ProjectRoleManager::class.java) }
-    private val avatarService by lazy { ComponentAccessor.getAvatarService() }
-    private val defaultAssigneeService by lazy { ComponentAccessor.getComponent(DefaultAssigneeService::class.java) }
+    private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
+    private val permissionManager = ComponentAccessor.getPermissionManager()
+    private val userUtil = ComponentAccessor.getUserUtil()
+    private val projectRoleService = ComponentAccessor.getComponent(ProjectRoleService::class.java)
+    private val avatarService = ComponentAccessor.getAvatarService()
+    private val defaultAssigneeService = ComponentAccessor.getComponent(DefaultAssigneeService::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
 
-    private fun loggedInUser() = jiraAuthenticationContext.loggedInUser
+    private fun user() = jiraAuthenticationContext.loggedInUser
 
     override suspend fun getAssignableUsersByProjectKey(projectKey: String): Either<JiraClientError, List<JiraUser>> =
-        Either.catchJiraClientError {
+        eitherAndCatch {
             val project =
-                projectManager.getProjectByCurrentKey(projectKey)
+                projectService.getProjectByKey(user(), projectKey).toEither().bind().project
                     ?: return createProjectNotFoundError(projectKey).left()
             val users = defaultAssigneeService.findAssignableUsers("", project)
             users.map { it.toJiraUser() }
@@ -76,12 +79,14 @@ object SdkJiraUserOperator : JiraUserOperator {
     private fun filteredProjectUsers(
         projectKey: String,
         predicate: (Project, ApplicationUser) -> Boolean
-    ): Either<JiraClientError, List<JiraUser>> = Either.catchJiraClientError {
-        val project =
-            projectManager.getProjectByCurrentKey(projectKey) ?: return createProjectNotFoundError(projectKey).left()
+    ): Either<JiraClientError, List<JiraUser>> = eitherAndCatch {
+        val project = projectService.getProjectByKey(user(), projectKey).toEither().bind().project
+                ?: return createProjectNotFoundError(projectKey).left()
 
-        projectRoleManager.projectRoles
-            .map { projectRole -> projectRoleManager.getProjectRoleActors(projectRole, project) }
+        withErrorCollection { projectRoleService.getProjectRoles(it) }.bind()
+            .map { projectRole ->
+                withErrorCollection { projectRoleService.getProjectRoleActors(projectRole, project, it) }.bind()
+            }
             .flatMap(ProjectRoleActors::getUsers)
             .filter { predicate(project, it) }
             .map { it.toJiraUser() }
@@ -100,7 +105,7 @@ object SdkJiraUserOperator : JiraUserOperator {
     }
 
     private fun ApplicationUser.toJiraUser(): JiraUser {
-        val avatarUrl = avatarService.getAvatarURL(loggedInUser(), this).toASCIIString()
+        val avatarUrl = avatarService.getAvatarURL(user(), this).toASCIIString()
         return JiraUser(key, name, emailAddress, avatarUrl, displayName)
     }
 }
