@@ -54,7 +54,7 @@ object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
                 user,
                 outwardIssue,
                 linkType.id,
-                Direction.OUT,
+                Direction.IN,
                 listOf(inwardSourceIssue.key),
                 DISPATCH_EVENT
             ).toEither().bind()
