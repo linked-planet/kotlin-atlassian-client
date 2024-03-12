@@ -174,7 +174,7 @@ class SdkJiraCustomRadioField(
     value: String
 ) : JiraCustomRadioField(customFieldName, value), SdkJiraField {
     override fun render(issue: IssueInputParameters) {
-        val customField = customFieldManager.getCustomFieldObjectsByName(customFieldName).single()
+        val customField = customField()
         val issueContext: IssueContext = IssueContextImpl(issue.projectId, issue.issueTypeId)
         val relevantConfig = customField.getRelevantConfig(issueContext)
         val option = optionsManager.getOptions(relevantConfig).getOptionForValue(value, null)

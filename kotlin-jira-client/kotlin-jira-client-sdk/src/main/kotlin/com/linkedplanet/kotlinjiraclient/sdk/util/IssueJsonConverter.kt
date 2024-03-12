@@ -43,12 +43,12 @@ import javax.xml.bind.annotation.XmlTransient
 class IssueJsonConverter {
 
     private val log = LoggerFactory.getLogger(FieldAccessorImpl::class.java)
-    private val fieldLayoutManager by lazy { ComponentAccessor.getFieldLayoutManager() }
-    private val fieldManager by lazy { ComponentAccessor.getFieldManager() }
+    private val fieldLayoutManager = ComponentAccessor.getFieldLayoutManager()
+    private val fieldManager = ComponentAccessor.getFieldManager()
     private val beanBuilderFactory = ComponentAccessor.getOSGiComponentInstanceOfType(BeanBuilderFactory::class.java)
     private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
     private val uriBuilder: UriBuilder = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
-    private val gson by lazy { setupGson() }
+    private val gson = setupGson()
 
 
     @Throws(FieldException::class)

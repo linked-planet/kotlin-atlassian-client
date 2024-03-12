@@ -23,7 +23,6 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
-import com.atlassian.jira.bc.ServiceResult
 import com.atlassian.jira.bc.issue.search.SearchService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.event.type.EventDispatchOption
@@ -32,7 +31,6 @@ import com.atlassian.jira.issue.IssueInputParameters
 import com.atlassian.jira.issue.MutableIssue
 import com.atlassian.jira.jql.parser.JqlQueryParser
 import com.atlassian.jira.user.ApplicationUser
-import com.atlassian.jira.util.ErrorCollection
 import com.atlassian.jira.util.ErrorCollection.Reason
 import com.atlassian.jira.util.ErrorCollections
 import com.atlassian.jira.web.bean.I18nBean
@@ -46,7 +44,8 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraField
 import com.linkedplanet.kotlinjiraclient.sdk.util.IssueJsonConverter
 import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
-import org.jetbrains.kotlin.util.removeSuffixIfPresent
+import com.linkedplanet.kotlinjiraclient.sdk.util.jiraClientError
+import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import javax.inject.Named
 import kotlin.math.ceil
 
@@ -126,31 +125,6 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
             val validateDelete = issueService.validateDelete(user(), issueToDelete.issue.id).toEither().bind()
             issueService.delete(user(), validateDelete, EventDispatchOption.ISSUE_DELETED, false).toEither().bind()
         }.bind()
-    }
-
-    private fun <T : ServiceResult> T.toEither(errorTitle: String? = null): Either<JiraClientError, T> =
-        when {
-            this.isValid -> Either.Right(this)
-            else -> Either.Left(jiraClientError(this.errorCollection, errorTitle
-                        ?: "${this::class.simpleName?.removeSuffixIfPresent("ServiceResult")}Error"))
-        }
-
-    private fun ErrorCollection.toEither(errorTitle: String = "SdkError") : Either<JiraClientError, Unit> =
-        when {
-            this.hasAnyErrors() -> jiraClientError(this, errorTitle).left()
-            else -> Unit.right()
-        }
-
-    private fun jiraClientError(errorCollection: ErrorCollection, errorTitle: String = "SdkError"): JiraClientError {
-        val worstReason: Reason? = Reason.getWorstReason(errorCollection.reasons)
-        val httpStatusSuffix = worstReason?.let { " (${it.httpStatusCode})" } ?: ""
-        return JiraClientError(
-            errorTitle,
-            errorCollection.errorMessages.joinToString(",\n")
-                    + errorCollection.errors.map { "'$it.key':${it.value}" }.joinToString(",\n")
-                    + httpStatusSuffix,
-            statusCode = worstReason?.httpStatusCode
-        )
     }
 
     override suspend fun <T> getIssueById(

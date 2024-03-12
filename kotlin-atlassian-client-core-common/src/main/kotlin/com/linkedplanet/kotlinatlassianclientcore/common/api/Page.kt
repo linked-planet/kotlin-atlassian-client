@@ -28,6 +28,7 @@ open class Page<T> (
     @field:NotNull val currentPageIndex: Int,
     @field:NotNull val pageSize: Int
 ) {
+    @Suppress("unused") // useful for inheritance by clients
     constructor() : this(emptyList<T>(), 0, 0, 0, 1)
 
     override fun equals(other: Any?): Boolean {

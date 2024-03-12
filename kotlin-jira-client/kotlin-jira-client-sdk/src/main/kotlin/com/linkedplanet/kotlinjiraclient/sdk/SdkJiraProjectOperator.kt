@@ -20,26 +20,31 @@
 package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
+import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraProjectOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraProject
-import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
+import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 
 object SdkJiraProjectOperator : JiraProjectOperator {
 
-    private val projectManager by lazy { ComponentAccessor.getProjectManager() }
+    private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+
+    private fun user() = jiraAuthenticationContext.loggedInUser
 
     override suspend fun getProject(projectId: Number): Either<JiraClientError, JiraProject?> =
-        Either.catchJiraClientError {
-            projectManager.getProjectObj(projectId.toLong())?.let {
+        eitherAndCatch {
+            projectService.getProjectById(user(), projectId.toLong()).toEither().bind().get().let {
                 JiraProject(it.id.toString(), it.key, it.name)
             }
         }
 
     override suspend fun getProjects(): Either<JiraClientError, List<JiraProject>> =
-        Either.catchJiraClientError {
-            return Either.Right(projectManager.projects.map {
+        eitherAndCatch {
+            return Either.Right(projectService.getAllProjects(user()).toEither().bind().get().map {
                 JiraProject(it.id.toString(), it.key, it.name)
             })
         }

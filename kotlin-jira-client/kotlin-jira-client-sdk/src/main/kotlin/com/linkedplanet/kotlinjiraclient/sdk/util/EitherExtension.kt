@@ -20,7 +20,55 @@
 package com.linkedplanet.kotlinjiraclient.sdk.util
 
 import arrow.core.Either
+import arrow.core.left
+import arrow.core.raise.Raise
+import arrow.core.raise.fold
+import arrow.core.right
+import com.atlassian.jira.bc.ServiceResult
+import com.atlassian.jira.util.ErrorCollection
+import com.atlassian.jira.util.SimpleErrorCollection
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
+import org.jetbrains.kotlin.util.removeSuffixIfPresent
+
+/**
+ * Allows you to call toEither().bind() on all ServiceResults
+ */
+fun <T : ServiceResult> T.toEither(errorTitle: String? = null): Either<JiraClientError, T> =
+    when {
+        this.isValid -> Either.Right(this)
+        else -> Either.Left(jiraClientError(this.errorCollection, errorTitle
+            ?: "${this::class.simpleName?.removeSuffixIfPresent("ServiceResult")}Error"))
+    }
+
+fun ErrorCollection.toEither(errorTitle: String = "SdkError") : Either<JiraClientError, Unit> =
+    when {
+        this.hasAnyErrors() -> jiraClientError(this, errorTitle).left()
+        else -> Unit.right()
+    }
+
+fun <T> withErrorCollection(
+    errorTitle: String = "SdkError",
+    block: (errors: ErrorCollection) -> T
+): Either<JiraClientError, T> {
+    val simpleErrorCollection = SimpleErrorCollection()
+    val result = block(simpleErrorCollection)
+    return when {
+        simpleErrorCollection.hasAnyErrors() -> jiraClientError(simpleErrorCollection, errorTitle).left()
+        else -> result.right()
+    }
+}
+
+fun jiraClientError(errorCollection: ErrorCollection, errorTitle: String = "SdkError"): JiraClientError {
+    val worstReason: ErrorCollection.Reason? = ErrorCollection.Reason.getWorstReason(errorCollection.reasons)
+    val httpStatusSuffix = worstReason?.let { " (${it.httpStatusCode})" } ?: ""
+    return JiraClientError(
+        errorTitle,
+        errorCollection.errorMessages.joinToString(",\n")
+                + errorCollection.errors.map { "'$it.key':${it.value}" }.joinToString(",\n")
+                + httpStatusSuffix,
+        statusCode = worstReason?.httpStatusCode
+    )
+}
 
 inline fun <B> Either.Companion.catchJiraClientError(
     error: String? = null,
@@ -34,3 +82,11 @@ inline fun <B> Either.Companion.catchJiraClientError(
         500
     )
 }
+
+inline fun <A : Any> eitherAndCatch(block: Raise<JiraClientError>.() -> A): Either<JiraClientError, A> =
+    fold({
+        Either.catchJiraClientError{
+            block.invoke(this)
+        }.bind()
+    }, { Either.Left(it) }, { Either.Right(it) })
+

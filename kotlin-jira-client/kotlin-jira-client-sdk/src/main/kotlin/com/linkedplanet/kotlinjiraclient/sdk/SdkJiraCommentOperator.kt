@@ -20,48 +20,67 @@
 package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
+import com.atlassian.jira.bc.JiraServiceContextImpl
+import com.atlassian.jira.bc.issue.IssueService
+import com.atlassian.jira.bc.issue.comment.CommentService
+import com.atlassian.jira.bc.issue.comment.CommentService.CommentParameters
 import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.MutableIssue
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraCommentOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueComment
-import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
+import com.linkedplanet.kotlinjiraclient.sdk.util.*
 
 object SdkJiraCommentOperator : JiraCommentOperator {
 
-    private val issueManager by lazy { ComponentAccessor.getIssueManager() }
-    private val commentManager by lazy { ComponentAccessor.getCommentManager() }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
+    private val issueService: IssueService = ComponentAccessor.getIssueService()
+    private val commentService : CommentService = ComponentAccessor.getComponent(CommentService::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
     private fun user() = jiraAuthenticationContext.loggedInUser
-    private fun dispatchEvent(): Boolean = true // default dispatch behaviour for this operator
+    private const val DISPATCH_EVENT: Boolean = true // default dispatch behaviour for this operator
 
     override suspend fun getComments(issueKey: String): Either<JiraClientError, List<JiraIssueComment>> =
-        Either.catchJiraClientError {
-            val issue = issueManager.getIssueByCurrentKey(issueKey)
-            val comments = commentManager.getComments(issue)
+        eitherAndCatch {
+            val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
+            val comments = commentService.getCommentsForUser(user(), issue)
             comments.map { JiraIssueComment(it.id.toString(), it.body, it.authorFullName, it.updated.toString()) }
-        }
+    }
 
     override suspend fun createComment(issueKey: String, content: String): Either<JiraClientError, Unit> =
-        Either.catchJiraClientError {
-            val issue = issueManager.getIssueByCurrentKey(issueKey)
-            commentManager.create(issue, user(), content, dispatchEvent())
+        eitherAndCatch {
+            val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
+            val commentParameters = newCommentParameters(issue, content)
+            val validateComment = commentService.validateCommentCreate(user(), commentParameters).toEither().bind()
+            commentService.create(user(), validateComment, DISPATCH_EVENT)
+            validateComment.toEither().bind()
         }
 
     override suspend fun updateComment(
         issueKey: String,
         commentId: String,
         content: String
-    ): Either<JiraClientError, Unit> =
-        Either.catchJiraClientError {
-            val comment = commentManager.getMutableComment(commentId.toLongOrNull()!!)
-            comment.body = content
-            comment.setUpdateAuthor(user())
-            commentManager.update(comment, dispatchEvent())
-        }
+    ): Either<JiraClientError, Unit> = eitherAndCatch {
+        val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
+        val commentParameters = newCommentParameters(issue, content)
+        val valid = commentService.validateCommentUpdate(user(), commentId.toLong(), commentParameters).toEither().bind()
+        commentService.update(user(), valid, DISPATCH_EVENT)
+    }
 
     override suspend fun deleteComment(issueKey: String, id: String): Either<JiraClientError, Unit> =
-        Either.catchJiraClientError {
-            val comment = commentManager.getCommentById(id.toLongOrNull()!!)
-            commentManager.delete(comment, dispatchEvent(), user())
+        eitherAndCatch {
+            val comment = withErrorCollection { commentService.getCommentById(user(), id.toLongOrNull()!!, it) }.bind()
+            val jiraServiceContextImpl = JiraServiceContextImpl(user())
+            commentService.delete(jiraServiceContextImpl, comment, DISPATCH_EVENT)
+            jiraServiceContextImpl.errorCollection.toEither().bind()
         }
+
+    private fun newCommentParameters(
+        issue: MutableIssue,
+        content: String
+    ): CommentParameters = CommentParameters.CommentParametersBuilder()
+        .issue(issue)
+        .body(content)
+        .author(user())
+        .build()
+
 }

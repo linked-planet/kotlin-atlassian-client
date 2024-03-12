@@ -22,42 +22,41 @@ package com.linkedplanet.kotlinjiraclient.sdk
 import arrow.core.Either
 import arrow.core.left
 import com.atlassian.jira.component.ComponentAccessor
-import com.atlassian.jira.issue.Issue
 import com.atlassian.jira.issue.IssueInputParameters
 import com.atlassian.jira.transition.TransitionManager
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraTransitionOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraTransition
-import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
+import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 
 object SdkJiraTransitionOperator : JiraTransitionOperator {
 
-    private val issueManager by lazy { ComponentAccessor.getIssueManager() }
-    private val issueService by lazy { ComponentAccessor.getIssueService() }
-    private val workflowManager by lazy { ComponentAccessor.getWorkflowManager() }
-    private val transitionManager by lazy { ComponentAccessor.getComponent(TransitionManager::class.java) }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
+    private val issueService = ComponentAccessor.getIssueService()
+    private val workflowManager = ComponentAccessor.getWorkflowManager()
+    private val transitionManager = ComponentAccessor.getComponent(TransitionManager::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
     private fun user() = jiraAuthenticationContext.loggedInUser
 
     override suspend fun doTransition(
         issueKey: String,
         transitionId: String,
         comment: String?
-    ): Either<JiraClientError, Boolean> = Either.catchJiraClientError {
-        val issue = issueManager.getIssueByCurrentKey(issueKey)
+    ): Either<JiraClientError, Boolean> = eitherAndCatch {
+        val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
         val issueInputParameters = createParams(comment)
         val actionId = transitionId.toIntOrNull() ?: return createTransitionIdNoIntError(transitionId).left()
 
         val validateTransition = issueService.validateTransition(user(), issue.id, actionId, issueInputParameters)
-        if (!validateTransition.isValid) return@catchJiraClientError false
+        if (!validateTransition.isValid) return@eitherAndCatch false
 
         val executedTransition = issueService.transition(user(), validateTransition)
         executedTransition.isValid
     }
 
     override suspend fun getAvailableTransitions(issueKey: String): Either<JiraClientError, List<JiraTransition>> =
-        Either.catchJiraClientError {
-            val issue: Issue = issueManager.getIssueByCurrentKey(issueKey)
+        eitherAndCatch {
+            val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
             val workflow = workflowManager.getWorkflow(issue)
             val allPossibleTransitions = transitionManager.getTransitions(listOf(workflow))
             allPossibleTransitions
