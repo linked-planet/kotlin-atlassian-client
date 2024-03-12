@@ -25,7 +25,6 @@ import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraProjectOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraProject
-import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 

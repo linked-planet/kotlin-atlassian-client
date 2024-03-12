@@ -32,7 +32,7 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 
 object SdkJiraTransitionOperator : JiraTransitionOperator {
 
-    private val issueService by lazy { ComponentAccessor.getIssueService() }
+    private val issueService = ComponentAccessor.getIssueService()
     private val workflowManager by lazy { ComponentAccessor.getWorkflowManager() }
     private val transitionManager by lazy { ComponentAccessor.getComponent(TransitionManager::class.java) }
     private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
