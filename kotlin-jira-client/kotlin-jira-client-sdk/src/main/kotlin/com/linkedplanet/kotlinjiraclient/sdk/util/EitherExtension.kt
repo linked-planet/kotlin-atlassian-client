@@ -26,6 +26,7 @@ import arrow.core.raise.fold
 import arrow.core.right
 import com.atlassian.jira.bc.ServiceResult
 import com.atlassian.jira.util.ErrorCollection
+import com.atlassian.jira.util.SimpleErrorCollection
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import org.jetbrains.kotlin.util.removeSuffixIfPresent
 
@@ -44,6 +45,18 @@ fun ErrorCollection.toEither(errorTitle: String = "SdkError") : Either<JiraClien
         this.hasAnyErrors() -> jiraClientError(this, errorTitle).left()
         else -> Unit.right()
     }
+
+fun <T> withErrorCollection(
+    errorTitle: String = "SdkError",
+    block: (errors: ErrorCollection) -> T
+): Either<JiraClientError, T> {
+    val simpleErrorCollection = SimpleErrorCollection()
+    val result = block(simpleErrorCollection)
+    return when {
+        simpleErrorCollection.hasAnyErrors() -> jiraClientError(simpleErrorCollection, errorTitle).left()
+        else -> result.right()
+    }
+}
 
 fun jiraClientError(errorCollection: ErrorCollection, errorTitle: String = "SdkError"): JiraClientError {
     val worstReason: ErrorCollection.Reason? = ErrorCollection.Reason.getWorstReason(errorCollection.reasons)

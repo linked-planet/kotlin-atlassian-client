@@ -33,9 +33,9 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 object SdkJiraTransitionOperator : JiraTransitionOperator {
 
     private val issueService = ComponentAccessor.getIssueService()
-    private val workflowManager by lazy { ComponentAccessor.getWorkflowManager() }
-    private val transitionManager by lazy { ComponentAccessor.getComponent(TransitionManager::class.java) }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
+    private val workflowManager = ComponentAccessor.getWorkflowManager()
+    private val transitionManager = ComponentAccessor.getComponent(TransitionManager::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
     private fun user() = jiraAuthenticationContext.loggedInUser
 
     override suspend fun doTransition(

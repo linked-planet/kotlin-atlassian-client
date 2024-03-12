@@ -26,7 +26,6 @@ import com.atlassian.jira.bc.issue.comment.CommentService
 import com.atlassian.jira.bc.issue.comment.CommentService.CommentParameters
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.issue.MutableIssue
-import com.atlassian.jira.util.SimpleErrorCollection
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraCommentOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueComment
@@ -69,9 +68,7 @@ object SdkJiraCommentOperator : JiraCommentOperator {
 
     override suspend fun deleteComment(issueKey: String, id: String): Either<JiraClientError, Unit> =
         eitherAndCatch {
-            val simpleErrorCollection = SimpleErrorCollection()
-            val comment = commentService.getCommentById(user(), id.toLongOrNull()!!, simpleErrorCollection)
-            simpleErrorCollection.toEither().bind()
+            val comment = withErrorCollection { commentService.getCommentById(user(), id.toLongOrNull()!!, it) }.bind()
             val jiraServiceContextImpl = JiraServiceContextImpl(user())
             commentService.delete(jiraServiceContextImpl, comment, DISPATCH_EVENT)
             jiraServiceContextImpl.errorCollection.toEither().bind()
