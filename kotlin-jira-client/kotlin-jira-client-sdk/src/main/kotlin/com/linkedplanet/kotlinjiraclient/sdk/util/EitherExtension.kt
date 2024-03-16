@@ -60,11 +60,11 @@ fun <T> withErrorCollection(
 
 fun jiraClientError(errorCollection: ErrorCollection, errorTitle: String = "SdkError"): JiraClientError {
     val worstReason: ErrorCollection.Reason? = ErrorCollection.Reason.getWorstReason(errorCollection.reasons)
-    val httpStatusSuffix = worstReason?.let { " (${it.httpStatusCode})" } ?: ""
+    val httpStatusSuffix = worstReason?.let { " (Status Code ${it.httpStatusCode})" } ?: ""
     return JiraClientError(
         errorTitle,
-        errorCollection.errorMessages.joinToString(",\n")
-                + errorCollection.errors.map { "'$it.key':${it.value}" }.joinToString(",\n")
+        errorCollection.errorMessages.joinToString(", \n")
+                + errorCollection.errors.map { "'${it.key}': ${it.value}" }.joinToString(", \n")
                 + httpStatusSuffix,
         statusCode = worstReason?.httpStatusCode
     )
