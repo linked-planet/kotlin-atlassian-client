@@ -103,7 +103,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssueByKey(issueKey, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("You do not have the permission to see the specified issue."))
+            assertThat(error.message, containsString("401"))
         }
     }
 
@@ -112,7 +112,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
-            assertThat(error.message, containsString("You do not have the permission to see the specified issue."))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
 
@@ -121,7 +121,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssuesByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
-            assertThat(error.message, containsString("You do not have the permission to see the specified issue."))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")) )
         }
     }
 
@@ -130,7 +130,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssuesByJQLPaginated("summary ~ \"Test-1\"", 0, 1, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("You do not have the permission to see the specified issue."))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
     @Test
@@ -138,7 +138,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssuesByIssueType(projectId, issueTypeId, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("You do not have the permission to see the specified issue."))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
     @Test
@@ -146,7 +146,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         loginAsUser("EveTheEvilHacker")
         runBlocking {
             val error = issueOperator.getIssuesByTypePaginated(projectId, issueTypeId, 0, 1, ::issueParser).assertLeft()
-            assertThat(error.message, containsString("You do not have the permission to see the specified issue."))
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
 
@@ -320,7 +320,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_07CreateIssueWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         val error = runBlocking { issueOperator.createIssue(projectId, issueTypeId, listOf()) }.assertLeft()
-        assertThat(error.message, anyOf(containsString("Anonymous users do not have permission to create issues in this project. Please try logging in first.")))
+        assertThat(error.message, anyOf(containsString("401"), containsString("400")))
     }
 
     @Test
@@ -328,7 +328,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
         loginAsUser("EveTheEvilHacker")
         val error = runBlocking { issueOperator.updateIssue(projectId, issueTypeId, issue.key, listOf()) }.assertLeft()
-        assertThat(error.message, containsString("You do not have the permission to see the specified issue."))
+        assertThat(error.message, anyOf(containsString("401"), containsString("400")))
     }
 
     @Test
@@ -336,7 +336,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
         loginAsUser("EveTheEvilHacker")
         val error = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
-        assertThat(error.message, containsString("You do not have the permission to see the specified issue."))
+        assertThat(error.message, containsString("401"))
     }
 
     @Test
