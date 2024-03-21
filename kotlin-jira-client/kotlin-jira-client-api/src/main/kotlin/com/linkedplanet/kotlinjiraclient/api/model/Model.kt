@@ -43,7 +43,16 @@ data class JiraIssueType(
 
 data class JiraIssueTypeAttribute(
     val id: String,
-    val name: String
+    val name: String,
+    val schema: JiraIssueTypeAttributeSchema
+)
+
+data class JiraIssueTypeAttributeSchema(
+    val type: String, // "date" see com.atlassian.jira.issue.fields.rest.json.JsonType
+    val items: String?, // unclear what this is
+    val system: String?, // only used if its a system field, e.g. "assignee"
+    val custom: String?, // e.g. com.atlassian.jira.plugin.system.customfieldtypes:datepicker
+    val customId: Long? // e.g. 10202
 )
 
 data class JiraIssue(

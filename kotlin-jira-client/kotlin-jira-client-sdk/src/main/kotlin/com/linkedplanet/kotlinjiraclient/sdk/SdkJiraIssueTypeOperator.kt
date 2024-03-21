@@ -23,6 +23,9 @@ import arrow.core.Either
 import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.config.IssueTypeService
+import com.atlassian.jira.issue.fields.rest.RestAwareField
+import com.atlassian.jira.issue.fields.screen.FieldScreenLayoutItem
+import com.atlassian.jira.issue.fields.screen.FieldScreenTab
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager
 import com.atlassian.jira.issue.issuetype.IssueType
 import com.atlassian.jira.issue.operation.IssueOperations
@@ -30,6 +33,7 @@ import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueTypeOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueType
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
+import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttributeSchema
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import javax.inject.Named
@@ -56,9 +60,21 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
             )
             val screenScheme = screenSchemes.getEffectiveFieldScreenScheme(issueType)
             val createScreen = screenScheme.getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION)
-            val fields = createScreen.tabs.flatMap { screenTab ->
-                screenTab.fieldScreenLayoutItems.map { layoutItem ->
-                    JiraIssueTypeAttribute(layoutItem.orderableField.id, layoutItem.orderableField.name)
+            val fields = createScreen.tabs.flatMap { screenTab: FieldScreenTab ->
+                screenTab.fieldScreenLayoutItems.map { layoutItem: FieldScreenLayoutItem ->
+                    val orderableField = layoutItem.orderableField
+                    val schema = (orderableField as? RestAwareField)?.jsonSchema
+                    JiraIssueTypeAttribute(
+                        id = orderableField.id,
+                        name = orderableField.name,
+                        schema = JiraIssueTypeAttributeSchema(
+                            schema?.type ?: "Any",
+                            schema?.items,
+                            schema?.system,
+                            schema?.custom,
+                            schema?.customId,
+                        )
+                    )
                 }
             }
             fields

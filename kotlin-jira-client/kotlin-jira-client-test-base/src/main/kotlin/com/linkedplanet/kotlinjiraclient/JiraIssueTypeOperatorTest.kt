@@ -60,5 +60,8 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         val attributeNames = attributes.map(JiraIssueTypeAttribute::name)
         assertThat(attributeNames.size, equalTo(attributes.size))
         assertThat(attributeNames, hasItems(*expectedAttributes))
+
+        assertThat(attributes.firstOrNull { it.name == "Reporter" }?.schema?.type, equalTo("user"))
+        assertThat(attributes.firstOrNull { it.name == "Summary" }?.schema?.type, equalTo("string"))
     }
 }
