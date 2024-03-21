@@ -22,7 +22,7 @@ package com.linkedplanet.kotlinjiraclient
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
 import com.linkedplanet.kotlinjiraclient.util.orFail
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
@@ -51,7 +51,7 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
                     issueTypeId
                 )
             }.orFail()
-        val expectedAttributes = listOf(
+        val expectedAttributes = arrayOf(
             "Epic Link", "Summary", "Issue Type", "Reporter", "Component/s", "Description",
             "Fix Version/s", "Priority", "Labels", "Attachment", "Linked Issues", "Assignee",
             "Sprint", "InsightObject"
@@ -59,8 +59,6 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
 
         val attributeNames = attributes.map(JiraIssueTypeAttribute::name)
         assertThat(attributeNames.size, equalTo(attributes.size))
-        expectedAttributes.forEach {
-            assertThat("Attributes does not contain: $it", attributeNames.contains(it), equalTo(true))
-        }
+        assertThat(attributeNames, hasItems(*expectedAttributes))
     }
 }
