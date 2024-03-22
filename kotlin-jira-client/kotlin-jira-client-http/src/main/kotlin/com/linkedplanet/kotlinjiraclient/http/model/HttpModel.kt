@@ -93,12 +93,33 @@ fun List<HttpJiraIssueType>.toJiraIssueTypes(): List<JiraIssueType> =
     map { it.toJiraIssueType() }
 
 data class HttpJiraIssueTypeAttribute(
+    val required: Boolean,
+    val schema: HttpJiraIssueTypeAttributeJsonSchema?,
     val name: String,
-    val fieldId: String
+    val fieldId: String,
+    val hasDefaultValue: Boolean,
 ) {
     fun toJiraIssueTypeAttribute() =
-        JiraIssueTypeAttribute(fieldId, name)
+        JiraIssueTypeAttribute(
+            fieldId,
+            name,
+            JiraIssueTypeAttributeSchema(
+                schema?.type ?: "Any",
+                schema?.items,
+                schema?.system,
+                schema?.custom,
+                schema?.customId,
+            )
+        )
 }
+
+data class HttpJiraIssueTypeAttributeJsonSchema(
+    val type: String, // "date" see com.atlassian.jira.issue.fields.rest.json.JsonType
+    val items: String?, // unclear what this is
+    val system: String?, // only used if its a system field, e.g. "assignee"
+    val custom: String?, // e.g. com.atlassian.jira.plugin.system.customfieldtypes:datepicker
+    val customId: Long? // e.g. 10202
+)
 
 fun List<HttpJiraIssueTypeAttribute>.toJiraIssueTypeAttributes(): List<JiraIssueTypeAttribute> =
     map { it.toJiraIssueTypeAttribute() }
