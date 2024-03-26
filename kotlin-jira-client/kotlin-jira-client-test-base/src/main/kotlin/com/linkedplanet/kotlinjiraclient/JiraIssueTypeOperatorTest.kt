@@ -40,6 +40,11 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         val issueType = runBlocking { issueTypeOperator.getIssueType(issueTypeId) }.orFail()
         assertThat(issueType.id, equalTo(issueTypeId.toString()))
         assertThat(issueType.name, equalTo("Story"))
+        assertThat(issueType.subTask, equalTo(false))
+        assertThat(issueType.description, containsString("Issue type for a user story."))
+        assertThat(issueType.self, endsWith("rest/api/2/issuetype/10001"))
+        assertThat(issueType.iconUrl, endsWith("images/icons/issuetypes/story.svg"))
+        assertThat(issueType.avatarId, equalTo(0L))
     }
 
     @Test

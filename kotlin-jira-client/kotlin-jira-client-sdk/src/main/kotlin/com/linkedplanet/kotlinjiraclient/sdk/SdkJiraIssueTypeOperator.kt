@@ -24,11 +24,14 @@ import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.config.IssueTypeService
 import com.atlassian.jira.issue.fields.rest.RestAwareField
+import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls
 import com.atlassian.jira.issue.fields.screen.FieldScreenLayoutItem
 import com.atlassian.jira.issue.fields.screen.FieldScreenTab
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager
 import com.atlassian.jira.issue.issuetype.IssueType
 import com.atlassian.jira.issue.operation.IssueOperations
+import com.atlassian.jira.rest.v2.issue.IssueTypeResource
+import com.atlassian.jira.rest.v2.issue.ResourceUriBuilder
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueTypeOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueType
@@ -36,7 +39,10 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttributeSchema
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
+import java.net.MalformedURLException
+import java.net.URL
 import javax.inject.Named
+import javax.ws.rs.core.UriBuilder
 
 @Named
 object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
@@ -45,6 +51,7 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
     private val issueTypeService = ComponentAccessor.getComponent(IssueTypeService::class.java)
     private val issueTypeScreenSchemeManager = ComponentAccessor.getComponent(IssueTypeScreenSchemeManager::class.java)
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
 
     private fun user() = jiraAuthenticationContext.loggedInUser
 
@@ -64,6 +71,7 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
                 screenTab.fieldScreenLayoutItems.map { layoutItem: FieldScreenLayoutItem ->
                     val orderableField = layoutItem.orderableField
                     val schema = (orderableField as? RestAwareField)?.jsonSchema
+                    // code inspired by AbstractMetaFieldBeanBuilder.java
                     JiraIssueTypeAttribute(
                         id = orderableField.id,
                         name = orderableField.name,
@@ -88,16 +96,27 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
         eitherAndCatch {
             val issueType = issueTypeService.getIssueType(user(), issueTypeId.toString()).orNull
                 ?: return@getIssueType issueTypeNotFound(issueTypeId)
-            issueType.let { it: IssueType ->
-                JiraIssueType(it.id, it.name)
-            }
+            toJiraIssueType(issueType)
         }
 
     override suspend fun getIssueTypes(projectId: Number): Either<JiraClientError, List<JiraIssueType>> =
         eitherAndCatch {
             projectService.getProjectById(user(), projectId.toLong()).toEither().bind().project?.issueTypes
-                ?.map { it: IssueType ->
-                    JiraIssueType(it.id, it.name)
-                } ?: emptyList()
+                ?.map(::toJiraIssueType)
+                ?: emptyList()
         }
+
+    private fun toJiraIssueType(issueType: IssueType): JiraIssueType =
+        issueType.run {
+            // code inspired by IssueTypeBeanBuilder
+            val iconAbsoluteURL = try {
+                URL(issueType.iconUrl).toString()
+            } catch (_: MalformedURLException) {
+                jiraBaseUrls.baseUrl() + issueType.iconUrl
+            }
+            val restApiUrl = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
+            val self = ResourceUriBuilder().build(restApiUrl, IssueTypeResource::class.java, issueType.id).toString()
+            JiraIssueType(id, name, self, descTranslation, isSubTask, iconAbsoluteURL, avatar?.id ?: 0L)
+        }
+
 }
