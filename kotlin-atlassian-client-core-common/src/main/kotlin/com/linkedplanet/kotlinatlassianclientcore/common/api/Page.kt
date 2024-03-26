@@ -27,7 +27,7 @@ open class Page<T>(
     @field:NotNull val totalPages: Int,
     @field:NotNull val currentPageIndex: Int,
     @field:NotNull val pageSize: Int
-) : List<T> by items {
+) {
     @Suppress("unused") // useful for inheritance by clients
     constructor() : this(emptyList<T>(), 0, 0, 0, 1)
 
