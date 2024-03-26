@@ -40,15 +40,18 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttributeSchema
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import javax.inject.Named
+import javax.ws.rs.core.Context
 
 @Named
 object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
+
+    @Context
+    private lateinit var contextUriInfo: ContextUriInfo
 
     private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
     private val issueTypeService = ComponentAccessor.getComponent(IssueTypeService::class.java)
     private val issueTypeScreenSchemeManager = ComponentAccessor.getComponent(IssueTypeScreenSchemeManager::class.java)
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
-    private val contextUriInfo = ComponentAccessor.getComponent(ContextUriInfo::class.java)
     private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
 
     private fun user() = jiraAuthenticationContext.loggedInUser
