@@ -30,8 +30,8 @@ import com.atlassian.jira.issue.fields.screen.FieldScreenTab
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager
 import com.atlassian.jira.issue.issuetype.IssueType
 import com.atlassian.jira.issue.operation.IssueOperations
-import com.atlassian.jira.rest.v2.issue.IssueTypeBeanBuilder
-import com.atlassian.jira.rest.v2.issue.context.ContextUriInfo
+import com.atlassian.jira.rest.v2.issue.IssueTypeResource
+import com.atlassian.jira.rest.v2.issue.ResourceUriBuilder
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueTypeOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueType
@@ -39,14 +39,13 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttributeSchema
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
+import java.net.MalformedURLException
+import java.net.URL
 import javax.inject.Named
-import javax.ws.rs.core.Context
+import javax.ws.rs.core.UriBuilder
 
 @Named
 object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
-
-    @Context
-    private lateinit var contextUriInfo: ContextUriInfo
 
     private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
     private val issueTypeService = ComponentAccessor.getComponent(IssueTypeService::class.java)
@@ -108,11 +107,17 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
         }
 
     private fun toJiraIssueType(issueType: IssueType): JiraIssueType =
-        IssueTypeBeanBuilder()
-            .jiraBaseUrls(this.jiraBaseUrls)
-            .context(contextUriInfo)
-            .issueType(issueType)
-            .build()
-            .run { JiraIssueType(id, name, self, description, isSubtask, iconUrl, avatarId) }
+        issueType.run {
+            // code inspired by IssueTypeBeanBuilder
+            val iconAbsoluteURL = try {
+                URL(issueType.iconUrl).toString()
+            } catch (_: MalformedURLException) {
+                jiraBaseUrls.baseUrl() + issueType.iconUrl
+            }
+            val baseUriBuilder = UriBuilder.fromPath(jiraBaseUrls.baseUrl())
+            val self =
+                ResourceUriBuilder().build(baseUriBuilder, IssueTypeResource::class.java, issueType.id).toString()
+            JiraIssueType(id, name, self, descTranslation, isSubTask, iconAbsoluteURL, avatar?.id ?: 0L)
+        }
 
 }
