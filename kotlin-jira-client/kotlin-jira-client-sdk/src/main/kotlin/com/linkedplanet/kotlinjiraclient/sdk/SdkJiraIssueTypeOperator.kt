@@ -114,9 +114,8 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
             } catch (_: MalformedURLException) {
                 jiraBaseUrls.baseUrl() + issueType.iconUrl
             }
-            val baseUriBuilder = UriBuilder.fromPath(jiraBaseUrls.baseUrl())
-            val self =
-                ResourceUriBuilder().build(baseUriBuilder, IssueTypeResource::class.java, issueType.id).toString()
+            val restApiUrl = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
+            val self = ResourceUriBuilder().build(restApiUrl, IssueTypeResource::class.java, issueType.id).toString()
             JiraIssueType(id, name, self, descTranslation, isSubTask, iconAbsoluteURL, avatar?.id ?: 0L)
         }
 
