@@ -38,7 +38,12 @@ data class JiraProject(
 
 data class JiraIssueType(
     val id: String,
-    val name: String
+    val name: String,
+    val self: String,
+    val description: String,
+    val subTask: Boolean,
+    val iconUrl: String,
+    val avatarId: Long
 )
 
 data class JiraIssueTypeAttribute(

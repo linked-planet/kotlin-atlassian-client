@@ -83,10 +83,10 @@ data class HttpJiraIssueType(
     val iconUrl: String,
     val name: String,
     val subtask: Boolean,
-    val avatarId: Int
+    val avatarId: Long
 ) {
     fun toJiraIssueType() =
-        JiraIssueType(id, name)
+        JiraIssueType(id, name, self, description, subtask, iconUrl, avatarId)
 }
 
 fun List<HttpJiraIssueType>.toJiraIssueTypes(): List<JiraIssueType> =

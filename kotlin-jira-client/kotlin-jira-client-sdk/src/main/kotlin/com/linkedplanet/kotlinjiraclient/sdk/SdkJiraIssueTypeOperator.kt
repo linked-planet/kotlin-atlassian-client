@@ -24,11 +24,14 @@ import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.config.IssueTypeService
 import com.atlassian.jira.issue.fields.rest.RestAwareField
+import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls
 import com.atlassian.jira.issue.fields.screen.FieldScreenLayoutItem
 import com.atlassian.jira.issue.fields.screen.FieldScreenTab
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager
 import com.atlassian.jira.issue.issuetype.IssueType
 import com.atlassian.jira.issue.operation.IssueOperations
+import com.atlassian.jira.rest.v2.issue.IssueTypeBeanBuilder
+import com.atlassian.jira.rest.v2.issue.context.ContextUriInfo
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueTypeOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueType
@@ -45,6 +48,8 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
     private val issueTypeService = ComponentAccessor.getComponent(IssueTypeService::class.java)
     private val issueTypeScreenSchemeManager = ComponentAccessor.getComponent(IssueTypeScreenSchemeManager::class.java)
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private val contextUriInfo = ComponentAccessor.getComponent(ContextUriInfo::class.java)
+    private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
 
     private fun user() = jiraAuthenticationContext.loggedInUser
 
@@ -64,6 +69,7 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
                 screenTab.fieldScreenLayoutItems.map { layoutItem: FieldScreenLayoutItem ->
                     val orderableField = layoutItem.orderableField
                     val schema = (orderableField as? RestAwareField)?.jsonSchema
+                    // code inspired by AbstractMetaFieldBeanBuilder.java
                     JiraIssueTypeAttribute(
                         id = orderableField.id,
                         name = orderableField.name,
@@ -88,16 +94,22 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
         eitherAndCatch {
             val issueType = issueTypeService.getIssueType(user(), issueTypeId.toString()).orNull
                 ?: return@getIssueType issueTypeNotFound(issueTypeId)
-            issueType.let { it: IssueType ->
-                JiraIssueType(it.id, it.name)
-            }
+            toJiraIssueType(issueType)
         }
 
     override suspend fun getIssueTypes(projectId: Number): Either<JiraClientError, List<JiraIssueType>> =
         eitherAndCatch {
             projectService.getProjectById(user(), projectId.toLong()).toEither().bind().project?.issueTypes
-                ?.map { it: IssueType ->
-                    JiraIssueType(it.id, it.name)
-                } ?: emptyList()
+                ?.map(::toJiraIssueType)
+                ?: emptyList()
         }
+
+    private fun toJiraIssueType(issueType: IssueType): JiraIssueType =
+        IssueTypeBeanBuilder()
+            .jiraBaseUrls(this.jiraBaseUrls)
+            .context(contextUriInfo)
+            .issueType(issueType)
+            .build()
+            .run { JiraIssueType(id, name, self, description, isSubtask, iconUrl, avatarId) }
+
 }
