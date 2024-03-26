@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.linked-planet.client</groupId>
         <artifactId>kotlin-jira-client</artifactId>
-        <version>0.13.12-SNAPSHOT</version>
+        <version>0.13.12</version>
     </parent>
 
     <artifactId>kotlin-jira-client-test-applink</artifactId>
