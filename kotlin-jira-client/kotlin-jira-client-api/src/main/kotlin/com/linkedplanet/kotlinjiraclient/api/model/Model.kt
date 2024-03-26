@@ -19,41 +19,43 @@
  */
 package com.linkedplanet.kotlinjiraclient.api.model
 
+import javax.validation.constraints.NotNull
+
 data class JiraStatus(
-    val id: String,
-    val name: String,
-    val statusCategory: String
+    @field:NotNull val id: String,
+    @field:NotNull val name: String,
+    @field:NotNull val statusCategory: String
 )
 
 data class JiraTransition(
-    val id: String,
-    val name: String
+    @field:NotNull val id: String,
+    @field:NotNull val name: String
 )
 
 data class JiraProject(
-    val id: String,
-    val key: String,
-    val name: String
+    @field:NotNull val id: String,
+    @field:NotNull val key: String,
+    @field:NotNull val name: String
 )
 
 data class JiraIssueType(
-    val id: String,
-    val name: String,
-    val self: String,
-    val description: String,
-    val subTask: Boolean,
-    val iconUrl: String,
-    val avatarId: Long
+    @field:NotNull val id: String,
+    @field:NotNull val name: String,
+    @field:NotNull val self: String,
+    @field:NotNull val description: String,
+    @field:NotNull val subTask: Boolean,
+    @field:NotNull val iconUrl: String,
+    @field:NotNull val avatarId: Long
 )
 
 data class JiraIssueTypeAttribute(
-    val id: String,
-    val name: String,
-    val schema: JiraIssueTypeAttributeSchema
+    @field:NotNull val id: String,
+    @field:NotNull val name: String,
+    @field:NotNull val schema: JiraIssueTypeAttributeSchema
 )
 
 data class JiraIssueTypeAttributeSchema(
-    val type: String, // "date" see com.atlassian.jira.issue.fields.rest.json.JsonType
+    @field:NotNull val type: String, // "date" see com.atlassian.jira.issue.fields.rest.json.JsonType
     val items: String?, // unclear what this is
     val system: String?, // only used if its a system field, e.g. "assignee"
     val custom: String?, // e.g. com.atlassian.jira.plugin.system.customfieldtypes:datepicker
@@ -61,14 +63,14 @@ data class JiraIssueTypeAttributeSchema(
 )
 
 data class JiraIssue(
-    val id: String,
-    val key: String,
-    val self: String
+    @field:NotNull val id: String,
+    @field:NotNull val key: String,
+    @field:NotNull val self: String
 )
 
 data class JiraIssueComment(
-    val id: String,
-    val content: String,
-    val author: String,
-    val dateTime: String
+    @field:NotNull val id: String,
+    @field:NotNull val content: String,
+    @field:NotNull val author: String,
+    @field:NotNull val dateTime: String
 )
