@@ -28,7 +28,9 @@ import com.atlassian.jira.bc.ServiceResult
 import com.atlassian.jira.util.ErrorCollection
 import com.atlassian.jira.util.SimpleErrorCollection
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
-import org.jetbrains.kotlin.util.removeSuffixIfPresent
+
+private fun String.removeSuffixIfPresent(suffix: String) =
+    if (this.endsWith(suffix)) this.dropLast(suffix.length) else this
 
 /**
  * Allows you to call toEither().bind() on all ServiceResults

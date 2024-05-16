@@ -20,7 +20,7 @@
 package com.linkedplanet.plugin.jira.insightclient.test.impl
 
 import com.linkedplanet.plugin.jira.insightclient.test.api.PluginComponent
-import org.jetbrains.kotlin.javax.inject.Named
+import javax.inject.Named
 
 @Named
 class PluginComponentImpl : PluginComponent
