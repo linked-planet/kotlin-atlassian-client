@@ -31,7 +31,6 @@ import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
 import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
 import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import org.apache.http.HttpHeaders
-import org.jetbrains.kotlin.library.impl.javaFile
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
@@ -131,7 +130,8 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         }
 
     private fun tempFileWithData(filename: String, inputStream: InputStream): File {
-        val file: File = org.jetbrains.kotlin.konan.file.createTempFile(filename).javaFile()
+        val tempFilePath = Files.createTempFile(filename, null)
+        val file = File(tempFilePath.toString())
         Files.copy(inputStream, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
         return file
     }
