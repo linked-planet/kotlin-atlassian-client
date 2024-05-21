@@ -330,7 +330,7 @@ jobs:
 
       - name: List available secret keys
         id: list-secret-keys
-        run: gpg --list-keys ${{ secrets.SIGNING_KEY }}
+        run: gpg --list-secret-keys
 
       - name: Install GPG Secret Key
         id: install-secret-key
