@@ -328,6 +328,10 @@ jobs:
           git tag -f $TAG_NAME
           git push origin -f --tags
 
+      - name: List available secret keys
+        id: list-secret-keys
+        run: gpg --list-keys ${{ secrets.SIGNING_KEY }}
+
       - name: Install GPG Secret Key
         id: install-secret-key
         run: cat <(echo -e "${{ secrets.SIGNING_KEY }}") | gpg --batch --import

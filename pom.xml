@@ -338,6 +338,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <configuration>
+                            <keyname>${env.SIGNING_KEY}</keyname>
                             <passphrase>${env.SIGNING_PASSWORD}</passphrase>
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
