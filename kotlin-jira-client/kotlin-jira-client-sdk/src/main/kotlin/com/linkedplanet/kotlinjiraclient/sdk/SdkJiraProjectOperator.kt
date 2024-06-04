@@ -23,6 +23,8 @@ import arrow.core.Either
 import com.atlassian.jira.avatar.Avatar
 import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
+import com.atlassian.jira.config.properties.ApplicationProperties
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraProject
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraProjectOperator
@@ -34,6 +36,7 @@ object SdkJiraProjectOperator : JiraProjectOperator {
     private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
     private val avatarService = ComponentAccessor.getAvatarService()
+    private val baseUrl = getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!!
 
     private fun user() = jiraAuthenticationContext.loggedInUser
 
@@ -41,7 +44,8 @@ object SdkJiraProjectOperator : JiraProjectOperator {
         eitherAndCatch {
             projectService.getProjectById(user(), projectId.toLong()).toEither().bind().get().let {
                 val avatarUrl = avatarService.getProjectAvatarAbsoluteURL(it, Avatar.Size.defaultSize())
-                JiraProject(it.id, it.key, it.name, it.url, avatarUrl.toASCIIString())
+                val url = it.url.ifEmpty { "$baseUrl/rest/api/2/project/${it.id}" }
+                JiraProject(it.id, it.key, it.name, url, avatarUrl.toASCIIString())
             }
         }
 
@@ -49,7 +53,8 @@ object SdkJiraProjectOperator : JiraProjectOperator {
         eitherAndCatch {
             return Either.Right(projectService.getAllProjects(user()).toEither().bind().get().map {
                 val avatarUrl = avatarService.getProjectAvatarAbsoluteURL(it, Avatar.Size.defaultSize())
-                JiraProject(it.id, it.key, it.name, it.url, avatarUrl.toASCIIString())
+                val url = it.url.ifEmpty { "$baseUrl/rest/api/2/project/${it.id}" }
+                JiraProject(it.id, it.key, it.name, url, avatarUrl.toASCIIString())
             })
         }
 }
