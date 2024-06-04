@@ -38,6 +38,7 @@ enum class InsightObjectType(val id: InsightObjectTypeId) {
     Many(InsightObjectTypeId(5)),
     Abstract(InsightObjectTypeId(6)),
     User(InsightObjectTypeId(9)),
+    Group(InsightObjectTypeId(41)),
     ObjectWithAllDefaultTypes(InsightObjectTypeId(40))
 }
 
@@ -58,6 +59,10 @@ enum class TestAttributes(val attributeId: InsightAttributeId, val attributeName
     UserTestName(InsightAttributeId(40), "Name"),
     UserTestUser(InsightAttributeId(43), "User"),
     UserTestUsers(InsightAttributeId(44), "Users"),
+
+    TestGroupName(InsightAttributeId(82), "Name"),
+    TestGroupGroup(InsightAttributeId(85), "Group"),
+    TestGroupGroups(InsightAttributeId(86), "Groups"),
 }
 
 enum class ObjectWithAllDefaultTypesAttributeIds(val attributeId: InsightAttributeId) {

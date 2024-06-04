@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraGroup
 import com.linkedplanet.kotlininsightclient.AuthenticatedJiraHttpClientFactory.Companion.Credentials
 import com.linkedplanet.kotlininsightclient.ObjectWithAllDefaultTypesAttributeIds.*
 import com.linkedplanet.kotlininsightclient.TestAttributes.*
@@ -38,6 +39,8 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObject
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toGroup
+import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute.Companion.toGroups
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.addSelectValue
 import com.linkedplanet.kotlininsightclient.api.model.getAttributeAs
@@ -47,6 +50,7 @@ import com.linkedplanet.kotlininsightclient.api.model.getBooleanValue
 import com.linkedplanet.kotlininsightclient.api.model.getDateTimeValue
 import com.linkedplanet.kotlininsightclient.api.model.getDateValue
 import com.linkedplanet.kotlininsightclient.api.model.getDoubleValue
+import com.linkedplanet.kotlininsightclient.api.model.getGroupList
 import com.linkedplanet.kotlininsightclient.api.model.getIntValue
 import com.linkedplanet.kotlininsightclient.api.model.getMultiReferenceValue
 import com.linkedplanet.kotlininsightclient.api.model.getSelectValues
@@ -683,7 +687,38 @@ interface InsightObjectOperatorTest {
         }
     }
 
+    @Test
+    fun testGroupCrud() = runBlocking {
+        suspend fun getGroupAttributes(objectId: InsightObjectId): Pair<List<JiraGroup>?, List<JiraGroup>> {
+            val insightObject = insightObjectOperator.getObjectById(objectId, ::identity).orFail()!!
+            val attrGroup = insightObject.getAttributeAs<InsightAttribute.Group>(TestGroupGroup.attributeId)?.groups
+            val attrGroupList = insightObject.getGroupList(TestGroupGroups.attributeId)
+            return Pair(attrGroup, attrGroupList)
+        }
 
+        val objectName = "createdByUnitTest"
+        autoClean(clean = { deleteObjectByName(InsightObjectType.Group.id, objectName).orFail() }) {
+            val group1 = JiraGroup("jira-administrators", null)
+            val group2 = JiraGroup("jira-servicedesk-users", null)
+            val objectId = insightObjectOperator.createInsightObject(
+                InsightObjectType.Group.id,
+                TestGroupName.attributeId toValue objectName,
+                TestGroupGroup.attributeId toGroup group1,
+                TestGroupGroups.attributeId toGroups listOf(group1)
+            ).orFail()
+            val (attrGroup, attrGroups) = getGroupAttributes(objectId)
+            assertThat(attrGroup?.firstOrNull()?.name, equalTo(group1.name))
+            assertThat(attrGroups.firstOrNull()?.name, equalTo(group1.name))
+
+            insightObjectOperator.updateInsightObject(objectId,
+                TestGroupGroup.attributeId toGroup group2,
+                TestGroupGroups.attributeId toGroups listOf(group2, group1),
+                toDomain = ::identity )
+            val (updatedAttrGroup, updatedAttrGroups) = getGroupAttributes(objectId)
+            assertThat(updatedAttrGroup?.firstOrNull()?.name, equalTo(group2.name))
+            assertThat(updatedAttrGroups.map { it.name }.toSet(), equalTo(setOf(group1.name, group2.name)))
+        }
+    }
 
     private suspend fun deleteObjectByName(objectTypeId: InsightObjectTypeId, name: String): Either<InsightClientError, Unit> =
         arrow.core.computations.either {

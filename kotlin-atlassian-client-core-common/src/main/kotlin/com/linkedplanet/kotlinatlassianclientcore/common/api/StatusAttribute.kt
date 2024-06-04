@@ -1,0 +1,41 @@
+/*-
+ * #%L
+ * kotlin-atlassian-client-core-common
+ * %%
+ * Copyright (C) 2024 linked-planet GmbH
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+package com.linkedplanet.kotlinatlassianclientcore.common.api
+
+import javax.validation.constraints.NotNull
+
+data class StatusAttribute(
+    @field:NotNull val id: Int,
+    @field:NotNull val name: String,
+    @field:NotNull val category: StatusCategory,
+    @field:NotNull val objectSchemaId: Int,
+    val description: String?,
+)
+
+enum class StatusCategory(val category: Int){
+    INACTIVE(0),
+    ACTIVE(1),
+    PENDING(2);
+
+    companion object {
+        private val map = StatusCategory.values().associateBy { it.category }
+        infix fun from(value: Int): StatusCategory? = map[value]
+    }
+}

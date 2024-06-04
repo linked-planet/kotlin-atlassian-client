@@ -19,6 +19,11 @@
  */
 package com.linkedplanet.kotlininsightclient.api.model
 
+import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusAttribute
+import com.linkedplanet.kotlinatlassianclientcore.common.api.ProjectVersion
+import com.linkedplanet.kotlinatlassianclientcore.common.api.ConfluencePage
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraGroup
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraProject
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
@@ -258,6 +263,7 @@ sealed class InsightAttribute(
     data class Confluence(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
+        @field:NotNull val pages: List<ConfluencePage>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(
         attributeId,
@@ -273,8 +279,13 @@ sealed class InsightAttribute(
     data class Group(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        override val schema: ObjectTypeSchemaAttribute?) :
-        InsightAttribute(attributeId, schema, AttributeTypeEnum.Group){
+        @field:NotNull val groups: List<JiraGroup>,
+        override val schema: ObjectTypeSchemaAttribute?
+    ) : InsightAttribute(
+        attributeId,
+        schema,
+        AttributeTypeEnum.Group
+    ) {
         override fun toString() = "Group attributeId=$attributeId"
     }
 
@@ -284,8 +295,10 @@ sealed class InsightAttribute(
     data class Version(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        override val schema: ObjectTypeSchemaAttribute?) :
-        InsightAttribute(attributeId, schema, AttributeTypeEnum.Version){
+        @field:NotNull val version: List<ProjectVersion>,
+        override val schema: ObjectTypeSchemaAttribute?
+    ) :
+        InsightAttribute(attributeId, schema, AttributeTypeEnum.Version) {
         override fun toString() = "Version attributeId=$attributeId"
     }
 
@@ -295,6 +308,7 @@ sealed class InsightAttribute(
     data class Project(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
+        @field:NotNull val projects: List<JiraProject>,
         override val schema: ObjectTypeSchemaAttribute?) :
         InsightAttribute(attributeId, schema, AttributeTypeEnum.Project){
         override fun toString() = "Project attributeId=$attributeId"
@@ -307,8 +321,13 @@ sealed class InsightAttribute(
     data class Status(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        override val schema: ObjectTypeSchemaAttribute?) :
-            InsightAttribute(attributeId, schema, AttributeTypeEnum.Status){
+        @field:NotNull val status: StatusAttribute?,
+        override val schema: ObjectTypeSchemaAttribute?
+    ) : InsightAttribute(
+        attributeId,
+        schema,
+        AttributeTypeEnum.Status
+    ) {
         override fun toString() = "Status attributeId=$attributeId"
     }
 
@@ -354,6 +373,12 @@ sealed class InsightAttribute(
 
         infix fun InsightAttributeId.toUsers(users: List<JiraUser>) =
             User(this, users, schema = null)
+
+        infix fun InsightAttributeId.toGroup(group: JiraGroup?) =
+            Group(this, listOfNotNull(group), schema = null)
+
+        infix fun InsightAttributeId.toGroups(groups: List<JiraGroup>) =
+            Group(this, groups, schema = null)
 
         infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) =
             Reference(

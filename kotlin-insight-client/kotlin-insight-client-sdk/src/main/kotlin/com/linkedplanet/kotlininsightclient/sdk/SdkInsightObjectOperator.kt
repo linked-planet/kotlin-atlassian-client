@@ -20,14 +20,21 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
-import arrow.core.raise.either
 import arrow.core.flatMap
 import arrow.core.left
+import arrow.core.raise.either
 import arrow.core.right
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
+import com.atlassian.jira.project.ProjectManager
 import com.atlassian.jira.user.util.UserManager
+import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusAttribute
+import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusCategory
+import com.linkedplanet.kotlinatlassianclientcore.common.api.ProjectVersion
+import com.linkedplanet.kotlinatlassianclientcore.common.api.ConfluencePage
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraGroup
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraProject
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
@@ -48,6 +55,7 @@ import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredDateTimeFormatterInJira
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ConfigureFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
@@ -63,6 +71,7 @@ import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.DefaultType
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean.Type
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
+import com.riadalabs.jira.plugins.insight.services.model.StatusTypeBean
 import com.riadalabs.jira.plugins.insight.services.model.factory.ObjectAttributeBeanFactory
 import java.time.ZoneId
 import java.util.*
@@ -71,14 +80,20 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override var RESULTS_PER_PAGE: Int = 25
 
-    private val objectFacade by lazy { getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
-    private val userManager by lazy { getOSGiComponentInstanceOfType(UserManager::class.java) }
-    private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
-    private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
-    private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
-    private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
-    private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
+    private const val INSIGHT_REST_BASE_URL = "/rest/insight/1.0"
+
+    private val objectFacade = getOSGiComponentInstanceOfType(ObjectFacade::class.java)
+    private val objectTypeFacade = getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java)
+    private val configureFacade = getOSGiComponentInstanceOfType(ConfigureFacade::class.java)
+    private val userManager = getOSGiComponentInstanceOfType(UserManager::class.java)
+    private val objectTypeAttributeFacade = getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java)
+    private val iqlFacade = getOSGiComponentInstanceOfType(IQLFacade::class.java)
+    private val objectAttributeBeanFactory = getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java)
+    private val baseUrl = getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!!
+    private val insightRestBaseUrl = baseUrl + INSIGHT_REST_BASE_URL // see BaseUrlResolverServiceInJira
+    private val avatarService = ComponentAccessor.getAvatarService()
     private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()
+    private val projectManager = getOSGiComponentInstanceOfType(ProjectManager::class.java)
 
     private val zoneId: ZoneId by lazy { ZoneId.of("Z") }
 
@@ -223,14 +238,31 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     val userKeys = attr.users.map { it.key }
                     objectAttributeBeanFactory.createUserAttributeValueByKey(ota, *userKeys.toTypedArray())
                 }
+                is InsightAttribute.Group -> {
+                    val groupNames = attr.groups.map { it.name }
+                    objectAttributeBeanFactory.createGroupAttributeValueByNames(ota, *groupNames.toTypedArray())
+                }
 
-                // TODO support additional attribute types
-                is InsightAttribute.Group -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
-                is InsightAttribute.Project -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
-                is InsightAttribute.Status -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
-                is InsightAttribute.Version -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
-                is InsightAttribute.Confluence -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
-                is InsightAttribute.Unknown -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
+                // TODO test additional attribute types
+                is InsightAttribute.Project -> {
+                    val projectIds = attr.projects.map { it.id }
+                    objectAttributeBeanFactory.createProjectAttributeValue(ota) { projectIds.contains(it.id()) }
+                }
+                is InsightAttribute.Status -> {
+                    val statusId = attr.status?.id
+                    objectAttributeBeanFactory.createStatusAttributeValue(ota) { statusId != null && it.id == statusId }
+                }
+                is InsightAttribute.Version -> {
+                    val versionIds = attr.version.map { it.id.toLong() } // TODO:hg convert to long?
+                    objectAttributeBeanFactory.createVersionAttributeValue(ota) { versionIds.contains(it.id()) }
+                }
+                is InsightAttribute.Confluence -> {
+                    val pageIds = attr.pages.map { it.id }
+                    objectAttributeBeanFactory.createConfluenceAttributeValue(ota, *pageIds.toTypedArray())
+                }
+                is InsightAttribute.Unknown -> {
+                    objectAttributeBeanFactory.createObjectAttributeBeanForObject(bean, ota)
+                }
             }
         }
         bean.setObjectAttributeBeans(attributeBeans)
@@ -359,8 +391,11 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     ): Either<InsightClientError, InsightAttribute> = either {
         val attributeId = InsightAttributeId(objectTypeAttributeBean.id)
         val schema = typeAttributeBeanToSchema(objectTypeAttributeBean)
+        // see insight core ObjectAttributeBeanFactoryImpl.class for reference
         when (objectTypeAttributeBean.type) {
-            Type.DEFAULT -> handleDefaultValue(attributeId, schema, objectAttributeBean, objectTypeAttributeBean).bind()
+            Type.DEFAULT -> {
+                handleDefaultValue(attributeId, schema, objectAttributeBean, objectTypeAttributeBean).bind()
+            }
             Type.REFERENCED_OBJECT -> {
                 val referencedObjects = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
                     loadReferencedObject(attribute, objectTypeAttributeBean).bind()
@@ -373,14 +408,64 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 }
                 InsightAttribute.User(attributeId, users, schema)
             }
-            Type.CONFLUENCE -> InsightAttribute.Confluence(attributeId, schema)
-            Type.GROUP -> InsightAttribute.Group(attributeId, schema)
-            Type.VERSION -> InsightAttribute.Version(attributeId, schema)
-            Type.PROJECT -> InsightAttribute.Project(attributeId, schema)
-            Type.STATUS -> InsightAttribute.Status(attributeId, schema)
+            Type.GROUP -> {
+                val groups = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
+                    JiraGroup(attribute.textValue, avatarUrlFor("group-logo.jpg"))
+                }
+                InsightAttribute.Group(attributeId, groups, schema)
+            }
+            Type.VERSION -> { // TODO: add full support
+                val versions = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute: ObjectAttributeValueBean ->
+                    val avatarUrl = avatarUrlFor("version-logo.png")
+                    val versionId = attribute.integerValue
+                    ProjectVersion(
+                        id = versionId,
+                        // we would need access to VersionAssemblerInJira or VersionService access to resolve name and url
+                        name = "UNKNOWN", // see hidden class VersionAssemblerInJira.class in plugins:insight:10.4.2
+                        url = "#", // see hidden class VersionAssemblerInJira.class in plugins:insight:10.4.2
+                        avatarUrl = avatarUrl
+                    )
+                }
+                InsightAttribute.Version(attributeId, versions, schema)
+            }
+            Type.CONFLUENCE -> { // TODO: add full support
+                //resolve confluence pages; see DocumentationAssemblerInJira in plugins:insight:10.4.2
+                val pageIds = objectAttributeBean.objectAttributeValueBeans.mapNotNull { it.textValue.toIntOrNull() }
+                val pages = pageIds.map { ConfluencePage(it, "Loading Confluence Pages is not Implemented!", "#") }
+                InsightAttribute.Confluence(attributeId, pages, schema)
+            }
+            Type.PROJECT -> { // see ProjectAssembler.class and ObjectAttributeBeanFactoryImpl.createProjectAttributeValue
+                val projects = objectAttributeBean.objectAttributeValueBeans
+                    .mapNotNull { projectManager.getProjectObj(it.id) }
+                    .map {
+                            val url = "$insightRestBaseUrl/browse/${it.key}"
+                        val avatarUrl = "$insightRestBaseUrl/secure/projectavatar?pid=${it.id}"
+                        JiraProject(it.id, it.key, it.name, url, avatarUrl)
+                    }
+
+                InsightAttribute.Project(attributeId, projects, schema)
+            }
+            Type.STATUS -> {
+                val assetStatus = objectAttributeBean.objectAttributeValueBeans.firstOrNull()?.let { valueBean ->
+                    val objectTypeBean = objectTypeFacade.loadObjectType(objectTypeAttributeBean.objectTypeId)
+                    val allStatusTypeBeans = configureFacade.findAllStatusTypeBeans(objectTypeBean.objectSchemaId)
+                    val statusTypeBean: StatusTypeBean = allStatusTypeBeans
+                        .firstOrNull { it.id == valueBean.integerValue }
+                        ?: return@let null
+                    val categoryEnum = StatusCategory.from(statusTypeBean.category)
+                        ?: return@let null
+                    statusTypeBean.run {
+                        StatusAttribute(id, name, categoryEnum, objectSchemaId, description)
+                    }
+                }
+                InsightAttribute.Status(attributeId, assetStatus, schema)
+            }
             else -> internalError("Unsupported objectTypeAttributeBean.type (${objectTypeAttributeBean.type})").bind()
         }
     }
+
+    private fun avatarUrlFor(fileName: String) =
+        "$baseUrl/download/resources/com.riadalabs.jira.plugins.insight/images/$fileName"
 
     private suspend fun handleDefaultValue(
         id: InsightAttributeId,
@@ -446,7 +531,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 )
             }
         }
-    private val avatarService by lazy { ComponentAccessor.getAvatarService() }
+
     private fun loadAtlassianUserByKey(userKey: String): Either<InsightClientError, JiraUser?> =
         catchAsInsightClientError {
             userManager.getUserByKey(userKey)?.run {
