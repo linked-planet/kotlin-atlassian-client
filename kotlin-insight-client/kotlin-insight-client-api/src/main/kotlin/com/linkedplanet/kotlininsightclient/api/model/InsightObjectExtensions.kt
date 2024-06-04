@@ -22,7 +22,10 @@
 package com.linkedplanet.kotlininsightclient.api.model
 
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraGroup
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraProject
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.ProjectVersion
+import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusAttribute
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
@@ -150,6 +153,21 @@ fun InsightObject.getUserList(id: InsightAttributeId): List<JiraUser> =
 //region ObjectAttributeValue.Group
 fun InsightObject.getGroupList(id: InsightAttributeId): List<JiraGroup> =
     getAttributeAs<InsightAttribute.Group>(id)?.groups ?: emptyList()
+// endregion user
+
+//region ObjectAttributeValue.Status
+fun InsightObject.getStatus(id: InsightAttributeId): StatusAttribute? =
+    getAttributeAs<InsightAttribute.Status>(id)?.status
+// endregion user
+
+//region ObjectAttributeValue.Project
+fun InsightObject.getProjectList(id: InsightAttributeId): List<JiraProject> =
+    getAttributeAs<InsightAttribute.Project>(id)?.projects ?: emptyList()
+// endregion user
+
+//region ObjectAttributeValue.Version
+fun InsightObject.getVersionList(id: InsightAttributeId): List<ProjectVersion> =
+    getAttributeAs<InsightAttribute.Version>(id)?.versions ?: emptyList()
 // endregion user
 
 // region ObjectAttributeValue.Reference

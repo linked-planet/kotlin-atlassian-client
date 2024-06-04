@@ -24,10 +24,10 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
+import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
-import com.atlassian.jira.project.ProjectManager
 import com.atlassian.jira.user.util.UserManager
 import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusAttribute
 import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusCategory
@@ -93,7 +93,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val insightRestBaseUrl = baseUrl + INSIGHT_REST_BASE_URL // see BaseUrlResolverServiceInJira
     private val avatarService = ComponentAccessor.getAvatarService()
     private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()
-    private val projectManager = getOSGiComponentInstanceOfType(ProjectManager::class.java)
+    private val projectService = getOSGiComponentInstanceOfType(ProjectService::class.java)
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private fun user() = jiraAuthenticationContext.loggedInUser
 
     private val zoneId: ZoneId by lazy { ZoneId.of("Z") }
 
@@ -253,7 +255,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     objectAttributeBeanFactory.createStatusAttributeValue(ota) { statusId != null && it.id == statusId }
                 }
                 is InsightAttribute.Version -> {
-                    val versionIds = attr.version.map { it.id.toLong() } // TODO:hg convert to long?
+                    val versionIds = attr.versions.map { it.id.toLong() } // TODO:hg convert to long?
                     objectAttributeBeanFactory.createVersionAttributeValue(ota) { versionIds.contains(it.id()) }
                 }
                 is InsightAttribute.Confluence -> {
@@ -416,14 +418,11 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             }
             Type.VERSION -> { // TODO: add full support
                 val versions = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute: ObjectAttributeValueBean ->
-                    val avatarUrl = avatarUrlFor("version-logo.png")
-                    val versionId = attribute.integerValue
                     ProjectVersion(
-                        id = versionId,
+                        id = attribute.integerValue,
                         // we would need access to VersionAssemblerInJira or VersionService access to resolve name and url
-                        name = "UNKNOWN", // see hidden class VersionAssemblerInJira.class in plugins:insight:10.4.2
-                        url = "#", // see hidden class VersionAssemblerInJira.class in plugins:insight:10.4.2
-                        avatarUrl = avatarUrl
+                        name = "Unknown", // see hidden class VersionAssemblerInJira.class in plugins:insight:10.4.2
+                        avatarUrl = avatarUrlFor("version-logo.png")
                     )
                 }
                 InsightAttribute.Version(attributeId, versions, schema)
@@ -436,9 +435,9 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             }
             Type.PROJECT -> { // see ProjectAssembler.class and ObjectAttributeBeanFactoryImpl.createProjectAttributeValue
                 val projects = objectAttributeBean.objectAttributeValueBeans
-                    .mapNotNull { projectManager.getProjectObj(it.id) }
+                    .mapNotNull { projectService.getProjectById(user(), it.id).project }
                     .map {
-                            val url = "$insightRestBaseUrl/browse/${it.key}"
+                        val url = "$insightRestBaseUrl/browse/${it.key}"
                         val avatarUrl = "$insightRestBaseUrl/secure/projectavatar?pid=${it.id}"
                         JiraProject(it.id, it.key, it.name, url, avatarUrl)
                     }

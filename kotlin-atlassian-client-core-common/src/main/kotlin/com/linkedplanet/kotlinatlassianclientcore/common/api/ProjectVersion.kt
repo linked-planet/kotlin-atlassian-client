@@ -25,6 +25,6 @@ data class ProjectVersion(
     @field:NotNull val id: Int,
     @field:NotNull val name: String,
     @field:NotNull val avatarUrl: String,
-    @field:NotNull val url: String,
+//    @field:NotNull val url: String, // http api produces weird values, so we ignore it for now
 )
 

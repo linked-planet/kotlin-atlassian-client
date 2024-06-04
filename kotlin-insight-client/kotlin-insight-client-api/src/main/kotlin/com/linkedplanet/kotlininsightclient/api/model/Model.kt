@@ -295,7 +295,7 @@ sealed class InsightAttribute(
     data class Version(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        @field:NotNull val version: List<ProjectVersion>,
+        @field:NotNull val versions: List<ProjectVersion>,
         override val schema: ObjectTypeSchemaAttribute?
     ) :
         InsightAttribute(attributeId, schema, AttributeTypeEnum.Version) {
@@ -379,6 +379,21 @@ sealed class InsightAttribute(
 
         infix fun InsightAttributeId.toGroups(groups: List<JiraGroup>) =
             Group(this, groups, schema = null)
+
+        infix fun InsightAttributeId.toProject(project: JiraProject?) =
+            Project(this, listOfNotNull(project), schema = null)
+        
+        infix fun InsightAttributeId.toProjects(projects: List<JiraProject>) =
+            Project(this, projects, schema = null)
+       
+        infix fun InsightAttributeId.toStatus(status: StatusAttribute?) =
+            Status(this, status, schema = null)
+
+        infix fun InsightAttributeId.toVersion(version: ProjectVersion?) =
+            Version(this, listOfNotNull(version), schema = null)
+
+        infix fun InsightAttributeId.toVersions(versions: List<ProjectVersion>) =
+            Version(this, versions, schema = null)
 
         infix fun InsightAttributeId.toReference(referencedObjectId: InsightObjectId?) =
             Reference(
