@@ -32,12 +32,6 @@ data class JiraTransition(
     @field:NotNull val name: String
 )
 
-data class JiraProject(
-    @field:NotNull val id: String,
-    @field:NotNull val key: String,
-    @field:NotNull val name: String
-)
-
 data class JiraIssueType(
     @field:NotNull val id: String,
     @field:NotNull val name: String,

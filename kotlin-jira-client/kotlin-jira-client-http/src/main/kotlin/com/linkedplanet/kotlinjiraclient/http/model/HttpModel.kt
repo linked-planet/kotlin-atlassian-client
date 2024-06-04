@@ -19,6 +19,7 @@
  */
 package com.linkedplanet.kotlinjiraclient.http.model
 
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraProject
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlinhttpclient.api.http.HttpPage
 import com.linkedplanet.kotlinjiraclient.api.model.*
@@ -142,10 +143,12 @@ data class HttpJiraTransitions(
 data class HttpJiraProject(
     val id: String,
     val key: String,
-    val name: String
+    val name: String,
+    val self: String,
+    var avatarUrls: Map<String, String>?,
 ) {
     fun toJiraProject() =
-        JiraProject(id, key, name)
+        JiraProject(id.toLong(), key, name, url = self, avatarUrl = avatarUrls?.get(DEFAULT_AVATAR_SIZE))
 }
 
 fun List<HttpJiraProject>.toJiraProjects(): List<JiraProject> =

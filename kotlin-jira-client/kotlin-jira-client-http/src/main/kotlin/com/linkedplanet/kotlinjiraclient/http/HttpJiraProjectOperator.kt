@@ -22,9 +22,9 @@ package com.linkedplanet.kotlinjiraclient.http
 import arrow.core.Either
 import arrow.core.raise.either
 import com.google.gson.reflect.TypeToken
+import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraProject
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraProjectOperator
-import com.linkedplanet.kotlinjiraclient.api.model.JiraProject
 import com.linkedplanet.kotlinjiraclient.http.model.HttpJiraProject
 import com.linkedplanet.kotlinjiraclient.http.model.toJiraProjects
 import com.linkedplanet.kotlinjiraclient.http.util.fromHttpDomainError
