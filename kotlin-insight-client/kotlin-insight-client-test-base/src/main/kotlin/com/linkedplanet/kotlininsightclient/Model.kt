@@ -39,9 +39,9 @@ enum class InsightObjectType(val id: InsightObjectTypeId) {
     Abstract(InsightObjectTypeId(6)),
     User(InsightObjectTypeId(9)),
     Group(InsightObjectTypeId(42)),
-    Status(InsightObjectTypeId(44)),
-    Project(InsightObjectTypeId(43)),
-    Version(InsightObjectTypeId(47)),
+    Status(InsightObjectTypeId(43)),
+    Project(InsightObjectTypeId(44)),
+    Version(InsightObjectTypeId(45)),
     Confluence(InsightObjectTypeId(46)),
     ObjectWithAllDefaultTypes(InsightObjectTypeId(40))
 }
@@ -68,16 +68,16 @@ enum class TestAttributes(val attributeId: InsightAttributeId, val attributeName
     TestGroupGroup(InsightAttributeId(105), "Group"),
     TestGroupGroups(InsightAttributeId(106), "Groups"),
 
-    TestStatusName(InsightAttributeId(94), "Name"),
-    TestStatusStatus(InsightAttributeId(109), "Status"),
+    TestStatusName(InsightAttributeId(90), "Name"),
+    TestStatusStatus(InsightAttributeId(107), "Status"),
 
-    TestVersionName(InsightAttributeId(114), "Name"),
-    TestVersionVersion(InsightAttributeId(117), "Version"),
-    TestVersionVersions(InsightAttributeId(118), "Versions"),
+    TestVersionName(InsightAttributeId(98), "Name"),
+    TestVersionVersion(InsightAttributeId(110), "Version"),
+    TestVersionVersions(InsightAttributeId(111), "Versions"),
 
-    TestProjectName(InsightAttributeId(90), "Name"),
-    TestProjectProject(InsightAttributeId(107), "Project"),
-    TestProjectProjects(InsightAttributeId(108), "Projects"),
+    TestProjectName(InsightAttributeId(94), "Name"),
+    TestProjectProject(InsightAttributeId(108), "Project"),
+    TestProjectProjects(InsightAttributeId(109), "Projects"),
 }
 
 enum class ObjectWithAllDefaultTypesAttributeIds(val attributeId: InsightAttributeId) {
