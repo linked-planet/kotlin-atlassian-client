@@ -770,8 +770,10 @@ interface InsightObjectOperatorTest {
 
         val objectName = "createdByUnitTest"
         autoClean(clean = { deleteObjectByName(InsightObjectType.Project.id, objectName).orFail() }) {
-            val project1 = JiraProject(10000, "TEST", "Test", "http://localhost:2990/browse/TEST", "http://localhost:2990/secure/projectavatar?pid=10000")
-            val project2 = JiraProject(10000, "TEST", "Test", "http://localhost:2990/browse/TEST", "http://localhost:2990/secure/projectavatar?pid=10000")
+            val url = "http://localhost:2990/browse/TEST"
+            val avatarUrl = "http://localhost:2990/secure/projectavatar?pid=10000"
+            val project1 = JiraProject(10000, "TEST", "Test", url, avatarUrl)
+            val project2 = JiraProject(10000, "TEST", "Test", url, avatarUrl)
             val objectId = insightObjectOperator.createInsightObject(
                 InsightObjectType.Project.id,
                 TestProjectName.attributeId toValue objectName,
@@ -779,8 +781,8 @@ interface InsightObjectOperatorTest {
                 TestProjectProjects.attributeId toProjects listOf(project1)
             ).orFail()
             val (attrProject, attrProjects) = getProjectAttributes(objectId)
-            assertThat(attrProject?.firstOrNull()?.name, equalTo(project1.name))
-            assertThat(attrProjects.firstOrNull()?.name, equalTo(project1.name))
+            assertThat(attrProject?.firstOrNull(), equalTo(project1))
+            assertThat(attrProjects.firstOrNull(), equalTo(project1))
 
             insightObjectOperator.updateInsightObject(
                 objectId,
@@ -789,8 +791,8 @@ interface InsightObjectOperatorTest {
                 toDomain = ::identity
             )
             val (updatedAttrProject, updatedAttrProjects) = getProjectAttributes(objectId)
-            assertThat(updatedAttrProject?.firstOrNull()?.name, equalTo(project2.name))
-            assertThat(updatedAttrProjects.map { it.name }.toSet(), equalTo(setOf(project1.name, project2.name)))
+            assertThat(updatedAttrProject?.firstOrNull(), equalTo(project2))
+            assertThat(updatedAttrProjects.toSet(), equalTo(setOf(project1, project2)))
         }
     }
 

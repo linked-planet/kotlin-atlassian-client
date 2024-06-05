@@ -80,8 +80,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override var RESULTS_PER_PAGE: Int = 25
 
-    private const val INSIGHT_REST_BASE_URL = "/rest/insight/1.0"
-
     private val objectFacade by lazy { getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
     private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
     private val configureFacade by lazy { getOSGiComponentInstanceOfType(ConfigureFacade::class.java) }
@@ -97,7 +95,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
 
     private val zoneId: ZoneId = ZoneId.of("Z")
-    private val insightRestBaseUrl = baseUrl + INSIGHT_REST_BASE_URL // see BaseUrlResolverServiceInJira
 
     private fun user() = jiraAuthenticationContext.loggedInUser
 
@@ -431,16 +428,16 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             }
             Type.CONFLUENCE -> { // TODO: add full support
                 //resolve confluence pages; see DocumentationAssemblerInJira in plugins:insight:10.4.2
-                val pageIds = objectAttributeBean.objectAttributeValueBeans.mapNotNull { it.textValue.toIntOrNull() }
+                val pageIds = objectAttributeBean.objectAttributeValueBeans.mapNotNull { it.integerValue }
                 val pages = pageIds.map { ConfluencePage(it, "Loading Confluence Pages is not Implemented!", "#") }
                 InsightAttribute.Confluence(attributeId, pages, schema)
             }
             Type.PROJECT -> { // see ProjectAssembler.class and ObjectAttributeBeanFactoryImpl.createProjectAttributeValue
                 val projects = objectAttributeBean.objectAttributeValueBeans
-                    .mapNotNull { projectService.getProjectById(user(), it.id).project }
+                    .mapNotNull { projectService.getProjectById(user(), it.integerValue.toLong()).project }
                     .map {
-                        val url = "$insightRestBaseUrl/browse/${it.key}"
-                        val avatarUrl = "$insightRestBaseUrl/secure/projectavatar?pid=${it.id}"
+                        val url = "$baseUrl/browse/${it.key}"
+                        val avatarUrl = "$baseUrl/secure/projectavatar?pid=${it.id}"
                         JiraProject(it.id, it.key, it.name, url, avatarUrl)
                     }
 
