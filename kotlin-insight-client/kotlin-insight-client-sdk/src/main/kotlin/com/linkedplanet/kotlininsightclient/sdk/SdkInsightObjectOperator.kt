@@ -82,22 +82,24 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     private const val INSIGHT_REST_BASE_URL = "/rest/insight/1.0"
 
-    private val objectFacade = getOSGiComponentInstanceOfType(ObjectFacade::class.java)
-    private val objectTypeFacade = getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java)
-    private val configureFacade = getOSGiComponentInstanceOfType(ConfigureFacade::class.java)
-    private val userManager = getOSGiComponentInstanceOfType(UserManager::class.java)
-    private val objectTypeAttributeFacade = getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java)
-    private val iqlFacade = getOSGiComponentInstanceOfType(IQLFacade::class.java)
-    private val objectAttributeBeanFactory = getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java)
-    private val baseUrl = getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!!
-    private val insightRestBaseUrl = baseUrl + INSIGHT_REST_BASE_URL // see BaseUrlResolverServiceInJira
-    private val avatarService = ComponentAccessor.getAvatarService()
-    private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()
-    private val projectService = getOSGiComponentInstanceOfType(ProjectService::class.java)
-    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
-    private fun user() = jiraAuthenticationContext.loggedInUser
+    private val objectFacade by lazy { getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
+    private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
+    private val configureFacade by lazy { getOSGiComponentInstanceOfType(ConfigureFacade::class.java) }
+    private val userManager by lazy { getOSGiComponentInstanceOfType(UserManager::class.java) }
+    private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
+    private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
+    private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
+    private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
+    private val projectService by lazy { getOSGiComponentInstanceOfType(ProjectService::class.java) }
 
-    private val zoneId: ZoneId by lazy { ZoneId.of("Z") }
+    private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()
+    private val avatarService = ComponentAccessor.getAvatarService()
+    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+
+    private val zoneId: ZoneId = ZoneId.of("Z")
+    private val insightRestBaseUrl = baseUrl + INSIGHT_REST_BASE_URL // see BaseUrlResolverServiceInJira
+
+    private fun user() = jiraAuthenticationContext.loggedInUser
 
     override suspend fun <T> getObjectById(
         id: InsightObjectId,
