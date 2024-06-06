@@ -31,7 +31,6 @@ import com.atlassian.jira.config.properties.ApplicationProperties
 import com.atlassian.jira.user.util.UserManager
 import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusAttribute
 import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusCategory
-import com.linkedplanet.kotlinatlassianclientcore.common.api.ProjectVersion
 import com.linkedplanet.kotlinatlassianclientcore.common.api.ConfluencePage
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraGroup
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraProject
@@ -54,6 +53,7 @@ import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
 import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredDateTimeFormatterInJira
+import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredVersionAssembler
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ConfigureFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
@@ -90,6 +90,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
     private val projectService by lazy { getOSGiComponentInstanceOfType(ProjectService::class.java) }
 
+    private val versionAssembler = ReverseEngineeredVersionAssembler()
     private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()
     private val avatarService = ComponentAccessor.getAvatarService()
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
@@ -254,7 +255,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     objectAttributeBeanFactory.createStatusAttributeValue(ota) { statusId != null && it.id == statusId }
                 }
                 is InsightAttribute.Version -> {
-                    val versionIds = attr.versions.map { it.id.toLong() } // TODO:hg convert to long?
+                    val versionIds = attr.versions.map { it.id.toLong() }
                     objectAttributeBeanFactory.createVersionAttributeValue(ota) { versionIds.contains(it.id()) }
                 }
                 is InsightAttribute.Confluence -> {
@@ -411,18 +412,16 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             }
             Type.GROUP -> {
                 val groups = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
-                    JiraGroup(attribute.textValue, avatarUrlFor("group-logo.jpg"))
+                    JiraGroup(
+                        attribute.textValue,
+                        "$baseUrl/download/resources/com.riadalabs.jira.plugins.insight/images/${"group-logo.jpg"}"
+                    )
                 }
                 InsightAttribute.Group(attributeId, groups, schema)
             }
-            Type.VERSION -> { // TODO: add full support
+            Type.VERSION -> {
                 val versions = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute: ObjectAttributeValueBean ->
-                    ProjectVersion(
-                        id = attribute.integerValue,
-                        // we would need access to VersionAssemblerInJira or VersionService access to resolve name and url
-                        name = "Unknown", // see hidden class VersionAssemblerInJira.class in plugins:insight:10.4.2
-                        avatarUrl = avatarUrlFor("version-logo.png")
-                    )
+                    versionAssembler.assembleVersion(attribute.integerValue.toLong())
                 }
                 InsightAttribute.Version(attributeId, versions, schema)
             }
@@ -461,9 +460,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             else -> internalError("Unsupported objectTypeAttributeBean.type (${objectTypeAttributeBean.type})").bind()
         }
     }
-
-    private fun avatarUrlFor(fileName: String) =
-        "$baseUrl/download/resources/com.riadalabs.jira.plugins.insight/images/$fileName"
 
     private suspend fun handleDefaultValue(
         id: InsightAttributeId,

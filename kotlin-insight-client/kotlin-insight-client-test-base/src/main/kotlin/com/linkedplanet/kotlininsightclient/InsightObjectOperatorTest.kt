@@ -798,17 +798,20 @@ interface InsightObjectOperatorTest {
 
     @Test
     fun testVersionCrud() = runBlocking {
-        suspend fun getVersionAttributes(objectId: InsightObjectId): Pair<List<ProjectVersion>?, List<ProjectVersion>> {
+        suspend fun getVersionAttributes(objectId: InsightObjectId): Pair<List<ProjectVersion>, List<ProjectVersion>> {
             val insightObject = insightObjectOperator.getObjectById(objectId, ::identity).orFail()!!
-            val attrVersion = insightObject.getAttributeAs<InsightAttribute.Version>(TestVersionVersion.attributeId)?.versions
+            val attrVersion = insightObject.getAttributeAs<InsightAttribute.Version>(TestVersionVersion.attributeId)?.versions!!
             val attrVersionList = insightObject.getVersionList(TestVersionVersions.attributeId)
             return Pair(attrVersion, attrVersionList)
         }
 
         val objectName = "createdByUnitTest"
-        autoClean(clean = { deleteObjectByName(InsightObjectType.Version.id, objectName).orFail() }) {
-            val version1 = ProjectVersion(-1, "Unknown", "") // no name resolution for now
-            val version2 = ProjectVersion(-2, "Unknown", "") // no name resolution for now
+        autoClean(clean = { deleteObjectByName(InsightObjectType.Version.id, objectName).orFail()  }) {
+            // Versions need to be created inside the project settings before being available for selection
+            val avatarUrl="http://localhost:2990/download/resources/com.riadalabs.jira.plugins.insight/images/version-logo.png"
+            fun versionUrl(id: Long) = "http://localhost:2990/browse/TEST/fixforversion/${id}/?selectedTab=com.riadalabs.jira.plugins.insight:rlabs-version-summary-panel"
+            val version1 = ProjectVersion(10001, "v0.9 beta", avatarUrl, versionUrl(10001))
+            val version2 = ProjectVersion(10000, "v1.0", avatarUrl, versionUrl(10000))
             val objectId = insightObjectOperator.createInsightObject(
                 InsightObjectType.Version.id,
                 TestVersionName.attributeId toValue objectName,
@@ -816,18 +819,16 @@ interface InsightObjectOperatorTest {
                 TestVersionVersions.attributeId toVersions listOf(version1)
             ).orFail()
             val (attrVersion, attrVersions) = getVersionAttributes(objectId)
-            assertThat(attrVersion?.firstOrNull()?.id, equalTo(version1.id))
-            assertThat(attrVersions.firstOrNull()?.name, equalTo(version1.name))
-            assertThat(attrVersions.firstOrNull()?.avatarUrl, endsWith("version-logo.png"))
-//            assertThat(attrVersions.firstOrNull()?.url, startsWith("http")) // this always failed
+            assertThat(attrVersion.firstOrNull(), equalTo(version1))
+            assertThat(attrVersions.firstOrNull(), equalTo(version1))
 
             insightObjectOperator.updateInsightObject(objectId,
                 TestVersionVersion.attributeId toVersion version2,
                 TestVersionVersions.attributeId toVersions listOf(version2, version1),
                 toDomain = ::identity )
             val (updatedAttrVersion, updatedAttrVersions) = getVersionAttributes(objectId)
-            assertThat(updatedAttrVersion?.firstOrNull()?.id, equalTo(version2.id))
-            assertThat(updatedAttrVersions.map { it.id }.toSet(), equalTo(setOf(version1.id, version2.id)))
+            assertThat(updatedAttrVersion.firstOrNull(), equalTo(version2))
+            assertThat(updatedAttrVersions.toSet(), equalTo(setOf(version1, version2)))
         }
     }
 

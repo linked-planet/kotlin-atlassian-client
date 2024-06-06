@@ -330,7 +330,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 }
                 VERSION -> {
                     val version = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
-                        av.version?.run { ProjectVersion(id.toInt(), name = name, avatarUrl = avatarUrl) }
+                        av.version?.run { ProjectVersion(id.toInt(), name = name, avatarUrl = avatarUrl, url = url) }
                     }
                     InsightAttribute.Version(attributeId, version, schema)
                 }
