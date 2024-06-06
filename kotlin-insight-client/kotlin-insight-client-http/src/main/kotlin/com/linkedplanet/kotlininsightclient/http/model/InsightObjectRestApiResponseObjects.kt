@@ -71,7 +71,47 @@ internal data class ObjectAttributeValueApiResponse(
     var value: Any?,
     var displayValue: Any?,
     var referencedObject: ReferencedObjectApiResponse?,
-    var user: AtlassianUserApiResponse?
+    var user: AtlassianUserApiResponse?,
+    var group: AtlassianGroupApiResponse?,
+    var confluencePage: AtlassianConfluencePageApiResponse?,
+    var version: AtlassianVersionApiResponse?,
+    var project: AtlassianProjectApiResponse?,
+    var status: AtlassianStatusApiResponse?,
+
+)
+
+internal data class AtlassianGroupApiResponse(
+    val avatarUrl: String,
+    val name: String,
+)
+
+internal data class AtlassianConfluencePageApiResponse(
+    val id: String,
+    val title: String,
+    val url: String,
+)
+
+internal data class AtlassianVersionApiResponse(
+    val avatarUrl: String,
+    val id: String,
+    val name: String,
+    val url: String,
+)
+
+internal data class AtlassianProjectApiResponse(
+    val avatarUrl: String,
+    val id: String,
+    val name: String,
+    val key: String,
+    val url: String,
+)
+
+internal data class AtlassianStatusApiResponse(
+    val id: String,
+    val name: String,
+    val description: String,
+    val category: Int, // ACTIVE == 1, INACTIVE == 0, PENDING == 2
+    val objectSchemaId: Int,
 )
 
 internal data class AtlassianUserApiResponse(

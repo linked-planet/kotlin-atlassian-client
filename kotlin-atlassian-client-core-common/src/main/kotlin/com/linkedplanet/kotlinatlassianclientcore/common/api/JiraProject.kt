@@ -2,7 +2,7 @@
  * #%L
  * kotlin-atlassian-client-core-common
  * %%
- * Copyright (C) 2022 - 2024 linked-planet GmbH
+ * Copyright (C) 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ package com.linkedplanet.kotlinatlassianclientcore.common.api
 
 import javax.validation.constraints.NotNull
 
-data class JiraUser(
+data class JiraProject(
+    @field:NotNull val id: Long,
     @field:NotNull val key: String,
     @field:NotNull val name: String,
-    @field:NotNull val emailAddress: String,
-    @field:NotNull val avatarUrl: String? = null,
-    @field:NotNull val displayName: String
+    val url: String, // links to self or insight, depending on context
+    val avatarUrl: String? = null, // default size 48*48
 )

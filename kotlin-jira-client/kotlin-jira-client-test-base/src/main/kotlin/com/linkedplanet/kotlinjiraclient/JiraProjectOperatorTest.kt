@@ -34,9 +34,11 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
         }.orFail()
 
         assertThat(projects.size, equalTo(1))
-        assertThat(projects.first().id, equalTo("10000"))
+        assertThat(projects.first().id, equalTo(10000L))
         assertThat(projects.first().key, equalTo("TEST"))
         assertThat(projects.first().name, equalTo("Test"))
+        assertThat(projects.first().url, equalTo("http://localhost:2990/rest/api/2/project/10000"))
+        assertThat(projects.first().avatarUrl, equalTo("http://localhost:2990/secure/projectavatar?avatarId=10324"))
     }
 
     @Test
@@ -45,8 +47,10 @@ interface JiraProjectOperatorTest<JiraFieldType>: BaseTestConfigProvider<JiraFie
             projectOperator.getProject(projectId)
         }.orFail()
 
-        assertThat(project.id, equalTo("10000"))
+        assertThat(project.id, equalTo(10000L))
         assertThat(project.key, equalTo("TEST"))
         assertThat(project.name, equalTo("Test"))
+        assertThat(project.url, equalTo("http://localhost:2990/rest/api/2/project/10000"))
+        assertThat(project.avatarUrl, equalTo("http://localhost:2990/secure/projectavatar?avatarId=10324"))
     }
 }

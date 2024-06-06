@@ -54,13 +54,11 @@ internal fun InsightObject.getEditAttributes(): List<ObjectEditItemAttribute> =
 
             is InsightAttribute.Reference -> attr.referencedObjects.map { it.id.raw }
             is InsightAttribute.User -> attr.users.map { it.key }
-
-            // TODO support additional attribute types
-            is InsightAttribute.Group -> emptyList()
-            is InsightAttribute.Project -> emptyList()
-            is InsightAttribute.Status -> emptyList()
-            is InsightAttribute.Version -> emptyList()
-            is InsightAttribute.Confluence -> emptyList()
+            is InsightAttribute.Group -> attr.groups.map { it.name }
+            is InsightAttribute.Status -> listOfNotNull(attr.status?.id)
+            is InsightAttribute.Project -> attr.projects.map { it.id }
+            is InsightAttribute.Version -> attr.versions.map { it.id }
+            is InsightAttribute.Confluence -> attr.pages.map { it.id }
 
             is InsightAttribute.Unknown -> emptyList()
         }

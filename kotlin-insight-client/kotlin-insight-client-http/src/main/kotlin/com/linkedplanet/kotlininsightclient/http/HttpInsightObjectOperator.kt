@@ -25,11 +25,12 @@ import arrow.core.flatten
 import arrow.core.left
 import arrow.core.right
 import com.google.gson.JsonParser
-import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
+import com.linkedplanet.kotlinatlassianclientcore.common.api.*
 import com.linkedplanet.kotlinhttpclient.api.http.GSON
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError.Companion.internalError
 import com.linkedplanet.kotlininsightclient.api.error.ObjectNotFoundError
+import com.linkedplanet.kotlininsightclient.api.error.OtherNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
@@ -38,6 +39,7 @@ import com.linkedplanet.kotlininsightclient.http.model.DefaultType
 import com.linkedplanet.kotlininsightclient.http.model.InsightAttributeApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectAttributeType
+import com.linkedplanet.kotlininsightclient.http.model.InsightObjectAttributeType.*
 import com.linkedplanet.kotlininsightclient.http.model.InsightObjectEntriesApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectAttributeValueApiResponse
 import com.linkedplanet.kotlininsightclient.http.model.ObjectEditItem
@@ -288,10 +290,12 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             val attributeType: InsightObjectAttributeType =
                 apiAttribute.objectTypeAttribute?.type
                     ?.let { type -> InsightObjectAttributeType.parse(type) }
-                    ?: InsightObjectAttributeType.DEFAULT
+                    ?: DEFAULT
             when (attributeType) {
-                InsightObjectAttributeType.DEFAULT -> handleDefaultValue(attributeId, apiAttribute, schema).bind()
-                InsightObjectAttributeType.REFERENCE -> {
+                DEFAULT -> {
+                    handleDefaultValue(attributeId, apiAttribute, schema).bind()
+                }
+                REFERENCE -> {
                     val referencedObjects =
                         apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
                             av.referencedObject?.let { ro ->
@@ -306,17 +310,48 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                         }
                     InsightAttribute.Reference(attributeId, referencedObjects, schema)
                 }
-                InsightObjectAttributeType.USER -> {
+                USER -> {
                     val users = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
                         av.user?.run { JiraUser(key, name, emailAddress ?: "", displayName = displayName) }
                     }
                     InsightAttribute.User(attributeId, users, schema)
                 }
-                InsightObjectAttributeType.CONFLUENCE -> InsightAttribute.Confluence(attributeId, schema)
-                InsightObjectAttributeType.GROUP -> InsightAttribute.Group(attributeId, schema)
-                InsightObjectAttributeType.VERSION -> InsightAttribute.Version(attributeId, schema)
-                InsightObjectAttributeType.PROJECT -> InsightAttribute.Project(attributeId, schema)
-                InsightObjectAttributeType.STATUS -> InsightAttribute.Status(attributeId, schema)
+                CONFLUENCE -> {
+                    val confluencePages = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
+                        av.confluencePage?.run { ConfluencePage(id.toInt(), title = title, url = url) }
+                    }
+                    InsightAttribute.Confluence(attributeId, confluencePages, schema)
+                }
+                GROUP -> {
+                    val group = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
+                        av.group?.run { JiraGroup(name = name, avatarUrl = avatarUrl) }
+                    }
+                    InsightAttribute.Group(attributeId, group, schema)
+                }
+                VERSION -> {
+                    val version = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
+                        av.version?.run { ProjectVersion(id.toInt(), name = name, avatarUrl = avatarUrl, url = url) }
+                    }
+                    InsightAttribute.Version(attributeId, version, schema)
+                }
+                PROJECT -> {
+                    val projects = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
+                        av.project?.run { JiraProject(id = id.toLong(), key = key, name = name, url = url, avatarUrl) }
+                    }
+                    InsightAttribute.Project(attributeId, projects, schema)
+                }
+                STATUS -> { // max(cardinality) == 1
+                    val status = apiAttribute.objectAttributeValues.map { av: ObjectAttributeValueApiResponse ->
+                        av.status?.run {
+                            val categoryEnum = StatusCategory.from(category)
+                                ?: OtherNotFoundError("AtlassianApiStatusResponse with unknown category:$this")
+                                    .left().bind<Nothing>()
+                            StatusAttribute(id.toInt(), name, categoryEnum, objectSchemaId, description)
+                        }
+                    }.firstOrNull()
+                        ?: OtherNotFoundError("Status attribute with missing status. $apiAttribute").left().bind<Nothing>()
+                    InsightAttribute.Status(attributeId, status, schema)
+                }
                 else -> internalError("Unsupported objectTypeAttributeBean.type (${attributeType})").bind()
             }
         }
@@ -363,30 +398,30 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
         apiAttributeType.run {
             val iId = InsightAttributeId(id)
             return when (InsightObjectAttributeType.parse(type)) {
-                InsightObjectAttributeType.DEFAULT -> mapDefaultType(this, iId)
+                DEFAULT -> mapDefaultType(this, iId)
 
-                InsightObjectAttributeType.REFERENCE -> ObjectTypeSchemaAttribute.ReferenceSchema(
+                REFERENCE -> ObjectTypeSchemaAttribute.ReferenceSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes,
                     referenceObjectTypeId = InsightObjectTypeId(referenceObjectTypeId),
                     referenceKind = ReferenceKind.parse(referenceObjectTypeId)
                 )
-                InsightObjectAttributeType.USER -> ObjectTypeSchemaAttribute.UserSchema(
+                USER -> ObjectTypeSchemaAttribute.UserSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
 
-                InsightObjectAttributeType.CONFLUENCE -> ObjectTypeSchemaAttribute.ConfluenceSchema(
+                CONFLUENCE -> ObjectTypeSchemaAttribute.ConfluenceSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.GROUP -> ObjectTypeSchemaAttribute.GroupSchema(
+                GROUP -> ObjectTypeSchemaAttribute.GroupSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.VERSION -> ObjectTypeSchemaAttribute.VersionSchema(
+                VERSION -> ObjectTypeSchemaAttribute.VersionSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.PROJECT -> ObjectTypeSchemaAttribute.ProjectSchema(
+                PROJECT -> ObjectTypeSchemaAttribute.ProjectSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
-                InsightObjectAttributeType.STATUS -> ObjectTypeSchemaAttribute.StatusSchema(
+                STATUS -> ObjectTypeSchemaAttribute.StatusSchema(
                     iId, name, minimumCardinality, maximumCardinality, includeChildObjectTypes
                 )
                 else -> ObjectTypeSchemaAttribute.UnknownSchema(
