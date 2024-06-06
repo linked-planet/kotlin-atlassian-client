@@ -399,6 +399,10 @@ interface InsightObjectOperatorTest {
     @Test
     fun testAddingSelectList() {
         val obj = runBlocking {
+            println("insightSchemaOperator.getSchemas()")
+            println(insightSchemaOperator.getSchemas().orFail())
+            println("nsightObjectTypeOperator.getObjectType(InsightObjectType.TestWithLists.id)")
+            println(insightObjectTypeOperator.getObjectType(InsightObjectType.TestWithLists.id))
             insightObjectOperator.getObjects(InsightObjectType.TestWithLists.id, toDomain = ::identity).getOrNull()
         }!!.objects.first()
 
@@ -517,6 +521,7 @@ interface InsightObjectOperatorTest {
 
     @Test
     fun testUpdate() = runBlocking {
+        println(insightObjectTypeOperator.getObjectType(InsightObjectType.Country.id))
         updateCountryId("DE") // in case an old test failed
         try {
             updateCountryId("ED")
