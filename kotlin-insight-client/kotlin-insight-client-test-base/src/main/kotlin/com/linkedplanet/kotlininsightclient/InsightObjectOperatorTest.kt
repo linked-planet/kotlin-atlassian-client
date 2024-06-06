@@ -517,28 +517,23 @@ interface InsightObjectOperatorTest {
 
     @Test
     fun testUpdate() = runBlocking {
-        val countryId = InsightObjectType.Country.id
-        var country = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
-        assertThat(country.getStringValue(CountryName.attributeId), equalTo("Germany"))
-        if (country.getStringValue(CountryShortName.attributeId) == "ED") {
-            //likely an old test run failed, try to fix it:
-            country.setValue(CountryShortName.attributeId, "DE")
-            insightObjectOperator.updateInsightObject(country).orFail()
-            country = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
+        updateCountryId("DE") // in case an old test failed
+        try {
+            updateCountryId("ED")
+        } finally {
+            updateCountryId("DE")
         }
-        assertThat(country.getStringValue(CountryShortName.attributeId), equalTo("DE"))
-        country.setValue(CountryShortName.attributeId, "ED")
-        insightObjectOperator.updateInsightObject(country).orFail()
+    }
 
+    suspend fun updateCountryId(countryShortName: String) {
+        println("updateCountryId(${countryShortName})")
+        val countryId = InsightObjectType.Country.id
+        val country = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
+        country.setValue(CountryShortName.attributeId, countryShortName)
+        insightObjectOperator.updateInsightObject(country).orFail()
         val updatedCountry = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
         assertThat(updatedCountry.getStringValue(CountryName.attributeId), equalTo("Germany"))
-        assertThat(updatedCountry.getStringValue(CountryShortName.attributeId), equalTo("ED"))
-        updatedCountry.setValue(CountryShortName.attributeId, "DE")
-        insightObjectOperator.updateInsightObject(updatedCountry).orFail()
-
-        val restoredCountry = insightObjectOperator.getObjectByName(countryId, "Germany", ::identity).orFail()!!
-        assertThat(restoredCountry.getStringValue(CountryName.attributeId), equalTo("Germany"))
-        assertThat(restoredCountry.getStringValue(CountryShortName.attributeId), equalTo("DE"))
+        assertThat(updatedCountry.getStringValue(CountryShortName.attributeId), equalTo(countryShortName))
     }
 
     @Test
