@@ -214,6 +214,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         val attributeBeans = obj.attributes.map { attr ->
             val ota = objectTypeAttributeFacade.loadObjectTypeAttribute(attr.attributeId.raw).createMutable()
             when (attr) {
+                // primitive values
                 is InsightAttribute.Bool -> beanFromString(bean, ota, attr.value.toString())
                 is InsightAttribute.Date -> beanFromString(bean, ota, attr.value.toString())
                 is InsightAttribute.DateTime -> beanFromString(bean, ota, attr.value.toString())
@@ -225,6 +226,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 is InsightAttribute.Textarea -> beanFromString(bean, ota, attr.value.toString())
                 is InsightAttribute.Time -> beanFromString(bean, ota, attr.value.toString())
 
+                // multiple primitive values
                 is InsightAttribute.Url -> objectAttributeBeanFactory.createObjectAttributeBeanForObject(
                     bean, ota, *attr.values.toTypedArray()
                 )
@@ -232,6 +234,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     bean, ota, *attr.values.toTypedArray()
                 )
 
+                // advanced types
                 is InsightAttribute.Reference -> {
                     val referenceIds = attr.referencedObjects.map { it.id.raw }.toTypedArray()
                     objectAttributeBeanFactory.createReferenceAttributeValue(ota) { referenceIds.contains(it.id) }
@@ -244,8 +247,6 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     val groupNames = attr.groups.map { it.name }
                     objectAttributeBeanFactory.createGroupAttributeValueByNames(ota, *groupNames.toTypedArray())
                 }
-
-                // TODO test additional attribute types
                 is InsightAttribute.Project -> {
                     val projectIds = attr.projects.map { it.id }
                     objectAttributeBeanFactory.createProjectAttributeValue(ota) { projectIds.contains(it.id()) }
@@ -461,7 +462,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         }
     }
 
-    private suspend fun handleDefaultValue(
+    private fun handleDefaultValue(
         id: InsightAttributeId,
         schema: ObjectTypeSchemaAttribute,
         objectAttributeBean: ObjectAttributeBean,

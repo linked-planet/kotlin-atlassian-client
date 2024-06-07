@@ -34,7 +34,13 @@ data class HttpJiraUser(
     val displayName: String
 ) {
     fun toJiraUser() =
-        JiraUser(key, name, emailAddress, avatarUrls?.get(DEFAULT_AVATAR_SIZE), displayName)
+        JiraUser(
+            key = key,
+            name = name,
+            emailAddress = emailAddress,
+            avatarUrl = avatarUrls?.get(DEFAULT_AVATAR_SIZE) ?: avatarUrls?.values?.firstOrNull(),
+            displayName = displayName
+        )
 }
 
 fun List<HttpJiraUser>.toJiraUsers(): List<JiraUser> =

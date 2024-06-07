@@ -321,7 +321,7 @@ sealed class InsightAttribute(
     data class Status(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        @field:NotNull val status: StatusAttribute?,
+        val status: StatusAttribute?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(
         attributeId,

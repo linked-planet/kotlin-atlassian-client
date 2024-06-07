@@ -312,7 +312,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                 }
                 USER -> {
                     val users = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
-                        av.user?.run { JiraUser(key, name, emailAddress ?: "", displayName = displayName) }
+                        av.user?.run { JiraUser(key, name, emailAddress, avatarUrl, displayName) }
                     }
                     InsightAttribute.User(attributeId, users, schema)
                 }
@@ -323,10 +323,10 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
                     InsightAttribute.Confluence(attributeId, confluencePages, schema)
                 }
                 GROUP -> {
-                    val group = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
+                    val groups = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
                         av.group?.run { JiraGroup(name = name, avatarUrl = avatarUrl) }
                     }
-                    InsightAttribute.Group(attributeId, group, schema)
+                    InsightAttribute.Group(attributeId, groups, schema)
                 }
                 VERSION -> {
                     val version = apiAttribute.objectAttributeValues.mapNotNull { av: ObjectAttributeValueApiResponse ->
@@ -356,7 +356,7 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             }
         }
 
-    private suspend fun handleDefaultValue(
+    private fun handleDefaultValue(
         attributeId: InsightAttributeId,
         apiAttribute: InsightAttributeApiResponse,
         schema: ObjectTypeSchemaAttribute?,

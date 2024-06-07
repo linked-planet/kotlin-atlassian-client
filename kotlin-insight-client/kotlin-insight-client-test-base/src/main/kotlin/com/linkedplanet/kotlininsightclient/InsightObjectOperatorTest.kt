@@ -677,8 +677,8 @@ interface InsightObjectOperatorTest {
 
         val objectName = "createdByUnitTest"
         autoClean(clean = { deleteObjectByName(InsightObjectType.User.id, objectName).orFail() }) {
-            val user1 = JiraUser("JIRAUSER10100", "", "", displayName = "")
-            val user2 = JiraUser("JIRAUSER10101", "", "", displayName = "")
+            val user1 = JiraUser("JIRAUSER10100", "", null, null, "")
+            val user2 = JiraUser("JIRAUSER10101", "", null, null, "")
             val objectId = insightObjectOperator.createInsightObject(
                 InsightObjectType.User.id,
                 UserTestName.attributeId toValue objectName,
@@ -710,8 +710,8 @@ interface InsightObjectOperatorTest {
 
         val objectName = "createdByUnitTest"
         autoClean(clean = { deleteObjectByName(InsightObjectType.Group.id, objectName).orFail() }) {
-            val group1 = JiraGroup("jira-administrators", null)
-            val group2 = JiraGroup("jira-servicedesk-users", null)
+            val group1 = JiraGroup("jira-administrators", "test url")
+            val group2 = JiraGroup("jira-servicedesk-users", "test url")
             val objectId = insightObjectOperator.createInsightObject(
                 InsightObjectType.Group.id,
                 TestGroupName.attributeId toValue objectName,

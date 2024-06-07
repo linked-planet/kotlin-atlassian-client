@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull
 data class JiraUser(
     @field:NotNull val key: String,
     @field:NotNull val name: String,
-    @field:NotNull val emailAddress: String,
-    @field:NotNull val avatarUrl: String? = null,
+    val emailAddress: String?,
+    val avatarUrl: String?,
     @field:NotNull val displayName: String
 )
