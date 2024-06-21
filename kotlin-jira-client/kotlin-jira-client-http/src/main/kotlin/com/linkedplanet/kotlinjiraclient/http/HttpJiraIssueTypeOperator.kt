@@ -61,7 +61,7 @@ class HttpJiraIssueTypeOperator(private val context: HttpJiraClientContext) : Ji
             ?.toJiraIssueType()
     }
 
-    override suspend fun getAttributesOfIssueType(
+    override suspend fun getCreateAttributesOfIssueType(
         projectId: Number,
         issueTypeId: Number
     ): Either<JiraClientError, List<JiraIssueTypeAttribute>> = either {
@@ -79,4 +79,27 @@ class HttpJiraIssueTypeOperator(private val context: HttpJiraClientContext) : Ji
             .bind()
             .toJiraIssueTypeAttributes()
     }
+
+    override suspend fun getEditAttributes(
+        issueId: Long
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>> = getEditAttributes("$issueId")
+
+    override suspend fun getEditAttributes(
+        issueKey: String
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>> = either {
+        recursiveRestCallPaginated { index, pageSize ->
+            context.httpClient.executeRest<DefaultHttpPage<HttpJiraIssueTypeAttribute>>(
+                "GET",
+                "/rest/api/2/issue/$issueKey/editmeta?startAt=$index&maxResults=$pageSize",
+                emptyMap(),
+                null,
+                "application/json",
+                object : TypeToken<DefaultHttpPage<HttpJiraIssueTypeAttribute>>() {}.type
+            ).map { it.body!! }
+        }
+            .mapLeft { JiraClientError.fromHttpDomainError(it) }
+            .bind()
+            .toJiraIssueTypeAttributes()
+    }
+
 }

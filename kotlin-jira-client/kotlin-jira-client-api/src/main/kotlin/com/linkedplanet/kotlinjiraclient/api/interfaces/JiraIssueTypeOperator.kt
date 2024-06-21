@@ -49,12 +49,48 @@ interface JiraIssueTypeOperator {
 
     /**
      * Returns a list of attributes for an issue type in a given project.
+     * Attributes must be on a create screen.
      * @param projectId The ID of the project.
      * @param issueTypeId The ID of the issue type.
      * @return Either an error or a list of issue type attributes.
      */
+    @Deprecated(
+        "Renamed for clarity",
+        ReplaceWith("getCreateAttributesOfIssueType(projectId, issueTypeId)")
+    )
     suspend fun getAttributesOfIssueType(
         projectId: Number,
         issueTypeId: Number
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>> = getCreateAttributesOfIssueType(projectId, issueTypeId)
+
+    /**
+     * Returns a list of attributes for an issue type in a given project.
+     * Attributes must be on a create screen.
+     * @param projectId The ID of the project.
+     * @param issueTypeId The ID of the issue type.
+     * @return Either an error or a list of issue type attributes.
+     */
+    suspend fun getCreateAttributesOfIssueType(
+        projectId: Number,
+        issueTypeId: Number
     ): Either<JiraClientError, List<JiraIssueTypeAttribute>>
+
+    /**
+     * Returns a list of attributes for a concrete issue.
+     * @param issueId The ID of the issue.
+     * @return Either an error or a list of issue type attributes.
+     */
+    suspend fun getEditAttributes(
+        issueId: Long,
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>>
+
+    /**
+     * Returns a list of attributes for an issue type in a given project.
+     * @param issueKey The Key of the issue.
+     * @return Either an error or a list of issue type attributes.
+     */
+    suspend fun getEditAttributes(
+        issueKey: String,
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>>
+
 }
