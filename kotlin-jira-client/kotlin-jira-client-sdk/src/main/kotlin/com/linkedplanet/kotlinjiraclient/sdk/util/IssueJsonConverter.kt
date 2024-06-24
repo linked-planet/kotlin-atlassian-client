@@ -45,7 +45,21 @@ class IssueJsonConverter {
     private val log = LoggerFactory.getLogger(FieldAccessorImpl::class.java)
     private val fieldLayoutManager = ComponentAccessor.getFieldLayoutManager()
     private val fieldManager = ComponentAccessor.getFieldManager()
-    private val beanBuilderFactory = ComponentAccessor.getOSGiComponentInstanceOfType(BeanBuilderFactory::class.java)
+    private var _beanBuilderFactory = ComponentAccessor.getOSGiComponentInstanceOfType(BeanBuilderFactory::class.java)
+    private val beanBuilderFactory: BeanBuilderFactory
+        get() {
+            // For unknown reasons the factory is sometimes null. This workaround tries to fetch the instance again.
+            if (_beanBuilderFactory == null) {
+                log.warn("_beanBuilderFactory is null. Using getOSGiComponentInstanceOfType")
+                _beanBuilderFactory = ComponentAccessor.getOSGiComponentInstanceOfType(BeanBuilderFactory::class.java)
+            }
+            if (_beanBuilderFactory == null) {
+                log.warn("_beanBuilderFactory is null. Using getComponent")
+                _beanBuilderFactory = ComponentAccessor.getComponent(BeanBuilderFactory::class.java)
+            }
+            log.error("unable to find _beanBuilderFactory")
+            return _beanBuilderFactory
+        }
     private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
     private val uriBuilder: UriBuilder = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
     private val gson = setupGson()
