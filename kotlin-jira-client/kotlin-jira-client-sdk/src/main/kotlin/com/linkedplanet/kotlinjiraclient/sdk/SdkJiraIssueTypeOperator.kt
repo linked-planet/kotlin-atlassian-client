@@ -20,16 +20,19 @@
 package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
+import com.atlassian.jira.bc.issue.IssueService
 import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.config.IssueTypeService
 import com.atlassian.jira.issue.fields.rest.RestAwareField
 import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls
 import com.atlassian.jira.issue.fields.screen.FieldScreenLayoutItem
+import com.atlassian.jira.issue.fields.screen.FieldScreenScheme
 import com.atlassian.jira.issue.fields.screen.FieldScreenTab
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager
 import com.atlassian.jira.issue.issuetype.IssueType
 import com.atlassian.jira.issue.operation.IssueOperations
+import com.atlassian.jira.issue.operation.ScreenableIssueOperation
 import com.atlassian.jira.rest.v2.issue.IssueTypeResource
 import com.atlassian.jira.rest.v2.issue.ResourceUriBuilder
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
@@ -48,6 +51,7 @@ import javax.ws.rs.core.UriBuilder
 object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
 
     private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
+    private val issueService = ComponentAccessor.getComponent(IssueService::class.java)
     private val issueTypeService = ComponentAccessor.getComponent(IssueTypeService::class.java)
     private val issueTypeScreenSchemeManager = ComponentAccessor.getComponent(IssueTypeScreenSchemeManager::class.java)
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
@@ -55,38 +59,61 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
 
     private fun user() = jiraAuthenticationContext.loggedInUser
 
-    override suspend fun getAttributesOfIssueType(
+    override suspend fun getCreateAttributesOfIssueType(
         projectId: Number,
         issueTypeId: Number
-    ): Either<JiraClientError, List<JiraIssueTypeAttribute>> =
-        eitherAndCatch {
-            val issueType = issueTypeService.getIssueType(user(), issueTypeId.toString()).orNull
-                ?: return@getAttributesOfIssueType issueTypeNotFound(issueTypeId)
-            val screenSchemes = issueTypeScreenSchemeManager.getIssueTypeScreenScheme(
-                projectService.getProjectById(user(), projectId.toLong()).toEither().bind().project
-            )
-            val screenScheme = screenSchemes.getEffectiveFieldScreenScheme(issueType)
-            val createScreen = screenScheme.getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION)
-            val fields = createScreen.tabs.flatMap { screenTab: FieldScreenTab ->
-                screenTab.fieldScreenLayoutItems.map { layoutItem: FieldScreenLayoutItem ->
-                    val orderableField = layoutItem.orderableField
-                    val schema = (orderableField as? RestAwareField)?.jsonSchema
-                    // code inspired by AbstractMetaFieldBeanBuilder.java
-                    JiraIssueTypeAttribute(
-                        id = orderableField.id,
-                        name = orderableField.name,
-                        schema = JiraIssueTypeAttributeSchema(
-                            schema?.type ?: "Any",
-                            schema?.items,
-                            schema?.system,
-                            schema?.custom,
-                            schema?.customId,
-                        )
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>> = eitherAndCatch {
+        val issueType = issueTypeService.getIssueType(user(), issueTypeId.toString()).orNull
+            ?: return@getCreateAttributesOfIssueType issueTypeNotFound(issueTypeId)
+        val project = projectService.getProjectById(user(), projectId.toLong()).toEither().bind().project
+        issueTypeScreenSchemeManager
+            .getIssueTypeScreenScheme(project)
+            .getEffectiveFieldScreenScheme(issueType)
+            .attributesForOperation(IssueOperations.CREATE_ISSUE_OPERATION)
+    }
+
+    override suspend fun getEditAttributes(
+        issueId: Long
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>> = eitherAndCatch {
+        val issue = issueService.getIssue(user(), issueId).toEither().bind().issue
+        issueTypeScreenSchemeManager
+            .getFieldScreenScheme(issue)
+            .attributesForOperation(IssueOperations.EDIT_ISSUE_OPERATION)
+    }
+
+    override suspend fun getEditAttributes(
+        issueKey: String
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>> = eitherAndCatch {
+        val issue = issueService.getIssue(user(), issueKey).toEither().bind().issue
+        issueTypeScreenSchemeManager
+            .getFieldScreenScheme(issue)
+            .attributesForOperation(IssueOperations.EDIT_ISSUE_OPERATION)
+    }
+
+    private fun FieldScreenScheme.attributesForOperation(
+        issueOperationType: ScreenableIssueOperation
+    ): List<JiraIssueTypeAttribute> {
+        val createScreen = getFieldScreen(issueOperationType)
+        val fields = createScreen.tabs.flatMap { screenTab: FieldScreenTab ->
+            screenTab.fieldScreenLayoutItems.map { layoutItem: FieldScreenLayoutItem ->
+                val orderableField = layoutItem.orderableField
+                val schema = (orderableField as? RestAwareField)?.jsonSchema
+                // code inspired by AbstractMetaFieldBeanBuilder.java
+                JiraIssueTypeAttribute(
+                    id = orderableField.id,
+                    name = orderableField.name,
+                    schema = JiraIssueTypeAttributeSchema(
+                        schema?.type ?: "Any",
+                        schema?.items,
+                        schema?.system,
+                        schema?.custom,
+                        schema?.customId,
                     )
-                }
+                )
             }
-            fields
         }
+        return fields
+    }
 
     private fun <T> issueTypeNotFound(issueTypeId: Number): Either<JiraClientError, T> = Either.Left(
         JiraClientError("IssueType not found", "No IssueType with id:$issueTypeId found.", statusCode = 404)

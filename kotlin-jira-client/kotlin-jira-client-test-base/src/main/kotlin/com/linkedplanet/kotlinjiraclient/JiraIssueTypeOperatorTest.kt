@@ -20,6 +20,7 @@
 package com.linkedplanet.kotlinjiraclient
 
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
+import com.linkedplanet.kotlinjiraclient.util.issueParser
 import com.linkedplanet.kotlinjiraclient.util.orFail
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
@@ -48,19 +49,14 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
     }
 
     @Test
-    fun issueTypes_03GetAttributesOfIssueType() {
-        val attributes =
-            runBlocking {
-                issueTypeOperator.getAttributesOfIssueType(
-                    projectId,
-                    issueTypeId
-                )
-            }.orFail()
-        val expectedAttributes = arrayOf(
-            "Epic Link", "Summary", "Issue Type", "Reporter", "Component/s", "Description",
-            "Fix Version/s", "Priority", "Labels", "Attachment", "Linked Issues", "Assignee",
-            "Sprint", "InsightObject"
-        )   // Newer Jira does not include "Project
+    fun issueTypes_03GetCreateAttributesOfIssueType() {
+        val attributes = runBlocking {
+            issueTypeOperator.getCreateAttributesOfIssueType(
+                projectId,
+                issueTypeId
+            )
+        }.orFail()
+        val expectedAttributes = getExpectedAttributes()
 
         val attributeNames = attributes.map(JiraIssueTypeAttribute::name)
         assertThat(attributeNames.size, equalTo(attributes.size))
@@ -69,4 +65,27 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
         assertThat(attributes.firstOrNull { it.name == "Reporter" }?.schema?.type, equalTo("user"))
         assertThat(attributes.firstOrNull { it.name == "Summary" }?.schema?.type, equalTo("string"))
     }
+
+    @Test
+
+    fun issueTypes_04GetEditAttributesForIssue() {
+        val attributes = runBlocking {
+            val key = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser).orFail().key
+            issueTypeOperator.getEditAttributes(key)
+        }.orFail()
+        val expectedAttributes = getExpectedAttributes()
+
+        val attributeNames = attributes.map(JiraIssueTypeAttribute::name)
+        assertThat(attributeNames.size, equalTo(attributes.size))
+        assertThat(attributeNames, hasItems(*expectedAttributes))
+
+        assertThat(attributes.firstOrNull { it.name == "Reporter" }?.schema?.type, equalTo("user"))
+        assertThat(attributes.firstOrNull { it.name == "Summary" }?.schema?.type, equalTo("string"))
+    }
+
+    fun getExpectedAttributes() = arrayOf(
+        "Epic Link", "Summary", "Issue Type", "Reporter", "Component/s", "Description",
+        "Fix Version/s", "Priority", "Labels", "Attachment", "Linked Issues", "Assignee",
+        "Sprint", "InsightObject" // Newer Jira does not include "Project
+    )
 }
