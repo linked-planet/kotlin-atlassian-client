@@ -93,6 +93,10 @@ data class HttpJiraIssueType(
 fun List<HttpJiraIssueType>.toJiraIssueTypes(): List<JiraIssueType> =
     map { it.toJiraIssueType() }
 
+data class HttpEditMeta(
+    val fields: Map<String, HttpJiraIssueTypeAttribute>
+)
+
 data class HttpJiraIssueTypeAttribute(
     val required: Boolean,
     val schema: HttpJiraIssueTypeAttributeJsonSchema?,
@@ -117,12 +121,12 @@ data class HttpJiraIssueTypeAttribute(
 data class HttpJiraIssueTypeAttributeJsonSchema(
     val type: String, // "date" see com.atlassian.jira.issue.fields.rest.json.JsonType
     val items: String?, // unclear what this is
-    val system: String?, // only used if its a system field, e.g. "assignee"
+    val system: String?, // only used if it's a system field, e.g. "assignee"
     val custom: String?, // e.g. com.atlassian.jira.plugin.system.customfieldtypes:datepicker
     val customId: Long? // e.g. 10202
 )
 
-fun List<HttpJiraIssueTypeAttribute>.toJiraIssueTypeAttributes(): List<JiraIssueTypeAttribute> =
+fun Collection<HttpJiraIssueTypeAttribute>.toJiraIssueTypeAttributes(): List<JiraIssueTypeAttribute> =
     map { it.toJiraIssueTypeAttribute() }
 
 data class HttpJiraTransition(

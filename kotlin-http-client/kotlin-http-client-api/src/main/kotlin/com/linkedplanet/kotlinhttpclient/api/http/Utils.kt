@@ -31,7 +31,7 @@ suspend fun <T> recursiveRestCall(
     var index = startIndex
     val elements = mutableListOf<T>()
     do {
-        val tmpElements: List<T> = call(index, pageSize).getOrHandle {
+        val tmpElements: List<T> = call(index, pageSize).getOrElse {
             return@recursiveRestCall it.left()
         }
         elements.addAll(tmpElements)
@@ -41,15 +41,15 @@ suspend fun <T> recursiveRestCall(
 }
 
 @Suppress("unused")
-suspend fun <T> recursiveRestCallPaginated(
+suspend fun <T, ErrorType> recursiveRestCallPaginated(
     startIndex: Int = 0,
     pageSize: Int = 100,
-    call: suspend (Int, Int) -> Either<HttpDomainError, HttpPage<T>>
-): Either<HttpDomainError, List<T>> {
+    call: suspend (Int, Int) -> Either<ErrorType, HttpPage<T>>
+): Either<ErrorType, List<T>> {
     var index = startIndex
     val elements = mutableListOf<T>()
     do {
-        val tmpElements: HttpPage<T> = call(index, pageSize).getOrHandle {
+        val tmpElements: HttpPage<T> = call(index, pageSize).getOrElse {
             return@recursiveRestCallPaginated it.left()
         }
         elements.addAll(tmpElements.getValues())
@@ -59,15 +59,15 @@ suspend fun <T> recursiveRestCallPaginated(
 }
 
 @Suppress("unused")
-suspend fun <T> recursiveRestCallPaginatedRaw(
+suspend fun <T, ErrorType> recursiveRestCallPaginatedRaw(
     startIndex: Int = 0,
     pageSize: Int = 100,
-    call: suspend (Int, Int) -> Either<HttpDomainError, HttpPage<T>>
-): Either<HttpDomainError, List<HttpPage<T>>> {
+    call: suspend (Int, Int) -> Either<ErrorType, HttpPage<T>>
+): Either<ErrorType, List<HttpPage<T>>> {
     var index = startIndex
     val elements = mutableListOf<HttpPage<T>>()
     do {
-        val tmpElements: HttpPage<T> = call(index, pageSize).getOrHandle {
+        val tmpElements: HttpPage<T> = call(index, pageSize).getOrElse {
             return@recursiveRestCallPaginatedRaw it.left()
         }
         elements.add(tmpElements)
