@@ -87,7 +87,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
     private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
     private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
-    private val baseUrl by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!! }
+    private val applicationProperties by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java) }
     private val projectService by lazy { getOSGiComponentInstanceOfType(ProjectService::class.java) }
 
     private val versionAssembler = ReverseEngineeredVersionAssembler()
@@ -98,6 +98,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
     private val zoneId: ZoneId = ZoneId.of("Z")
 
     private fun user() = jiraAuthenticationContext.loggedInUser
+    private fun baseUrl() = applicationProperties.jiraBaseUrl
 
     override suspend fun <T> getObjectById(
         id: InsightObjectId,
@@ -366,7 +367,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
             attributes
                 .singleOrNull { it.schema?.name == "Link" }
                 ?.toString()
-                ?: "${baseUrl}/secure/insight/assets/${objectBean.objectKey}"
+                ?: "${baseUrl()}/secure/insight/assets/${objectBean.objectKey}"
 
         InsightObject(
             InsightObjectTypeId(objectBean.objectTypeId),
@@ -414,7 +415,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 val groups = objectAttributeBean.objectAttributeValueBeans.mapNotNull { attribute ->
                     JiraGroup(
                         attribute.textValue,
-                        "$baseUrl/download/resources/com.riadalabs.jira.plugins.insight/images/${"group-logo.jpg"}"
+                        "${baseUrl()}/download/resources/com.riadalabs.jira.plugins.insight/images/${"group-logo.jpg"}"
                     )
                 }
                 InsightAttribute.Group(attributeId, groups, schema)
@@ -435,8 +436,8 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 val projects = objectAttributeBean.objectAttributeValueBeans
                     .mapNotNull { projectService.getProjectById(user(), it.integerValue.toLong()).project }
                     .map {
-                        val url = "$baseUrl/browse/${it.key}"
-                        val avatarUrl = "$baseUrl/secure/projectavatar?pid=${it.id}"
+                        val url = "${baseUrl()}/browse/${it.key}"
+                        val avatarUrl = "${baseUrl()}/secure/projectavatar?pid=${it.id}"
                         JiraProject(it.id, it.key, it.name, url, avatarUrl)
                     }
 
