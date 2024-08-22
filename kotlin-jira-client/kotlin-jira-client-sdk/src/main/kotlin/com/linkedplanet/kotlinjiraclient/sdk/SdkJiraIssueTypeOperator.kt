@@ -22,7 +22,6 @@ package com.linkedplanet.kotlinjiraclient.sdk
 import arrow.core.Either
 import com.atlassian.jira.bc.issue.IssueService
 import com.atlassian.jira.bc.project.ProjectService
-import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.config.IssueTypeService
 import com.atlassian.jira.issue.fields.rest.RestAwareField
 import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls
@@ -64,14 +63,22 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
     override suspend fun getCreateAttributesOfIssueType(
         projectId: Number,
         issueTypeId: Number
+    ): Either<JiraClientError, List<JiraIssueTypeAttribute>> =
+        getSpecificAttributesOfIssueType(projectId, issueTypeId, IssueOperations.CREATE_ISSUE_OPERATION)
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun getSpecificAttributesOfIssueType(
+        projectId: Number,
+        issueTypeId: Number,
+        screenableIssueOperation: ScreenableIssueOperation
     ): Either<JiraClientError, List<JiraIssueTypeAttribute>> = eitherAndCatch {
         val issueType = issueTypeService.getIssueType(user(), issueTypeId.toString()).orNull
-            ?: return@getCreateAttributesOfIssueType issueTypeNotFound(issueTypeId)
+            ?: return@getSpecificAttributesOfIssueType issueTypeNotFound(issueTypeId)
         val project = projectService.getProjectById(user(), projectId.toLong()).toEither().bind().project
         issueTypeScreenSchemeManager
             .getIssueTypeScreenScheme(project)
             .getEffectiveFieldScreenScheme(issueType)
-            .attributesForOperation(IssueOperations.CREATE_ISSUE_OPERATION)
+            .attributesForOperation(screenableIssueOperation)
     }
 
     override suspend fun getEditAttributes(
