@@ -2,7 +2,7 @@
  * #%L
  * kotlin-insight-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
-import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectTypeOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
@@ -30,6 +29,7 @@ import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchema
 import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
 import com.linkedplanet.kotlininsightclient.api.model.ReferenceKind
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeAttributeFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
@@ -37,8 +37,8 @@ import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
 
 object SdkInsightObjectTypeOperator : InsightObjectTypeOperator {
 
-    private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
-    private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
+    private val objectTypeFacade: ObjectTypeFacade by getOSGiComponent()
+    private val objectTypeAttributeFacade: ObjectTypeAttributeFacade by getOSGiComponent()
 
     override suspend fun getObjectType(objectTypeId: InsightObjectTypeId): Either<InsightClientError, ObjectTypeSchema> =
         catchAsInsightClientError {

@@ -2,7 +2,7 @@
  * #%L
  * kotlin-insight-client-sdk
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
@@ -30,6 +29,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredAttachmentUrlResolver
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredFileManager
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 import com.linkedplanet.kotlininsightclient.sdk.util.toISOString
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
@@ -49,7 +49,7 @@ import kotlin.io.path.createTempFile
 
 object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
-    private val objectFacade by lazy { getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
+    private val objectFacade: ObjectFacade by getOSGiComponent()
 
     private val fileManager by lazy { ReverseEngineeredFileManager() }
     private val attachmentUrlResolver by lazy { ReverseEngineeredAttachmentUrlResolver() }

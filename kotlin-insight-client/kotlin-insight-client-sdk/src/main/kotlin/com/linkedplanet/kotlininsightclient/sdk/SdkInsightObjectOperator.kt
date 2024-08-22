@@ -2,7 +2,7 @@
  * #%L
  * kotlin-insight-client-sdk
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
-import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
 import com.atlassian.jira.user.util.UserManager
 import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusAttribute
@@ -55,6 +54,7 @@ import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typ
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredDateTimeFormatterInJira
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredVersionAssembler
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ConfigureFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
@@ -80,15 +80,15 @@ object SdkInsightObjectOperator : InsightObjectOperator {
 
     override var RESULTS_PER_PAGE: Int = 25
 
-    private val objectFacade by lazy { getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
-    private val objectTypeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
-    private val configureFacade by lazy { getOSGiComponentInstanceOfType(ConfigureFacade::class.java) }
-    private val userManager by lazy { getOSGiComponentInstanceOfType(UserManager::class.java) }
-    private val objectTypeAttributeFacade by lazy { getOSGiComponentInstanceOfType(ObjectTypeAttributeFacade::class.java) }
-    private val iqlFacade by lazy { getOSGiComponentInstanceOfType(IQLFacade::class.java) }
-    private val objectAttributeBeanFactory by lazy { getOSGiComponentInstanceOfType(ObjectAttributeBeanFactory::class.java) }
-    private val applicationProperties by lazy { getOSGiComponentInstanceOfType(ApplicationProperties::class.java) }
-    private val projectService by lazy { getOSGiComponentInstanceOfType(ProjectService::class.java) }
+    private val objectFacade : ObjectFacade by getOSGiComponent()
+    private val objectTypeFacade: ObjectTypeFacade by getOSGiComponent()
+    private val configureFacade: ConfigureFacade by getOSGiComponent()
+    private val userManager: UserManager by getOSGiComponent()
+    private val objectTypeAttributeFacade: ObjectTypeAttributeFacade by getOSGiComponent()
+    private val iqlFacade: IQLFacade by getOSGiComponent()
+    private val objectAttributeBeanFactory: ObjectAttributeBeanFactory by getOSGiComponent()
+    private val applicationProperties: ApplicationProperties by getOSGiComponent()
+    private val projectService: ProjectService by getOSGiComponent()
 
     private val versionAssembler = ReverseEngineeredVersionAssembler()
     private val dateTimeFormatter = ReverseEngineeredDateTimeFormatterInJira()

@@ -2,7 +2,7 @@
  * #%L
  * kotlin-insight-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
-import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightHistoryOperator
 import com.linkedplanet.kotlininsightclient.api.model.Actor
@@ -28,13 +27,14 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightHistory
 import com.linkedplanet.kotlininsightclient.api.model.InsightHistoryItem
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 import com.linkedplanet.kotlininsightclient.sdk.util.toISOString
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.ObjectHistoryBean
 
 object SdkInsightHistoryOperator : InsightHistoryOperator {
 
-    private val objectFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
+    private val objectFacade: ObjectFacade by getOSGiComponent()
 
     override suspend fun getHistory(objectId: InsightObjectId): Either<InsightClientError, InsightHistory> =
         catchAsInsightClientError {
