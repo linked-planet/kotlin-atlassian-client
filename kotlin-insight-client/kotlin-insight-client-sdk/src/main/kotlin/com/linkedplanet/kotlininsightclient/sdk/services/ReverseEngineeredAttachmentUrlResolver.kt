@@ -19,8 +19,8 @@
  */
 package com.linkedplanet.kotlininsightclient.sdk.services
 
-import com.atlassian.jira.component.ComponentAccessor.getComponent
 import com.atlassian.jira.config.properties.ApplicationProperties
+import com.linkedplanet.kotlininsightclient.sdk.util.getComponent
 
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
 import java.util.regex.Pattern
@@ -32,17 +32,15 @@ import java.util.regex.Pattern
  */
 internal class ReverseEngineeredAttachmentUrlResolver {
 
-    private val applicationProperties by lazy { getComponent(ApplicationProperties::class.java) }
+    private val applicationProperties: ApplicationProperties by getComponent()
 
     private val pattern = Pattern.compile(".*/(\\d+)/?")
     private val INSIGHT_REST_BASE_URL = "/rest/insight/1.0"
 
-    private fun getInsightBaseUrl(): String {
-        return applicationProperties.getString("jira.baseurl")!!
-    }
+    private fun baseUrl(): String = applicationProperties.jiraBaseUrl
 
     private fun getInsightRestBaseUrl(): String {
-        val insightBaseUrl = getInsightBaseUrl()
+        val insightBaseUrl = baseUrl()
         return insightBaseUrl + INSIGHT_REST_BASE_URL
     }
 

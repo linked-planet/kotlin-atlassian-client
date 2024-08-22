@@ -19,21 +19,22 @@
  */
 package com.linkedplanet.kotlininsightclient.sdk.services
 
-import com.atlassian.jira.component.ComponentAccessor
-import com.atlassian.jira.component.ComponentAccessor.getComponent
 import com.atlassian.jira.datetime.DateTimeFormatter
 import com.atlassian.jira.datetime.DateTimeFormatterFactory
 import com.atlassian.jira.datetime.DateTimeStyle
+import com.atlassian.jira.security.JiraAuthenticationContext
+import com.linkedplanet.kotlininsightclient.sdk.util.getComponent
 import java.util.*
 
 /**
  * Thin layer around Jira DateTime parsing. Kotlin version of
  * com.riadalabs.jira.plugins.insight.common.tools.InsightDateTimeFormatterInJira
  */
+@Suppress("unused") // because it is a utility class
 internal class ReverseEngineeredDateTimeFormatterInJira {
 
-    private val formatterFactory by lazy { getComponent(DateTimeFormatterFactory::class.java) }
-    private val jiraAuthenticationContext by lazy { ComponentAccessor.getJiraAuthenticationContext() }
+    private val formatterFactory: DateTimeFormatterFactory by getComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
     private fun loggedInUser() = jiraAuthenticationContext.loggedInUser
 
     fun parseToDate(date: String?): Date? =

@@ -51,8 +51,8 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     private val objectFacade: ObjectFacade by getOSGiComponent()
 
-    private val fileManager by lazy { ReverseEngineeredFileManager() }
-    private val attachmentUrlResolver by lazy { ReverseEngineeredAttachmentUrlResolver() }
+    private val fileManager = ReverseEngineeredFileManager()
+    private val attachmentUrlResolver = ReverseEngineeredAttachmentUrlResolver()
 
     override suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>> =
         catchAsInsightClientError {

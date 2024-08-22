@@ -19,9 +19,9 @@
  */
 package com.linkedplanet.kotlininsightclient.sdk.services
 
-import com.atlassian.jira.component.ComponentAccessor.getComponent
 import com.atlassian.jira.config.util.AttachmentPathManager
 import com.atlassian.jira.issue.AttachmentManager
+import com.linkedplanet.kotlininsightclient.sdk.util.getComponent
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -35,8 +35,8 @@ import java.io.InputStream
  */
 internal class ReverseEngineeredFileManager{
 
-    private val attachmentManager by lazy { getComponent(AttachmentManager::class.java) }
-    private val attachmentPathManager by lazy { getComponent(AttachmentPathManager::class.java) }
+    private val attachmentManager: AttachmentManager by getComponent()
+    private val attachmentPathManager: AttachmentPathManager by getComponent()
 
     @Throws(FileNotFoundException::class)
     fun getObjectAttachmentContent(objectId: Int, attachmentFileName: String): InputStream {
