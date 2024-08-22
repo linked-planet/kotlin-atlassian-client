@@ -2,7 +2,7 @@
  * #%L
  * kotlin-jira-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,22 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
+import com.atlassian.jira.bc.issue.IssueService
 import com.atlassian.jira.bc.issue.search.SearchService
-import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.config.properties.ApplicationProperties
 import com.atlassian.jira.event.type.EventDispatchOption
+import com.atlassian.jira.issue.CustomFieldManager
 import com.atlassian.jira.issue.Issue
 import com.atlassian.jira.issue.IssueInputParameters
 import com.atlassian.jira.issue.MutableIssue
 import com.atlassian.jira.jql.parser.JqlQueryParser
+import com.atlassian.jira.security.JiraAuthenticationContext
 import com.atlassian.jira.user.ApplicationUser
 import com.atlassian.jira.util.ErrorCollection.Reason
 import com.atlassian.jira.util.ErrorCollections
 import com.atlassian.jira.web.bean.I18nBean
 import com.atlassian.jira.web.bean.PagerFilter
+import com.atlassian.plugin.webresource.WebResourceUrlProvider
 import com.google.gson.JsonObject
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
@@ -44,6 +48,7 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraField
 import com.linkedplanet.kotlinjiraclient.sdk.util.IssueJsonConverter
 import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
+import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.jiraClientError
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import javax.inject.Named
@@ -53,13 +58,13 @@ import kotlin.math.ceil
 object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     override var RESULTS_PER_PAGE: Int = 10
 
-    private val issueService = ComponentAccessor.getIssueService()
-    private val customFieldManager = ComponentAccessor.getCustomFieldManager()
-    private val searchService: SearchService = ComponentAccessor.getComponent(SearchService::class.java)
-    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
-    private val jqlParser = ComponentAccessor.getComponent(JqlQueryParser::class.java)
-    private val applicationProperties = ComponentAccessor.getApplicationProperties()
-    private val webResourceUrlProvider = ComponentAccessor.getWebResourceUrlProvider()
+    private val issueService: IssueService by getComponent()
+    private val customFieldManager: CustomFieldManager by getComponent()
+    private val searchService: SearchService by getComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
+    private val jqlParser: JqlQueryParser by getComponent()
+    private val applicationProperties: ApplicationProperties by getComponent()
+    private val webResourceUrlProvider: WebResourceUrlProvider by getComponent()
     private val issueJsonConverter = IssueJsonConverter()
 
     private fun user() = jiraAuthenticationContext.loggedInUser

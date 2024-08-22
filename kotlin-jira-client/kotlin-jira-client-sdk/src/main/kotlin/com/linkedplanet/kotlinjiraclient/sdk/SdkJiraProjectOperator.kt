@@ -2,7 +2,7 @@
  * #%L
  * kotlin-jira-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,30 +21,33 @@ package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
 import com.atlassian.jira.avatar.Avatar
+import com.atlassian.jira.avatar.AvatarService
 import com.atlassian.jira.bc.project.ProjectService
-import com.atlassian.jira.component.ComponentAccessor
-import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
+import com.atlassian.jira.security.JiraAuthenticationContext
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraProject
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraProjectOperator
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
+import com.linkedplanet.kotlinjiraclient.sdk.util.getOSGiComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 
 object SdkJiraProjectOperator : JiraProjectOperator {
 
-    private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
-    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
-    private val avatarService = ComponentAccessor.getAvatarService()
-    private val baseUrl = getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!!
+    private val projectService: ProjectService by getComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
+    private val avatarService: AvatarService by getComponent()
+    private val applicationProperties: ApplicationProperties by getOSGiComponent()
 
+    private fun baseUrl() = applicationProperties.jiraBaseUrl
     private fun user() = jiraAuthenticationContext.loggedInUser
 
     override suspend fun getProject(projectId: Number): Either<JiraClientError, JiraProject?> =
         eitherAndCatch {
             projectService.getProjectById(user(), projectId.toLong()).toEither().bind().get().let {
                 val avatarUrl = avatarService.getProjectAvatarAbsoluteURL(it, Avatar.Size.defaultSize())
-                val url = it.url.ifEmpty { "$baseUrl/rest/api/2/project/${it.id}" }
+                val url = it.url.ifEmpty { "${baseUrl()}/rest/api/2/project/${it.id}" }
                 JiraProject(it.id, it.key, it.name, url, avatarUrl.toASCIIString())
             }
         }
@@ -53,7 +56,7 @@ object SdkJiraProjectOperator : JiraProjectOperator {
         eitherAndCatch {
             return Either.Right(projectService.getAllProjects(user()).toEither().bind().get().map {
                 val avatarUrl = avatarService.getProjectAvatarAbsoluteURL(it, Avatar.Size.defaultSize())
-                val url = it.url.ifEmpty { "$baseUrl/rest/api/2/project/${it.id}" }
+                val url = it.url.ifEmpty { "${baseUrl()}/rest/api/2/project/${it.id}" }
                 JiraProject(it.id, it.key, it.name, url, avatarUrl.toASCIIString())
             })
         }

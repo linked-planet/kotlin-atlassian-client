@@ -2,7 +2,7 @@
  * #%L
  * kotlin-jira-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,23 @@
 package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
+import com.atlassian.jira.bc.issue.IssueService
 import com.atlassian.jira.bc.issue.link.IssueLinkService
-import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.issue.link.Direction
 import com.atlassian.jira.issue.link.IssueLinkTypeManager
+import com.atlassian.jira.security.JiraAuthenticationContext
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueLinkOperator
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 
 object SdkJiraIssueLinkOperator : JiraIssueLinkOperator {
 
-    private val issueService = ComponentAccessor.getIssueService()
-    private val issueLinkService = ComponentAccessor.getComponent(IssueLinkService::class.java)
-    private val issueLinkTypeManager = ComponentAccessor.getComponent(IssueLinkTypeManager::class.java)
-    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private val issueService: IssueService by getComponent()
+    private val issueLinkService: IssueLinkService by getComponent()
+    private val issueLinkTypeManager: IssueLinkTypeManager by getComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
 
     private fun user() = jiraAuthenticationContext.loggedInUser
     private const val DISPATCH_EVENT: Boolean = true // default dispatch behaviour for this operator

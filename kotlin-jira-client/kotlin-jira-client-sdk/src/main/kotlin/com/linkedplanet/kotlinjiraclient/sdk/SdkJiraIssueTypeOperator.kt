@@ -2,7 +2,7 @@
  * #%L
  * kotlin-jira-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,12 +35,14 @@ import com.atlassian.jira.issue.operation.IssueOperations
 import com.atlassian.jira.issue.operation.ScreenableIssueOperation
 import com.atlassian.jira.rest.v2.issue.IssueTypeResource
 import com.atlassian.jira.rest.v2.issue.ResourceUriBuilder
+import com.atlassian.jira.security.JiraAuthenticationContext
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueTypeOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueType
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttribute
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttributeSchema
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import java.net.MalformedURLException
 import java.net.URL
@@ -50,12 +52,12 @@ import javax.ws.rs.core.UriBuilder
 @Named
 object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
 
-    private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
-    private val issueService = ComponentAccessor.getComponent(IssueService::class.java)
-    private val issueTypeService = ComponentAccessor.getComponent(IssueTypeService::class.java)
-    private val issueTypeScreenSchemeManager = ComponentAccessor.getComponent(IssueTypeScreenSchemeManager::class.java)
-    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
-    private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
+    private val projectService: ProjectService by getComponent()
+    private val issueService: IssueService by getComponent()
+    private val issueTypeService: IssueTypeService by getComponent()
+    private val issueTypeScreenSchemeManager: IssueTypeScreenSchemeManager by getComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
+    private val jiraBaseUrls: JiraBaseUrls by getComponent()
 
     private fun user() = jiraAuthenticationContext.loggedInUser
 

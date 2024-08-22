@@ -2,7 +2,7 @@
  * #%L
  * kotlin-jira-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,21 +21,24 @@ package com.linkedplanet.kotlinjiraclient.sdk
 
 import arrow.core.Either
 import arrow.core.left
-import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.bc.issue.IssueService
 import com.atlassian.jira.issue.IssueInputParameters
+import com.atlassian.jira.security.JiraAuthenticationContext
 import com.atlassian.jira.transition.TransitionManager
+import com.atlassian.jira.workflow.WorkflowManager
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraTransitionOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraTransition
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 
 object SdkJiraTransitionOperator : JiraTransitionOperator {
 
-    private val issueService = ComponentAccessor.getIssueService()
-    private val workflowManager = ComponentAccessor.getWorkflowManager()
-    private val transitionManager = ComponentAccessor.getComponent(TransitionManager::class.java)
-    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private val issueService: IssueService by getComponent()
+    private val workflowManager: WorkflowManager by getComponent()
+    private val transitionManager: TransitionManager by getComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
     private fun user() = jiraAuthenticationContext.loggedInUser
 
     override suspend fun doTransition(
