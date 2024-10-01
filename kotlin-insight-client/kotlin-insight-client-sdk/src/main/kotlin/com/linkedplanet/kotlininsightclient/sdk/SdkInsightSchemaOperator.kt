@@ -2,7 +2,7 @@
  * #%L
  * kotlin-insight-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@
 package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
-import com.atlassian.jira.component.ComponentAccessor
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightSchemaOperator
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchema
 import com.linkedplanet.kotlininsightclient.api.model.InsightSchemaId
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectSchemaFacade
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectTypeFacade
@@ -33,9 +33,9 @@ import com.riadalabs.jira.plugins.insight.services.model.ObjectSchemaBean
 
 object SdkInsightSchemaOperator : InsightSchemaOperator {
 
-    private val objectSchemaFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectSchemaFacade::class.java) }
-    private val objectTypeFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectTypeFacade::class.java) }
-    private val objectFacade by lazy { ComponentAccessor.getOSGiComponentInstanceOfType(ObjectFacade::class.java) }
+    private val objectSchemaFacade: ObjectSchemaFacade by getOSGiComponent()
+    private val objectTypeFacade: ObjectTypeFacade by getOSGiComponent()
+    private val objectFacade: ObjectFacade by getOSGiComponent()
 
     override suspend fun getSchemas(): Either<InsightClientError, List<InsightSchema>> =
         catchAsInsightClientError {

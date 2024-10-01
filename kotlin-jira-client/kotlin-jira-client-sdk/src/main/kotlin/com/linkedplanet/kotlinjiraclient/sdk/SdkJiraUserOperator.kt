@@ -2,7 +2,7 @@
  * #%L
  * kotlin-jira-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,30 +22,34 @@ package com.linkedplanet.kotlinjiraclient.sdk
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.left
+import com.atlassian.jira.avatar.AvatarService
 import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.bc.projectroles.ProjectRoleService
 import com.atlassian.jira.bc.user.search.DefaultAssigneeService
-import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.permission.ProjectPermissions
 import com.atlassian.jira.project.Project
+import com.atlassian.jira.security.JiraAuthenticationContext
+import com.atlassian.jira.security.PermissionManager
 import com.atlassian.jira.security.roles.ProjectRoleActors
 import com.atlassian.jira.user.ApplicationUser
+import com.atlassian.jira.user.util.UserUtil
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraUserOperator
 import com.linkedplanet.kotlinatlassianclientcore.common.api.JiraUser
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
+import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import com.linkedplanet.kotlinjiraclient.sdk.util.withErrorCollection
 
 object SdkJiraUserOperator : JiraUserOperator {
 
-    private val projectService = ComponentAccessor.getComponent(ProjectService::class.java)
-    private val permissionManager = ComponentAccessor.getPermissionManager()
-    private val userUtil = ComponentAccessor.getUserUtil()
-    private val projectRoleService = ComponentAccessor.getComponent(ProjectRoleService::class.java)
-    private val avatarService = ComponentAccessor.getAvatarService()
-    private val defaultAssigneeService = ComponentAccessor.getComponent(DefaultAssigneeService::class.java)
-    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private val projectService: ProjectService by getComponent()
+    private val permissionManager: PermissionManager by getComponent()
+    private val userUtil: UserUtil by getComponent()
+    private val projectRoleService: ProjectRoleService by getComponent()
+    private val avatarService: AvatarService by getComponent()
+    private val defaultAssigneeService: DefaultAssigneeService by getComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
 
     private fun user() = jiraAuthenticationContext.loggedInUser
 

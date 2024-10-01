@@ -2,7 +2,7 @@
  * #%L
  * kotlin-jira-client-api
  * %%
- * Copyright (C) 2022 - 2023 linked-planet GmbH
+ * Copyright (C) 2022 - 2024 linked-planet GmbH
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import com.atlassian.jira.bc.JiraServiceContextImpl
 import com.atlassian.jira.bc.issue.IssueService
 import com.atlassian.jira.bc.issue.comment.CommentService
 import com.atlassian.jira.bc.issue.comment.CommentService.CommentParameters
-import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.security.JiraAuthenticationContext
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraCommentOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueComment
@@ -33,9 +33,9 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.*
 
 object SdkJiraCommentOperator : JiraCommentOperator {
 
-    private val issueService: IssueService = ComponentAccessor.getIssueService()
-    private val commentService : CommentService = ComponentAccessor.getComponent(CommentService::class.java)
-    private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
+    private val issueService: IssueService by getComponent()
+    private val commentService : CommentService by getComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
     private fun user() = jiraAuthenticationContext.loggedInUser
     private const val DISPATCH_EVENT: Boolean = true // default dispatch behaviour for this operator
 

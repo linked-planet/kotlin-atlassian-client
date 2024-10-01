@@ -22,21 +22,23 @@ package com.linkedplanet.kotlininsightclient.sdk.services
 import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.bc.project.version.VersionService
 import com.atlassian.jira.component.ComponentAccessor
-import com.atlassian.jira.component.ComponentAccessor.getOSGiComponentInstanceOfType
 import com.atlassian.jira.config.properties.ApplicationProperties
 import com.linkedplanet.kotlinatlassianclientcore.common.api.ProjectVersion
 import com.atlassian.jira.project.version.Version
+import com.linkedplanet.kotlininsightclient.sdk.util.getComponent
+import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 
 /**
  *  Kotlin Version of com.riadalabs.jira.plugins.insight.channel.web.api.rest.services.version.VersionAssemblerInJira
  */
 class ReverseEngineeredVersionAssembler {
 
-    private val projectService by lazy { getOSGiComponentInstanceOfType(ProjectService::class.java) }
-    private val versionService by lazy { getOSGiComponentInstanceOfType(VersionService::class.java) }
-    private val baseUrl = getOSGiComponentInstanceOfType(ApplicationProperties::class.java).getString("jira.baseurl")!!
+    private val projectService: ProjectService by getOSGiComponent()
+    private val versionService: VersionService by getOSGiComponent()
+    private val applicationProperties: ApplicationProperties by getComponent()
     private val jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext()
     private fun user() = jiraAuthenticationContext.loggedInUser
+    private fun baseUrl(): String = applicationProperties.jiraBaseUrl
 
     fun assembleVersion(id: Long): ProjectVersion {
         val version: Version = versionService.getVersionById(user(), id).version
@@ -45,15 +47,15 @@ class ReverseEngineeredVersionAssembler {
         return ProjectVersion(
             id = id.toInt(),
             name = version.name,
-            avatarUrl = "$baseUrl/download/resources/com.riadalabs.jira.plugins.insight/images/version-logo.png",
-            url = "$baseUrl/browse/${project?.key ?: -1}/fixforversion/${id}/?selectedTab=com.riadalabs.jira.plugins.insight:rlabs-version-summary-panel"
+            avatarUrl = "${baseUrl()}/download/resources/com.riadalabs.jira.plugins.insight/images/version-logo.png",
+            url = "${baseUrl()}/browse/${project?.key ?: -1}/fixforversion/${id}/?selectedTab=com.riadalabs.jira.plugins.insight:rlabs-version-summary-panel"
         )
     }
 
     private fun createEmptyVersion(id: Long) = ProjectVersion(
         id = id.toInt(),
         name = "Unknown",
-        avatarUrl = "$baseUrl/download/resources/com.riadalabs.jira.plugins.insight/images/version-logo.png",
+        avatarUrl = "${baseUrl()}/download/resources/com.riadalabs.jira.plugins.insight/images/version-logo.png",
         url = "javascript:void(0);" // returns undefined when called
     )
 }
