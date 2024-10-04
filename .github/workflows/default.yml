@@ -396,3 +396,4 @@ jobs:
         uses: iRoachie/slack-github-actions@v2.3.2
         env:
           SLACK_WEBHOOK_URL: ${{ vars.LP_SLACK_WEBHOOK_URL }}
+          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
