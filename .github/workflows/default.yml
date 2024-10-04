@@ -343,8 +343,8 @@ jobs:
       - name: Deploy to Maven Central
         run: mvn -B deploy -Pci,-ci-sdk,-ci-jira-applink,-ci-ktor -DskipTests "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
         env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_S01_TOKEN_USER }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_S01_TOKEN_PASSWORD }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
 
   prepare-next-snapshot:
