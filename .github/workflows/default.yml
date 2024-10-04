@@ -319,14 +319,31 @@ jobs:
           git config user.name "GitHub Actions"
 
           VERSION="${{ needs.build.outputs.version }}"
-          mvn -B versions:set "-DnewVersion=$VERSION" versions:commit "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
-          
-          git commit -am "[skip ci] set release version $VERSION"
-          git push origin HEAD:$MAIN_BRANCH
-          
+
+          # Check if the version has already been set in the POM file
+          CURRENT_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+          if [ "$CURRENT_VERSION" = "$VERSION" ]; then
+            echo "Version $VERSION is already set in the POM file."
+          else
+            mvn -B versions:set "-DnewVersion=$VERSION" versions:commit "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          fi
+
+          # Check if there are changes to commit
+          if git diff --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -am "[skip ci] set release version $VERSION"
+            git push origin HEAD:$MAIN_BRANCH
+          fi
+
+          # Check if the tag already exists
           TAG_NAME="v$VERSION"
-          git tag -f $TAG_NAME
-          git push origin -f --tags
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists."
+          else
+            git tag -f $TAG_NAME
+            git push origin -f --tags
+          fi
 
       - name: gpg version
         id: show-gpg-version
