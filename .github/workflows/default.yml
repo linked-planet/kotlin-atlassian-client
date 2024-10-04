@@ -334,7 +334,7 @@ jobs:
 
       - name: Install GPG Secret Key
         id: install-secret-key
-        run: cat <(echo -e "${{ secrets.SIGNING_KEY }}") | gpg --batch --import
+        run: cat <(echo -e "${{ vars.DEV_LINKED_PLANET_PGP_KEY_ID }}") | gpg --batch --import
 
       - name: List available secret keys
         id: list-secret-keys
@@ -343,9 +343,9 @@ jobs:
       - name: Deploy to Maven Central
         run: mvn -B deploy -Pci,-ci-sdk,-ci-jira-applink,-ci-ktor -DskipTests "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
         env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_S01_TOKEN_USER }}
+          SONATYPE_USERNAME: ${{ vars.SONATYPE_S01_TOKEN_USER }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_S01_TOKEN_PASSWORD }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_PASSWORD: ${{ secrets.DEV_LINKED_PLANET_PGP_KEY_PW }}
 
   prepare-next-snapshot:
     runs-on: ubuntu-20.04
@@ -395,5 +395,4 @@ jobs:
         if: ${{ github.ref == env.MAIN_BRANCH_FULL || github.event_name == 'release' }}
         uses: iRoachie/slack-github-actions@v2.3.2
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ vars.LP_SLACK_WEBHOOK_URL }}
