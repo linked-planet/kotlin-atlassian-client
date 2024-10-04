@@ -28,6 +28,7 @@ import com.atlassian.jira.bc.projectroles.ProjectRoleService
 import com.atlassian.jira.bc.user.search.DefaultAssigneeService
 import com.atlassian.jira.permission.ProjectPermissions
 import com.atlassian.jira.project.Project
+import com.atlassian.jira.project.ProjectManager
 import com.atlassian.jira.security.JiraAuthenticationContext
 import com.atlassian.jira.security.PermissionManager
 import com.atlassian.jira.security.roles.ProjectRoleActors
@@ -43,6 +44,7 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.withErrorCollection
 
 object SdkJiraUserOperator : JiraUserOperator {
 
+    private val projectManager: ProjectManager by getComponent()
     private val projectService: ProjectService by getComponent()
     private val permissionManager: PermissionManager by getComponent()
     private val userUtil: UserUtil by getComponent()
@@ -52,6 +54,26 @@ object SdkJiraUserOperator : JiraUserOperator {
     private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
 
     private fun user() = jiraAuthenticationContext.loggedInUser
+
+    /**
+     * Check if a single user is project admin for the given project.
+     * This is only available through the Sdk Operator as it is quite inefficient to do this multiple times over http.
+     */
+    fun isProjectAdmin(applicationUser: ApplicationUser, projectId: Long): Either<JiraClientError, Boolean> = either {
+        val project = projectManager.getProjectObj(projectId)
+            ?: return createProjectNotFoundError(projectId).left()
+        applicationUser.hasPermissionWithName(ProjectPermissions.ADMINISTER_PROJECTS.permissionKey(), project)
+    }
+
+    /**
+     * Check if a single user is assignable to the given project.
+     * This is only available through the Sdk Operator as it is quite inefficient to do this multiple times over http.
+     */
+    fun isAssignable(applicationUser: ApplicationUser, projectId: Long): Either<JiraClientError, Boolean> = either {
+        val project = projectManager.getProjectObj(projectId)
+            ?: return createProjectNotFoundError(projectId).left()
+        defaultAssigneeService.isAssignable(project, applicationUser)
+    }
 
     override suspend fun getAssignableUsersByProjectKey(projectKey: String): Either<JiraClientError, List<JiraUser>> =
         eitherAndCatch {
@@ -99,6 +121,12 @@ object SdkJiraUserOperator : JiraUserOperator {
     private fun createProjectNotFoundError(projectKey: String) = JiraClientError(
         "Project not found",
         "No Project with projectKey $projectKey found.",
+        statusCode = 404
+    )
+
+    private fun createProjectNotFoundError(projectId: Long) = JiraClientError(
+        "Project not found",
+        "No Project with projectId $projectId found.",
         statusCode = 404
     )
 
