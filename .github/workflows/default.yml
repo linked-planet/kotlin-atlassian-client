@@ -351,7 +351,7 @@ jobs:
 
       - name: Install GPG Secret Key
         id: install-secret-key
-        run: cat <(echo -e "${{ vars.DEV_LINKED_PLANET_PGP_KEY_ID }}") | gpg --batch --import
+        run: cat <(echo -e "${{ secrets.DEV_LINKED_PLANET_PGP_PRIVATE_KEY }}") | gpg --batch --import
 
       - name: List available secret keys
         id: list-secret-keys
@@ -362,7 +362,7 @@ jobs:
         env:
           SONATYPE_USERNAME: ${{ vars.SONATYPE_S01_TOKEN_USER }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_S01_TOKEN_PASSWORD }}
-          SIGNING_PASSWORD: ${{ secrets.DEV_LINKED_PLANET_PGP_KEY_PW }}
+          SIGNING_PASSWORD: ${{ secrets.DEV_LINKED_PLANET_PGP_KEY_PASSPHRASE }}
 
   prepare-next-snapshot:
     runs-on: ubuntu-20.04
