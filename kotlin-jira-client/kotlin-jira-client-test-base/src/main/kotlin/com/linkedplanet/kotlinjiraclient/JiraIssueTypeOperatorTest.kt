@@ -70,7 +70,7 @@ interface JiraIssueTypeOperatorTest<JiraFieldType> : BaseTestConfigProvider<Jira
 
     fun issueTypes_04GetEditAttributesForIssue() {
         val attributes = runBlocking {
-            val key = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser).orFail().key
+            val key = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", parser = ::issueParser).orFail().key
             issueTypeOperator.getEditAttributes(key)
         }.orFail()
         val expectedAttributes = getExpectedAttributes()

@@ -22,6 +22,8 @@ package com.linkedplanet.kotlinjiraclient
 import arrow.core.*
 import arrow.core.raise.either
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
+import com.linkedplanet.kotlinjiraclient.api.model.ExpandedOption
+import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 import com.linkedplanet.kotlinjiraclient.util.*
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -31,6 +33,7 @@ import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
+@Suppress("FunctionName")
 interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFieldType> {
 
     @Test
@@ -41,7 +44,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                     Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
                 }
 
-            existingIssueIds.orFail().forEach {
+                existingIssueIds.orFail().forEach {
                     issueOperator.deleteIssue(it)
                 }
 
@@ -97,12 +100,12 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_03aGetIssueByKeyWithoutPermission() {
         loginAsUser("admin")
         val issueKey = runBlocking {
-            issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser)
+            issueOperator.getIssueByJQL("summary ~ \"Test-1\"", parser = ::issueParser)
         }.orFail().key
 
         loginAsUser("EveTheEvilHacker")
         runBlocking {
-            val error = issueOperator.getIssueByKey(issueKey, ::issueParser).assertLeft()
+            val error = issueOperator.getIssueByKey(issueKey, parser = ::issueParser).assertLeft()
             assertThat(error.message, containsString("401"))
         }
     }
@@ -111,7 +114,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_03bGetIssueByJqlWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
-            val error = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
+            val error = issueOperator.getIssueByJQL("summary ~ \"Test-1\"", parser = ::issueParser).assertLeft()
             assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
@@ -120,8 +123,8 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_03cGetIssuesByJqlWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
-            val error = issueOperator.getIssuesByJQL("summary ~ \"Test-1\"", ::issueParser).assertLeft()
-            assertThat(error.message, anyOf(containsString("401"), containsString("400")) )
+            val error = issueOperator.getIssuesByJQL("summary ~ \"Test-1\"", parser = ::issueParser).assertLeft()
+            assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
 
@@ -129,23 +132,27 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_03dGetIssuesByJqlPaginatedWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
-            val error = issueOperator.getIssuesByJQLPaginated("summary ~ \"Test-1\"", 0, 1, ::issueParser).assertLeft()
+            val error =
+                issueOperator.getIssuesByJQLPaginated("summary ~ \"Test-1\"", 0, 1, parser = ::issueParser).assertLeft()
             assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
+
     @Test
     fun issues_03eGetIssuesByIssueTypeWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
-            val error = issueOperator.getIssuesByIssueType(projectId, issueTypeId, ::issueParser).assertLeft()
+            val error = issueOperator.getIssuesByIssueType(projectId, issueTypeId, parser = ::issueParser).assertLeft()
             assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
+
     @Test
     fun issues_03fGetIssuesByTypePaginatedWithoutPermission() {
         loginAsUser("EveTheEvilHacker")
         runBlocking {
-            val error = issueOperator.getIssuesByTypePaginated(projectId, issueTypeId, 0, 1, ::issueParser).assertLeft()
+            val error = issueOperator.getIssuesByTypePaginated(projectId, issueTypeId, 0, 1, parser = ::issueParser)
+                .assertLeft()
             assertThat(error.message, anyOf(containsString("401"), containsString("400")))
         }
     }
@@ -284,7 +291,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         assertThat(creationResponse.self.endsWith("/rest/api/2/issue/${creationResponse.id}"), equalTo(true))
 
         val createdIssue = runBlocking {
-            issueOperator.getIssueByJQL("key = \"${creationResponse.key}\"", ::issueParser)
+            issueOperator.getIssueByJQL("key = \"${creationResponse.key}\"", parser = ::issueParser)
         }.orFail()
 
         assertThat(createdIssue.projectId, equalTo(projectId))
@@ -310,10 +317,18 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
             equalTo(zonedDateTimeValue.truncatedTo(ChronoUnit.MINUTES).withZoneSameInstant(ZoneOffset.UTC))
         )
 
-        val transitions = createdIssue.transitions
-        assertThat(transitions.isNotEmpty(), equalTo(true))
-        assertThat(transitions.singleOrNull { it.name == "Do it" }?.let { true } ?: false, equalTo(true))
-        assertThat(transitions.singleOrNull { it.name == "To Do" }?.let { true } ?: false, equalTo(true))
+        assertThat(createdIssue.transitions.map { it.name }.toSet(), equalTo(setOf("Do it", "To Do")))
+    }
+
+    @Test
+    fun issues_07aTestTransitionExpanded() {
+        val jql = "summary ~ \"MyNewSummary\""
+        val issue = runBlocking { issueOperator.getIssueByJQL(jql, parser = ::issueParser) }.orFail()
+        assertThat(issue.transitions.map { it.name }.toSet(), equalTo(setOf("Do it", "To Do")))
+
+        val queryParams = IssueQueryParams(expanded = listOf(ExpandedOption.NAMES))
+        val issueNoTransitions = runBlocking { issueOperator.getIssueByJQL(jql, queryParams, ::issueParser) }.orFail()
+        assertThat(issueNoTransitions.transitions, equalTo(emptyList()))
     }
 
     @Test
@@ -325,15 +340,17 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
 
     @Test
     fun issues_07xUpdateIssueWithourPermission() {
-        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
+        val issue =
+            runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", parser = ::issueParser) }.orFail()
         loginAsUser("EveTheEvilHacker")
         val error = runBlocking { issueOperator.updateIssue(projectId, issueTypeId, issue.key, listOf()) }.assertLeft()
         assertThat(error.message, anyOf(containsString("401"), containsString("400")))
     }
 
     @Test
-    fun issues_07xDeleteIssueWithoutPermission() { // throwable wtf
-        val issue = runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser) }.orFail()
+    fun issues_07xDeleteIssueWithoutPermission() {
+        val issue =
+            runBlocking { issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", parser = ::issueParser) }.orFail()
         loginAsUser("EveTheEvilHacker")
         val error = runBlocking { issueOperator.deleteIssue(issue.key) }.assertLeft()
         assertThat(error.message, containsString("401"))
@@ -343,7 +360,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     fun issues_08UpdateIssue() {
 
         val issue = runBlocking {
-            issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", ::issueParser)
+            issueOperator.getIssueByJQL("summary ~ \"MyNewSummary\"", parser = ::issueParser)
         }.orFail()
 
         val summary = "MyNewSummary-update"
@@ -384,7 +401,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         }.orFail()
 
         val issueAfterUpdate = runBlocking {
-            issueOperator.getIssueByKey(issue.key, ::issueParser)
+            issueOperator.getIssueByKey(issue.key, parser = ::issueParser)
         }.orFail()
 
         assertThat(issueAfterUpdate.projectId, equalTo(projectId))
@@ -407,7 +424,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_09DeleteIssue() {
         val searchNewIssue = runBlocking {
-            issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", ::issueParser)
+            issueOperator.getIssueByJQL("summary ~ \"MyNewSummary-update\"", parser = ::issueParser)
         }.orFail()
 
         runBlocking {
@@ -415,7 +432,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
         }.orFail()
 
         val issuesAfterDeletion = runBlocking {
-            issueOperator.getIssueByKey(searchNewIssue.key, ::issueParser).getOrNull()
+            issueOperator.getIssueByKey(searchNewIssue.key, parser = ::issueParser).getOrNull()
         }
         assertThat(issuesAfterDeletion, equalTo(null))
     }

@@ -28,6 +28,7 @@ import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
+import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraField
 import com.linkedplanet.kotlinjiraclient.http.model.HttpMappingField
 import com.linkedplanet.kotlinjiraclient.http.util.fromHttpDomainError
@@ -41,6 +42,7 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
 
     override suspend fun <T> getIssuesByJQL(
         jql: String,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, List<T>> = either {
         recursiveRestCallPaginatedRaw { index, maxSize ->
@@ -51,7 +53,7 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
                     "jql" to jql,
                     "startAt" to index.toString(),
                     "maxResults" to maxSize.toString(),
-                    "expand" to "names,transitions",
+                    "expand" to queryParams.expanded.joinToString(","),
                 ),
                 null,
                 "application/json",
@@ -75,6 +77,7 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
         jql: String,
         pageIndex: Int,
         pageSize: Int,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>> = either {
         val page = context.httpClient.executeGet<HttpJiraIssuePage>(
@@ -83,7 +86,7 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
                 "jql" to jql,
                 "startAt" to (pageIndex * pageSize).toString(),
                 "maxResults" to pageSize.toString(),
-                "expand" to "names,transitions",
+                "expand" to queryParams.expanded.joinToString(","),
             ),
             object : TypeToken<HttpJiraIssuePage>() {}.type
         )
@@ -111,17 +114,20 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
 
     override suspend fun <T> getIssueByJQL(
         jql: String,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?> = either {
-        getIssuesByJQLPaginated(jql, 0, 1, parser).bind().items.firstOrNull()
+        getIssuesByJQLPaginated(jql, 0, 1, queryParams, parser).bind().items.firstOrNull()
     }
 
     override suspend fun <T> getIssuesByIssueType(
         projectId: Long,
         issueTypeId: Int,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, List<T>> = either {
-        getIssuesByJQL("project=$projectId AND issueType=$issueTypeId", parser).bind()
+        val jql = "project=$projectId AND issueType=$issueTypeId"
+        getIssuesByJQL(jql, queryParams, parser).bind()
     }
 
     override suspend fun <T> getIssuesByTypePaginated(
@@ -129,19 +135,22 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
         issueTypeId: Int,
         pageIndex: Int,
         pageSize: Int,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>> = either {
-        getIssuesByJQLPaginated("project=$projectId AND issueType=$issueTypeId", pageIndex, pageSize, parser).bind()
+        val jql = "project=$projectId AND issueType=$issueTypeId"
+        getIssuesByJQLPaginated(jql, pageIndex, pageSize, queryParams, parser).bind()
     }
 
     override suspend fun <T> getIssueByKey(
         key: String,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?> = either {
         val successResponse = context.httpClient.executeGetCall(
             "/rest/api/2/issue/${key}",
             mapOf(
-                "expand" to "names,transitions"
+                "expand" to queryParams.expanded.joinToString(","),
             ),
         )
             .map { it.body }
@@ -167,8 +176,9 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
 
     override suspend fun <T> getIssueById(
         id: Int,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, T?> = getIssueByKey(id.toString(), parser)
+    ): Either<JiraClientError, T?> = getIssueByKey(id.toString(), queryParams, parser)
 
     override suspend fun createIssue(
         projectId: Long,

@@ -45,6 +45,7 @@ import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
+import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 import com.linkedplanet.kotlinjiraclient.sdk.field.SdkJiraField
 import com.linkedplanet.kotlinjiraclient.sdk.util.IssueJsonConverter
 import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
@@ -134,15 +135,17 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
 
     override suspend fun <T> getIssueById(
         id: Int,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?> =
-        getIssueByKey(id.toString(), parser)
+        getIssueByKey(id.toString(), queryParams, parser)
 
     override suspend fun <T> getIssueByJQL(
         jql: String,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?> = either {
-        val potentiallyMultipleIssues = getIssuesByJQLPaginated(jql, 0, 1, parser).bind()
+        val potentiallyMultipleIssues = getIssuesByJQLPaginated(jql, 0, 1, queryParams, parser).bind()
         if (potentiallyMultipleIssues.totalItems < 1) {
             JiraClientError("Issue not found", "No issue was found.").asEither<JiraClientError, T?>().bind()
         }
@@ -152,21 +155,28 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     override suspend fun <T> getIssuesByIssueType(
         projectId: Long,
         issueTypeId: Int,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, List<T>> =
-        getIssuesByJQL("project=$projectId AND issueType=$issueTypeId", parser)
+    ): Either<JiraClientError, List<T>> {
+        val jql = "project=$projectId AND issueType=$issueTypeId"
+        return getIssuesByJQL(jql, queryParams, parser)
+    }
 
     override suspend fun <T> getIssuesByTypePaginated(
         projectId: Long,
         issueTypeId: Int,
         pageIndex: Int,
         pageSize: Int,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, Page<T>> =
-        getIssuesByJQLPaginated("project=$projectId AND issueType=$issueTypeId", pageIndex, pageSize, parser)
+    ): Either<JiraClientError, Page<T>> {
+        val jql = "project=$projectId AND issueType=$issueTypeId"
+        return getIssuesByJQLPaginated(jql, pageIndex, pageSize, queryParams, parser)
+    }
 
     override suspend fun <T> getIssueByKey(
         key: String,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?> = either {
         Either.catchJiraClientError {
@@ -176,15 +186,16 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
             }
             val issue = issueResult.toEither().bind().issue
                 ?: return@catchJiraClientError null
-            issueToConcreteType(issue, parser).bind()
+            issueToConcreteType(issue, queryParams, parser).bind()
         }.bind()
     }
 
     override suspend fun <T> getIssuesByJQL(
         jql: String,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, List<T>> = either {
-        val issuePage = getIssuesByJqlWithPagerFilter(jql, PagerFilter.getUnlimitedFilter(), parser).bind()
+        val issuePage = getIssuesByJqlWithPagerFilter(jql, PagerFilter.getUnlimitedFilter(), queryParams, parser).bind()
         issuePage.items
     }
 
@@ -192,15 +203,19 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
         jql: String,
         pageIndex: Int,
         pageSize: Int,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
-    ): Either<JiraClientError, Page<T>> =
-        getIssuesByJqlWithPagerFilter(jql, PagerFilter.newPageAlignedFilter(pageIndex * pageSize, pageSize), parser)
+    ): Either<JiraClientError, Page<T>> {
+        val pagerFilter = PagerFilter.newPageAlignedFilter(pageIndex * pageSize, pageSize)
+        return getIssuesByJqlWithPagerFilter(jql, pagerFilter, queryParams, parser)
+    }
 
     private suspend fun <T> issueToConcreteType(
         issue: Issue,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T> = Either.catchJiraClientError {
-        val jsonIssue: JsonObject = issueJsonConverter.createJsonIssue(issue)
+        val jsonIssue: JsonObject = issueJsonConverter.createJsonIssue(issue, queryParams)
         val customFieldMap = customFieldManager.getCustomFieldObjects(issue).associate { it.name to it.id }
         return parser(jsonIssue, customFieldMap)
     }
@@ -208,13 +223,14 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     private suspend fun <T> getIssuesByJqlWithPagerFilter(
         jql: String,
         pagerFilter: PagerFilter<*>?,
+        queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>> = either {
         val user = userOrError().bind()
         val query = Either.catchJiraClientError { jqlParser.parseQuery(jql) }.bind()
         val search = Either.catchJiraClientError { searchService.search(user, query, pagerFilter) }.bind()
         val issues = search.results
-            .map { issue -> issueToConcreteType(issue, parser) }
+            .map { issue -> issueToConcreteType(issue, queryParams, parser) }
             .bindAll()
         val totalItems = search.total
         val pageSize = pagerFilter?.pageSize ?: 0
