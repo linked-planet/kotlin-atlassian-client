@@ -30,6 +30,7 @@ import com.atlassian.jira.rest.v2.issue.IncludedFields
 import com.atlassian.jira.rest.v2.issue.IssueBean
 import com.atlassian.jira.rest.v2.issue.builder.BeanBuilderFactory
 import com.google.gson.*
+import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 import com.linkedplanet.kotlinjiraclient.sdk.field.FieldAccessorImpl
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.UriBuilder
@@ -66,10 +67,13 @@ class IssueJsonConverter {
 
 
     @Throws(FieldException::class)
-    fun createJsonIssue(issue: Issue): JsonObject {
-        val expand = "names,transitions"
+    fun createJsonIssue(
+        issue: Issue,
+        queryParams: IssueQueryParams,
+    ): JsonObject {
+        val expanded = queryParams.expanded.joinToString(",")
         val issueBean: IssueBean = beanBuilderFactory
-            .newIssueBeanBuilder2(IncludedFields.includeNavigableByDefault(null), expand, uriBuilder)
+            .newIssueBeanBuilder2(IncludedFields.includeNavigableByDefault(null), expanded, uriBuilder)
             .build(issue)
         this.addOrderableFieldsToBean(issueBean, issue)
         this.addAvailableNavigableFieldsToBean(issueBean, issue)

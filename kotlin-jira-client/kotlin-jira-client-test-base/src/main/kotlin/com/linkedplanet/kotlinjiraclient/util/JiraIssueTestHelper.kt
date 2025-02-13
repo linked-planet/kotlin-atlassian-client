@@ -26,8 +26,10 @@ import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.field.JIRA_DATE_TIME_FORMATTER
 import com.linkedplanet.kotlinjiraclient.api.field.JiraFieldFactory
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueOperator
+import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
 import com.linkedplanet.kotlinjiraclient.api.model.JiraStatus
 import com.linkedplanet.kotlinjiraclient.api.model.JiraTransition
+import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 import com.linkedplanet.kotlinjiraclient.api.resolveConfig
 import java.time.ZonedDateTime
 import kotlinx.coroutines.runBlocking
@@ -39,11 +41,11 @@ class JiraIssueTestHelper<JiraFieldType>(
     private val epicIssueTypeId: Int,
     private val projectId: Long
 ) {
-    fun createDefaultIssue(vararg fields: JiraFieldType) = createIssue(issueTypeId, *fields)
+    fun createDefaultIssue(vararg fields: JiraFieldType): JiraIssue = createIssue(issueTypeId, *fields)
 
-    fun createEpic(vararg fields: JiraFieldType) = createIssue(epicIssueTypeId, *fields)
+    fun createEpic(vararg fields: JiraFieldType): JiraIssue = createIssue(epicIssueTypeId, *fields)
 
-    fun createIssue(jiraIssueTypeId: Int, vararg fields: JiraFieldType) =
+    fun createIssue(jiraIssueTypeId: Int, vararg fields: JiraFieldType): JiraIssue =
         runBlocking {
             val combinedFields = listOf(
                 fieldFactory.jiraProjectField(projectId),
@@ -53,8 +55,8 @@ class JiraIssueTestHelper<JiraFieldType>(
             issueOperator.createIssue(projectId, jiraIssueTypeId, combinedFields)
         }.orFail()
 
-    fun getIssueByKey(key: String) = runBlocking {
-        issueOperator.getIssueByKey(key, ::issueParser)
+    fun getIssueByKey(key: String): Story = runBlocking {
+        issueOperator.getIssueByKey(key, IssueQueryParams(), ::issueParser)
     }.orFail()
 }
 
@@ -79,7 +81,7 @@ data class Story(
     val transitions: List<JiraTransition>
 )
 
-suspend fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Either<JiraClientError, Story> =
+fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Either<JiraClientError, Story> =
     either {
         val fields = jsonObject.get("fields").asJsonObject
 
@@ -115,13 +117,14 @@ suspend fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Eithe
         )
 
         val transitions =
-            jsonObject.get("transitions").asJsonArray
-                .map {
+            jsonObject.get("transitions")?.asJsonArray
+                ?.map {
                     val transition = it.asJsonObject
                     val name = transition.get("name").asString
                     val id = transition.get("id").asString
                     JiraTransition(id, name)
                 }
+                ?: emptyList()
 
         val epicKey: String? = fieldByName("Epic Link")?.asString
 

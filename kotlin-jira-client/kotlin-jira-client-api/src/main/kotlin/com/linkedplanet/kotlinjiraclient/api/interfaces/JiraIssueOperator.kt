@@ -24,6 +24,7 @@ import com.google.gson.JsonObject
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.model.JiraIssue
+import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 
 /**
  * Provides methods for working with Jira issues, including retrieving issues by JQL query, issue type, or key; creating and updating issues; and deleting issues.
@@ -40,6 +41,7 @@ interface JiraIssueOperator<JiraFieldType> {
      */
     suspend fun <T> getIssuesByJQL(
         jql: String,
+        queryParams: IssueQueryParams = IssueQueryParams(),
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, List<T>>
 
@@ -55,6 +57,7 @@ interface JiraIssueOperator<JiraFieldType> {
         jql: String,
         pageIndex: Int = 0,
         pageSize: Int = RESULTS_PER_PAGE,
+        queryParams: IssueQueryParams = IssueQueryParams(),
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>>
 
@@ -66,6 +69,7 @@ interface JiraIssueOperator<JiraFieldType> {
      */
     suspend fun <T> getIssueByJQL(
         jql: String,
+        queryParams: IssueQueryParams = IssueQueryParams(),
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?>
 
@@ -79,6 +83,7 @@ interface JiraIssueOperator<JiraFieldType> {
     suspend fun <T> getIssuesByIssueType(
         projectId: Long,
         issueTypeId: Int,
+        queryParams: IssueQueryParams = IssueQueryParams(),
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, List<T>>
 
@@ -96,6 +101,7 @@ interface JiraIssueOperator<JiraFieldType> {
         issueTypeId: Int,
         pageIndex: Int = 0,
         pageSize: Int = RESULTS_PER_PAGE,
+        queryParams: IssueQueryParams = IssueQueryParams(),
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>>
 
@@ -108,6 +114,7 @@ interface JiraIssueOperator<JiraFieldType> {
      */
     suspend fun <T> getIssueByKey(
         key: String,
+        queryParams: IssueQueryParams = IssueQueryParams(),
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?>
 
@@ -119,6 +126,7 @@ interface JiraIssueOperator<JiraFieldType> {
      */
     suspend fun <T> getIssueById(
         id: Int,
+        queryParams: IssueQueryParams = IssueQueryParams(),
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, T?>
 
