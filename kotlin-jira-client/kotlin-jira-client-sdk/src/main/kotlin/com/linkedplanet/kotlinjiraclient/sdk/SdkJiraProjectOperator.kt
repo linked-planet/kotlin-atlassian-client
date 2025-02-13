@@ -47,7 +47,7 @@ object SdkJiraProjectOperator : JiraProjectOperator {
         eitherAndCatch {
             projectService.getProjectById(user(), projectId.toLong()).toEither().bind().get().let {
                 val avatarUrl = avatarService.getProjectAvatarAbsoluteURL(it, Avatar.Size.defaultSize())
-                val url = it.url.ifEmpty { "${baseUrl()}/rest/api/2/project/${it.id}" }
+                val url = if (!it.url.isNullOrEmpty()) it.url else "${baseUrl()}/rest/api/2/project/${it.id}"
                 JiraProject(it.id, it.key, it.name, url, avatarUrl.toASCIIString())
             }
         }
@@ -56,7 +56,7 @@ object SdkJiraProjectOperator : JiraProjectOperator {
         eitherAndCatch {
             return Either.Right(projectService.getAllProjects(user()).toEither().bind().get().map {
                 val avatarUrl = avatarService.getProjectAvatarAbsoluteURL(it, Avatar.Size.defaultSize())
-                val url = it.url.ifEmpty { "${baseUrl()}/rest/api/2/project/${it.id}" }
+                val url = if (!it.url.isNullOrEmpty()) it.url else "${baseUrl()}/rest/api/2/project/${it.id}"
                 JiraProject(it.id, it.key, it.name, url, avatarUrl.toASCIIString())
             })
         }
