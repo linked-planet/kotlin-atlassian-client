@@ -41,15 +41,7 @@ import com.linkedplanet.kotlininsightclient.api.error.ObjectTypeNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightObjectOperator
 import com.linkedplanet.kotlininsightclient.api.interfaces.MapToDomain
 import com.linkedplanet.kotlininsightclient.api.interfaces.identity
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttribute
-import com.linkedplanet.kotlininsightclient.api.model.InsightAttributeId
-import com.linkedplanet.kotlininsightclient.api.model.InsightObject
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectPage
-import com.linkedplanet.kotlininsightclient.api.model.InsightObjectTypeId
-import com.linkedplanet.kotlininsightclient.api.model.ObjectTypeSchemaAttribute
-import com.linkedplanet.kotlininsightclient.api.model.ReferencedObject
-import com.linkedplanet.kotlininsightclient.api.model.ReferencedObjectType
+import com.linkedplanet.kotlininsightclient.api.model.*
 import com.linkedplanet.kotlininsightclient.sdk.SdkInsightObjectTypeOperator.typeAttributeBeanToSchema
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredDateTimeFormatterInJira
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredVersionAssembler
@@ -73,8 +65,10 @@ import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeAttributeBean
 import com.riadalabs.jira.plugins.insight.services.model.ObjectTypeBean
 import com.riadalabs.jira.plugins.insight.services.model.StatusTypeBean
 import com.riadalabs.jira.plugins.insight.services.model.factory.ObjectAttributeBeanFactory
+import kotlinx.coroutines.runBlocking
 import java.time.ZoneId
 import java.util.*
+import kotlin.math.min
 
 object SdkInsightObjectOperator : InsightObjectOperator {
 
@@ -305,6 +299,45 @@ object SdkInsightObjectOperator : InsightObjectOperator {
         val insightObjectId = createInsightObject(objectTypeId, *insightAttributes).bind()
         (getObjectById(insightObjectId, toDomain).bind()
             ?.right() ?: ObjectNotFoundError(insightObjectId).left<ObjectNotFoundError>()).bind()
+    }
+
+    suspend fun getAttributeValues(
+        objectTypeId: Int,
+        attributeId: Int,
+        query: String?,
+        exceptionList: String?,
+        page: Int,
+        pageSize: Int
+    ): Either<InsightClientError, AttributeValueResponse> = catchAsInsightClientError {
+        val exceptions = exceptionList?.split(",")?.map { it.lowercase() }?: emptyList()
+        val objectTypeAttributeBean =
+            objectTypeAttributeFacade.findObjectTypeAttributeBeans(objectTypeId).firstOrNull { it.id == attributeId }
+                ?: throw RuntimeException("objectType not found")
+
+        val objects: List<ObjectBean> = iqlFacade.findObjects("objectTypeId = $objectTypeId", 0, 1000000).objects
+        val allAttributeValues = objects.flatMap { it ->
+            val attributeBean = it.objectAttributeBeans.firstOrNull { it.objectTypeAttributeId == attributeId }
+            attributeBean?.let { runBlocking { mapAttributeBeanToInsightAttribute(it, objectTypeAttributeBean)
+                .getOrNull() } }?.let {
+                if(it.isMulti) {
+                    it.displayValues?: emptyList()
+                } else {
+                    it.displayValue?.let {listOf(it)}?: emptyList()
+                }
+            }?: emptyList()
+        }.toSet().sorted()
+        val filteredAttributeValues = allAttributeValues.filter {!exceptions.contains(it.lowercase()) }
+            .filter { query.isNullOrEmpty() || it.lowercase().contains(query.lowercase()) }
+        val pages = (filteredAttributeValues.size + pageSize - 1) / pageSize
+        val paginationIndex = ((page-1).takeIf { it >= 0 }?:0)*pageSize
+        val paginationEndIndex = min(paginationIndex+pageSize, filteredAttributeValues.size)
+        val paginatedValues = filteredAttributeValues.subList(paginationIndex, paginationEndIndex)
+        AttributeValueResponse(
+            page,
+            pages,
+            pageSize,
+            paginatedValues
+        )
     }
 
     private fun createEmptyDomainObject(

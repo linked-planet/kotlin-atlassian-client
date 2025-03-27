@@ -55,6 +55,13 @@ value class InsightAttributeId(@field:NotNull val raw: Int)
 
 // endregion ID wrapper
 
+data class AttributeValueResponse(
+    @field:NotNull val page: Int,
+    @field:NotNull val pages: Int,
+    @field:NotNull val pageSize: Int,
+    @field:NotNull val results: List<String>
+)
+
 data class InsightObjectPage<T>(
     @field:NotNull val totalFilterCount: Int = -1,
     @field:NotNull val objects: List<T> = emptyList(),
@@ -121,14 +128,17 @@ sealed class InsightAttribute(
     @get:JvmName("getAttributeId")
     @Transient @field:NotNull open val attributeId: InsightAttributeId,
     @Transient open val schema: ObjectTypeSchemaAttribute?,
-    @field:NotNull val type: AttributeTypeEnum
+    @field:NotNull val type: AttributeTypeEnum,
+    val isMulti: Boolean,
+    open val displayValue: String?,
+    open val displayValues: List<String>?
 ) {
     data class Text(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: String?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Text) {
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Text, false, value, null) {
         override fun toString() = value ?: ""
     }
 
@@ -137,7 +147,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: Int?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Integer){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Integer, false, value?.toString(), null) {
         override fun toString() = value?.toString() ?: ""
     }
 
@@ -146,7 +156,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: Boolean?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Bool){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Bool, false, value?.toString(), null) {
         override fun toString() = value?.toString() ?: ""
     }
 
@@ -155,7 +165,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: Double?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.DoubleNumber){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.DoubleNumber, false, value?.toString(), null){
         override fun toString() = value?.toString() ?: ""
     }
 
@@ -163,9 +173,9 @@ sealed class InsightAttribute(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: LocalDate?,
-        val displayValue: String?,
+        override val displayValue: String?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Date){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Date, false, displayValue, null){
         override fun toString() = value?.toString() ?: ""
     }
 
@@ -176,9 +186,9 @@ sealed class InsightAttribute(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: LocalTime?,
-        val displayValue: String?,
+        override val displayValue: String?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Time){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Time, false, displayValue, null){
         override fun toString() = value?.toString() ?: ""
     }
 
@@ -186,9 +196,9 @@ sealed class InsightAttribute(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: ZonedDateTime?,
-        val displayValue: String?,
+        override val displayValue: String?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.DateTime){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.DateTime, false, displayValue, null){
         override fun toString() = value?.toString() ?: ""
     }
 
@@ -197,7 +207,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: String?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Email){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Email, false, value, null){
         override fun toString() = value ?: ""
     }
 
@@ -206,7 +216,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: String?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Textarea){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Textarea, false, value, null){
         override fun toString() = value ?: ""
     }
 
@@ -215,7 +225,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: String?,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Ipaddress){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Ipaddress, false, value, null){
         override fun toString() = value ?: ""
     }
 
@@ -225,7 +235,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         val values: List<String>,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Url){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Url, true, values.joinToString(","), values){
         override fun toString() = values.joinToString(",")
     }
 
@@ -234,7 +244,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         val values: List<String>,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Select){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Select, true, values.joinToString(","), values){
         override fun toString() = values.joinToString(",")
     }
 
@@ -244,7 +254,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         @field:NotNull val referencedObjects: List<ReferencedObject>,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Reference) {
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Reference, true, referencedObjects.map { it.label }.joinToString(","), referencedObjects.map { it.label }) {
         override fun toString() = referencedObjects.joinToString(",") { it.objectKey }
     }
 
@@ -253,7 +263,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         @field:NotNull val users: List<JiraUser>,
         override val schema: ObjectTypeSchemaAttribute?
-    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.User){
+    ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.User, true, users.map { it.displayName }.joinToString(","), users.map { it.displayName }){
         override fun toString() = users.joinToString(",") { it.key }
     }
 
@@ -268,7 +278,10 @@ sealed class InsightAttribute(
     ) : InsightAttribute(
         attributeId,
         schema,
-        AttributeTypeEnum.Confluence
+        AttributeTypeEnum.Confluence,
+        true,
+        pages.map { it.title }.joinToString(","),
+        pages.map { it.title }
     ) {
         override fun toString() = "Confluence attributeId=$attributeId"
     }
@@ -284,7 +297,10 @@ sealed class InsightAttribute(
     ) : InsightAttribute(
         attributeId,
         schema,
-        AttributeTypeEnum.Group
+        AttributeTypeEnum.Group,
+        true,
+        groups.map { it.name }.joinToString(","),
+        groups.map { it.name }
     ) {
         override fun toString() = "Group attributeId=$attributeId"
     }
@@ -298,7 +314,7 @@ sealed class InsightAttribute(
         @field:NotNull val versions: List<ProjectVersion>,
         override val schema: ObjectTypeSchemaAttribute?
     ) :
-        InsightAttribute(attributeId, schema, AttributeTypeEnum.Version) {
+        InsightAttribute(attributeId, schema, AttributeTypeEnum.Version, true, versions.map { it.name }.joinToString(","), versions.map { it.name }) {
         override fun toString() = "Version attributeId=$attributeId"
     }
 
@@ -310,7 +326,7 @@ sealed class InsightAttribute(
         @field:NotNull override val attributeId: InsightAttributeId,
         @field:NotNull val projects: List<JiraProject>,
         override val schema: ObjectTypeSchemaAttribute?) :
-        InsightAttribute(attributeId, schema, AttributeTypeEnum.Project){
+        InsightAttribute(attributeId, schema, AttributeTypeEnum.Project, true, projects.map { it.name }.joinToString(","), projects.map { it.name }) {
         override fun toString() = "Project attributeId=$attributeId"
     }
 
@@ -326,7 +342,10 @@ sealed class InsightAttribute(
     ) : InsightAttribute(
         attributeId,
         schema,
-        AttributeTypeEnum.Status
+        AttributeTypeEnum.Status,
+        false,
+        status?.name,
+        null
     ) {
         override fun toString() = "Status attributeId=$attributeId"
     }
@@ -335,7 +354,7 @@ sealed class InsightAttribute(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
         override val schema: ObjectTypeSchemaAttribute?) :
-        InsightAttribute(attributeId, schema, AttributeTypeEnum.Unknown){
+        InsightAttribute(attributeId, schema, AttributeTypeEnum.Unknown, false, null, null){
         override fun toString() = ""
     }
 
