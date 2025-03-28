@@ -130,8 +130,8 @@ sealed class InsightAttribute(
     @Transient open val schema: ObjectTypeSchemaAttribute?,
     @field:NotNull val type: AttributeTypeEnum,
     val isMulti: Boolean,
-    open val displayValue: String?,
-    open val displayValues: List<String>?
+    @Transient open val displayValue: String? = null,
+    @Transient open val displayValues: List<String>? = null
 ) {
     data class Text(
         @get:JvmName("getAttributeId")
@@ -186,8 +186,8 @@ sealed class InsightAttribute(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: LocalTime?,
-        override val displayValue: String?,
-        override val schema: ObjectTypeSchemaAttribute?
+        override val schema: ObjectTypeSchemaAttribute?,
+        override val displayValue: String? = null
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Time, false, displayValue, null){
         override fun toString() = value?.toString() ?: ""
     }
@@ -196,8 +196,8 @@ sealed class InsightAttribute(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
         val value: ZonedDateTime?,
-        override val displayValue: String?,
-        override val schema: ObjectTypeSchemaAttribute?
+        override val schema: ObjectTypeSchemaAttribute?,
+        override val displayValue: String? = null
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.DateTime, false, displayValue, null){
         override fun toString() = value?.toString() ?: ""
     }
