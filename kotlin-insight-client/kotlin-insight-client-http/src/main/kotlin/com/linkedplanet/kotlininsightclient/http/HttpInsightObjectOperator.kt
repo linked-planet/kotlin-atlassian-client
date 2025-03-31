@@ -378,11 +378,11 @@ class HttpInsightObjectOperator(private val context: HttpInsightClientContext) :
             }
             DefaultType.TIME -> {
                 val localTime = singleValue()?.let { LocalTime.parse(it) }
-                InsightAttribute.Time(attributeId, localTime, values.firstOrNull()?.displayValue as? String?, schema)
+                InsightAttribute.Time(attributeId, localTime, schema, values.firstOrNull()?.displayValue as? String?, )
             }
             DefaultType.DATE_TIME -> {
                 val zonedDateTime = singleValue()?.let { ZonedDateTime.parse(it) }
-                InsightAttribute.DateTime(attributeId, zonedDateTime, values.firstOrNull()?.displayValue as? String?, schema)
+                InsightAttribute.DateTime(attributeId, zonedDateTime, schema, values.firstOrNull()?.displayValue as? String?)
             }
             DefaultType.EMAIL -> InsightAttribute.Email(attributeId, singleValue(), schema)
             DefaultType.TEXTAREA -> InsightAttribute.Textarea(attributeId, singleValue(), schema)
