@@ -70,7 +70,7 @@ class InsightSdkClientTest : InsightClientTest() {
             AttributeValueTestData("INT", 47, 117, "", null, 1, 10, listOf("1")),
             AttributeValueTestData("FLOAT", 47, 118, "", null, 1, 10, listOf("1.0")),
             AttributeValueTestData("DATE", 47, 119, "", null, 1, 10, listOf("1/Jan/25")),
-            AttributeValueTestData("DATETIME", 47, 120, "", null, 1, 10, listOf("01/Jan/25 11:00 AM")),
+            AttributeValueTestData("DATETIME", 47, 120, "", null, 1, 10, listOf("31/Dec/24 11:00 PM")),
             AttributeValueTestData("URL", 47, 121, "", null, 1, 10, listOf("http://localhost:0001/")),
             AttributeValueTestData("EMAIL", 47, 122, "", null, 1, 10, listOf("1@linked-planet.com")),
             AttributeValueTestData("TEXTAREA", 47, 123, "", null, 1, 10, listOf("<p>TEXTAREA_1</p>")),
