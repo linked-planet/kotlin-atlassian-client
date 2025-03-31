@@ -28,6 +28,7 @@ import com.atlassian.jira.bc.project.ProjectService
 import com.atlassian.jira.component.ComponentAccessor
 import com.atlassian.jira.config.properties.ApplicationProperties
 import com.atlassian.jira.user.util.UserManager
+import com.atlassian.jira.util.NaturalOrderStringComparator
 import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusAttribute
 import com.linkedplanet.kotlinatlassianclientcore.common.api.StatusCategory
 import com.linkedplanet.kotlinatlassianclientcore.common.api.ConfluencePage
@@ -325,7 +326,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     it.displayValue?.let {listOf(it)}?: emptyList()
                 }
             }?: emptyList()
-        }.toSet().sorted()
+        }.toSet().sortedWith(NaturalOrderStringComparator.CASE_INSENSITIVE_ORDER)
         val filteredAttributeValues = allAttributeValues.filter {!exceptions.contains(it.lowercase()) }
             .filter { query.isNullOrEmpty() || it.lowercase().contains(query.lowercase()) }
         val pages = (filteredAttributeValues.size + pageSize - 1) / pageSize
@@ -517,13 +518,13 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                 val date = values.firstOrNull()?.dateValue
                 val localTime = date?.toInstant()?.atZone(zoneId)?.toLocalTime()
                 val displayValue = null // Insights original ObjectAssembler does not handle this case at all.
-                InsightAttribute.Time(id,localTime, displayValue, schema)
+                InsightAttribute.Time(id,localTime, schema, displayValue)
             }
             DefaultType.DATE_TIME -> {
                 val date = values.firstOrNull()?.dateValue
                 val zonedDateTime = date?.toInstant()?.atZone(zoneId)
                 val displayValue = zonedDateTime?.let { dateTimeFormatter.formatDateTimeToString(Date.from(it.toInstant())) }
-                InsightAttribute.DateTime(id,zonedDateTime, displayValue, schema)
+                InsightAttribute.DateTime(id,zonedDateTime, schema, displayValue)
             }
             DefaultType.EMAIL -> InsightAttribute.Email(id,values.firstOrNull()?.textValue, schema)
             DefaultType.TEXTAREA -> InsightAttribute.Textarea(id,values.firstOrNull()?.textValue, schema)
