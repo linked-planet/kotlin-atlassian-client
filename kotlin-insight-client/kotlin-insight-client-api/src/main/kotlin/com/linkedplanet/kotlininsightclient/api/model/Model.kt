@@ -435,6 +435,32 @@ sealed class InsightAttribute(
 
 }
 
+fun InsightAttribute.copy(
+    attributeId: InsightAttributeId = this.attributeId,
+    schema: ObjectTypeSchemaAttribute? = this.schema,
+): InsightAttribute = when (this) {
+    is InsightAttribute.Text -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Integer -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Bool -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.DoubleNumber -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Date -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Time -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.DateTime -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Email -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Textarea -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Ipaddress -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Url -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Select -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Reference -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.User -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Confluence -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Group -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Version -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Project -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Status -> copy(attributeId = attributeId, schema = schema)
+    is InsightAttribute.Unknown -> copy(attributeId = attributeId, schema = schema)
+}
+
 fun InsightAttribute.isValueAttribute() = this.type.isValueAttribute()
 fun ObjectTypeSchemaAttribute.isValueAttribute() = this.type.isValueAttribute()
 
