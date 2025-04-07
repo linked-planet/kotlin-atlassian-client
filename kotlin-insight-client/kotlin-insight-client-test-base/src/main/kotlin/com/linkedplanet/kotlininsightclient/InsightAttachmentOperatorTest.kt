@@ -57,7 +57,7 @@ interface InsightAttachmentOperatorTest {
         assertThat(firstAttachment.created, endsWith(":06:08.208Z")) // 7 works fine locally and should be correct,
         assertThat(firstAttachment.created, startsWith("2023-02-21T0")) // but github pipeline insists on 8 o'clock
 
-        val downloadContent = insightAttachmentOperator.downloadAttachment(attachments.first().url).orNull()!!
+        val downloadContent = insightAttachmentOperator.downloadAttachment(attachments.first().url).getOrNull()!!
         val sha256HashIS = calculateSha256(downloadContent.readBytes())
         assertThat(sha256HashIS, equalTo("fd411837a51c43670e8d7367e64f72dbbcda5016f59988547c12d067505ef75b"))
     }
@@ -67,33 +67,38 @@ interface InsightAttachmentOperatorTest {
 
     @Test
     fun attachmentTestAttachmentCRUD() = runBlocking {
-        insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
-        try {
-            val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
-            val country = insightObjectOperator.createObject(
-                Country.id,
-                CountryName.attributeId toValue "Attachistan",
-                CountryShortName.attributeId toValue disclaimer,
-                toDomain =  ::identity
-            ).orFail()
+        mapOf(
+            "AttachmentWithSimpleName" to "simple.txt",
+            "AttachmentWithNumber" to "01231515_a_1241.txt",
+            "AttachmentWithImg" to "cover-L.jpg",
+        ).forEach { (attachmentName, fileName) ->
+            insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, attachmentName)
+            try {
+                val disclaimer = "created by Test and should only exist during test run. Deutsches ß und ä."
+                val country = insightObjectOperator.createObject(
+                    Country.id,
+                    CountryName.attributeId toValue attachmentName,
+                    CountryShortName.attributeId toValue disclaimer,
+                    toDomain =  ::identity
+                ).orFail()
 
-            val attachment = insightAttachmentOperator.uploadAttachment(
-                country.id, "attachistan.txt", "content".byteInputStream()
-            ).orFail()
+                val attachment = insightAttachmentOperator.uploadAttachment(
+                    country.id, fileName, "content".byteInputStream()
+                ).orFail()
 
-            assertThat(attachment.filename, equalTo("attachistan.txt"))
+                assertThat(attachment.filename, equalTo(fileName))
 
-            val downloadContent = insightAttachmentOperator.downloadAttachment(attachment.url).orFail()
-            val downloadContentString = String(downloadContent.readBytes())
-            assertThat(downloadContentString, equalTo("content"))
+                val downloadContent = insightAttachmentOperator.downloadAttachment(attachment.url).orFail()
+                val downloadContentString = String(downloadContent.readBytes())
+                assertThat(downloadContentString, equalTo("content"))
 
-            insightAttachmentOperator.deleteAttachment(attachment.id).orFail()
-            assertThat(insightAttachmentOperator.downloadAttachment(attachment.url).isLeft(), equalTo(true))
-        } finally {
-            insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, "Attachistan")
+                insightAttachmentOperator.deleteAttachment(attachment.id).orFail()
+                assertThat(insightAttachmentOperator.downloadAttachment(attachment.url).isLeft(), equalTo(true))
+            } finally {
+                insightObjectOperator.makeSureObjectWithNameDoesNotExist(Country.id, attachmentName)
+            }
         }
     }
-
 
     @Test
     fun attachmentTestGetAttachmentsForNotExistingObject() = runBlocking {

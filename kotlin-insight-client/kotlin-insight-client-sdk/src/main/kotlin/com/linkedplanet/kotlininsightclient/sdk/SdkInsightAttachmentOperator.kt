@@ -22,6 +22,7 @@ package com.linkedplanet.kotlininsightclient.sdk
 import arrow.core.Either
 import arrow.core.raise.either
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.linkedplanet.kotlininsightclient.api.error.OtherNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
@@ -66,7 +67,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             val attachmentId = attachmentUrlResolver.parseAttachmentIdFromPathInformation(url)
             val attachmentBean = objectFacade.loadAttachmentBeanById(attachmentId)
             fileManager.getObjectAttachmentContent(attachmentBean.objectId, attachmentBean.nameInFileSystem)
-        }
+        }.mapLeft { OtherNotFoundError("Attachment download failed for url:$url") }
 
     override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =
         either {
