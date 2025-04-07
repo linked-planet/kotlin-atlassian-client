@@ -68,6 +68,12 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             fileManager.getObjectAttachmentContent(attachmentBean.objectId, attachmentBean.nameInFileSystem)
         }
 
+    suspend fun downloadAttachmentById(attachmentId: AttachmentId): Either<InsightClientError, InputStream> =
+        catchAsInsightClientError {
+            val attachmentBean = objectFacade.loadAttachmentBeanById(attachmentId.raw)
+            fileManager.getObjectAttachmentContent(attachmentBean.objectId, attachmentBean.nameInFileSystem)
+        }
+
     override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =
         either {
             val fileMap = allAttachmentStreamsForInsightObject(objectId).bind()
