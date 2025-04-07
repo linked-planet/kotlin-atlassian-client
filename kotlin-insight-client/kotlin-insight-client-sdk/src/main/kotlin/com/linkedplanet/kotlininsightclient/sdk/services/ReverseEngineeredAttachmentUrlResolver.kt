@@ -34,7 +34,7 @@ internal class ReverseEngineeredAttachmentUrlResolver {
 
     private val applicationProperties: ApplicationProperties by getComponent()
 
-    private val pattern = Pattern.compile(".*/(\\d+)/?")
+    private val pattern = Pattern.compile(".*/(\\d+)(/[^/]*)?$")
     private val INSIGHT_REST_BASE_URL = "/rest/insight/1.0"
 
     private fun baseUrl(): String = applicationProperties.jiraBaseUrl
