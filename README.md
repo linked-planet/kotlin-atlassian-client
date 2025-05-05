@@ -14,7 +14,7 @@ Provides several Kotlin clients for the interaction with Atlassian Jira and Insi
 
 ### kotlin-jira-client
 Provides a Kotlin client for interaction with Atlassian Jira (supported version can be seen on top). It provides management functionality for
-
+ 
 - comments,
 - issues,
 - transitions,
