@@ -16,7 +16,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.extract-version.outputs.version }}
     steps:
@@ -55,7 +55,7 @@ jobs:
 # -------------------------------------------------------
 
   kotlin-jira-client-test-ktor:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout Source
@@ -95,7 +95,7 @@ jobs:
         run: mvn -B verify -Pjira-itest-ktor,jira-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
   kotlin-jira-client-test-applink:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout Source
@@ -138,7 +138,7 @@ jobs:
         run: mvn -B verify -Pjira-itest-applink,jira-ci-applink,-jira-itest-ktor,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://confluence:1990"
 
   kotlin-jira-client-test-sdk:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout Source
@@ -174,7 +174,7 @@ jobs:
 # -------------------------------------------------------
 
   kotlin-insight-client-test-ktor:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout Source
@@ -214,7 +214,7 @@ jobs:
         run: mvn -B verify -Pinsight-itest-ktor,insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink,-insight-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
   kotlin-insight-client-test-sdk:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout Source
@@ -246,7 +246,7 @@ jobs:
       - name: Integration tests using sdk
         run: mvn -B verify -Pinsight-itest-sdk,insight-ci-sdk,-insight-itest-ktor,-insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990"
   kotlin-insight-client-test-applink:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout Source
@@ -289,7 +289,7 @@ jobs:
         run: mvn -B verify -Pinsight-itest-applink,insight-ci-applink,-insight-itest-ktor,-insight-itest-sdk,-jira-itest-ktor,-jira-itest-sdk,-jira-itest-applink "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://confluence:1990"
 
   deploy-to-central:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     needs: [ build, kotlin-jira-client-test-sdk, kotlin-jira-client-test-ktor, kotlin-jira-client-test-applink, kotlin-insight-client-test-ktor, kotlin-insight-client-test-applink, kotlin-insight-client-test-sdk ]
     if: ${{ github.event_name == 'release' }}
     steps:
@@ -365,7 +365,7 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.DEV_LINKED_PLANET_PGP_KEY_PASSPHRASE }}
 
   prepare-next-snapshot:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     needs: [ build, deploy-to-central ]
     if: ${{ github.event_name == 'release' }}
     steps:
@@ -406,7 +406,7 @@ jobs:
   notify-slack:
     needs: prepare-next-snapshot
     if: always()
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-24.04
     steps:
       - name: Notify Slack
         if: ${{ github.ref == env.MAIN_BRANCH_FULL || github.event_name == 'release' }}
