@@ -48,6 +48,28 @@
                 <groupId>com.atlassian.jira.plugins</groupId>
                 <artifactId>insight</artifactId>
                 <version>${insight.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy.modules.http-builder</groupId>
+                        <artifactId>http-builder</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.xml.bind</groupId>
+                        <artifactId>jaxb-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.ehcache</groupId>
+                        <artifactId>ehcache</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.atlassian.translations</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.atlassian.jira.plugins</groupId>
+                        <artifactId>insight-core-widget-report</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- Kotlin -->

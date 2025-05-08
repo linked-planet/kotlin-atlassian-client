@@ -31,7 +31,13 @@ import com.linkedplanet.kotlinjiraclient.api.interfaces.*
 import com.linkedplanet.kotlinjiraclient.http.*
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraField
 import com.linkedplanet.kotlinjiraclient.http.field.HttpJiraFieldFactory
+import com.linkedplanet.kotlinjiraclient.util.Story
+import com.linkedplanet.kotlinjiraclient.util.issueParser
+import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AtlassianPluginsTestRunner::class)
@@ -77,4 +83,17 @@ class JiraApplinkClientTest constructor(
         loginAsUser("admin")
     }
 
+//    @Test
+//    fun arghTest() {
+//        val issues: List<Story>? = runBlocking {
+//            issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).getOrNull()
+//        }
+//        assertThat(issues?.size, equalTo(10))
+//        val keys = 1..10
+//        keys.forEach { searchedKeyIndex ->
+//            val issue = issues?.first { "Test-$searchedKeyIndex" == it.summary }
+//            assertThat(issue?.insightObjectKey, equalTo("IT-1"))
+//            assertThat(issue?.status?.name, equalTo("To Do"))
+//        }
+//    }
 }

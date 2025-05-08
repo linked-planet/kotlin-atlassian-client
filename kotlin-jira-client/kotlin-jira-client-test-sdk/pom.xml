@@ -81,6 +81,14 @@
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
+                    <groupId>org.codehaus.groovy.modules.http-builder</groupId>
+                    <artifactId>http-builder</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.ehcache</groupId>
                     <artifactId>ehcache</artifactId>
                 </exclusion>
@@ -191,6 +199,7 @@
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>jira-maven-plugin</artifactId>
+                <version>${amps.version}</version>
                 <extensions>true</extensions>
                 <configuration>
                     <productVersion>${jira.version}</productVersion>
@@ -198,25 +207,11 @@
                     <productDataPath>${maven.multiModuleProjectDirectory}/test-resources/jira-generated-test-resources.zip
                     </productDataPath>
                     <skipITs>true</skipITs>
-                    <enableQuickReload>true</enableQuickReload>
-                    <startupTimeout>1800000</startupTimeout>
                     <jvmArgs>-Xms2g -Xmx4g -XX:+UseG1GC</jvmArgs>
                     <contextPath>/</contextPath>
                     <productLicense>${jira.service.management.license}</productLicense>
                     <httpPort>${jira.http.port}</httpPort>
                     <!-- https://developer.atlassian.com/docs/advanced-topics/configuration-of-instructions-in-atlassian-plugins -->
-                    <instructions>
-                        <Atlassian-Plugin-Key>${atlassian.plugin.key}</Atlassian-Plugin-Key>
-                        <Export-Package>
-                            com.linkedplanet.plugin.jira.jiraclient.test.api,
-                        </Export-Package>
-                        <Import-Package>
-                            org.springframework.osgi.*;resolution:="optional",
-                            org.eclipse.gemini.blueprint.*;resolution:="optional",
-                            *;version="0";resolution:=optional
-                        </Import-Package>
-                        <Spring-Context>*</Spring-Context>
-                    </instructions>
                     <applications>
                         <application>
                             <applicationKey>jira-software</applicationKey>
