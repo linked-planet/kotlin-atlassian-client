@@ -75,7 +75,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Set Release Version
         if: ${{ github.event_name == 'release' }}
@@ -115,7 +115,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Set Release Version
         if: ${{ github.event_name == 'release' }}
@@ -183,7 +183,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Set Release Version
         if: ${{ github.event_name == 'release' }}
@@ -219,7 +219,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Set Release Version
         if: ${{ github.event_name == 'release' }}
@@ -259,7 +259,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Set Release Version
         if: ${{ github.event_name == 'release' }}
@@ -291,7 +291,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Set Release Version
         if: ${{ github.event_name == 'release' }}
@@ -335,7 +335,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Extract, set and commit Release Version
         id: extract-version
@@ -409,7 +409,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Prepare next Snapshot Version
         run: |
