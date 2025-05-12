@@ -249,13 +249,13 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
     }
 
     private fun extractEmbeddedMappings(issuePage: HttpJiraIssuePage): Map<String, String> {
-        val names = issuePage.names.asJsonObject
+        val names = issuePage.names?.asJsonObject
         return names
-            .entrySet()
-            .map { it.key }
-            .associateBy {
+            ?.entrySet()
+            ?.map { it.key }
+            ?.associateBy {
                 names.get(it).asString
-            }
+            }?: emptyMap()
     }
 
     private fun extractEmbeddedMappings(jsonObject: JsonObject): Map<String, String> {
@@ -306,12 +306,12 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
                 jsonBody
             }
 
-    private data class HttpJiraIssuePage(
+    private class HttpJiraIssuePage(
         private val maxResults: Number,
         private val startAt: Number,
         private val total: Number,
-        private val issues: JsonArray,
-        val names: JsonObject
+        private val issues: Array<JsonElement>,
+        val names: JsonElement? = null
     ) : HttpPage<JsonElement> {
         override fun getMaxResults() = maxResults
         override fun getStartAt() = startAt
