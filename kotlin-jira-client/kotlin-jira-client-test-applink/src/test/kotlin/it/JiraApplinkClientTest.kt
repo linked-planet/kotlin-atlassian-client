@@ -82,18 +82,4 @@ class JiraApplinkClientTest constructor(
     fun initTest() {
         loginAsUser("admin")
     }
-
-//    @Test
-//    fun arghTest() {
-//        val issues: List<Story>? = runBlocking {
-//            issueOperator.getIssuesByJQL("summary ~ \"Test-*\"", parser = ::issueParser).getOrNull()
-//        }
-//        assertThat(issues?.size, equalTo(10))
-//        val keys = 1..10
-//        keys.forEach { searchedKeyIndex ->
-//            val issue = issues?.first { "Test-$searchedKeyIndex" == it.summary }
-//            assertThat(issue?.insightObjectKey, equalTo("IT-1"))
-//            assertThat(issue?.status?.name, equalTo("To Do"))
-//        }
-//    }
 }

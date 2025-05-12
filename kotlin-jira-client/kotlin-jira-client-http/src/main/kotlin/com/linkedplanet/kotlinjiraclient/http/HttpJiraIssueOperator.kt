@@ -306,16 +306,16 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
                 jsonBody
             }
 
-    private class HttpJiraIssuePage(
+    private data class HttpJiraIssuePage(
         private val maxResults: Number,
         private val startAt: Number,
         private val total: Number,
-        private val issues: List<JsonElement>,
-        val names: JsonElement
+        private val issues: JsonArray,
+        val names: JsonObject
     ) : HttpPage<JsonElement> {
         override fun getMaxResults() = maxResults
         override fun getStartAt() = startAt
         override fun getTotal() = total
-        override fun getValues(): List<JsonElement> = issues
+        override fun getValues(): List<JsonElement> = issues.asList()
     }
 }
