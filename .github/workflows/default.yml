@@ -127,6 +127,9 @@ jobs:
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
         run: |
+          echo "JAVA_HOME"
+          echo $JAVA_HOME
+          java -version
           (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" > jira-startup.log &
           echo "JIRA_PID=$!" >> $GITHUB_ENV
 
