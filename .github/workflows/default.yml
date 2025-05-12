@@ -126,7 +126,9 @@ jobs:
 
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
+        run: |
+          (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" > jira-startup.log &
+          echo "JIRA_PID=$!" >> $GITHUB_ENV
 
       - name: Wait for Jira and Insight
         run: ./scripts/wait-for-jira.sh
@@ -136,6 +138,29 @@ jobs:
 
       - name: Integration tests using applinks
         run: mvn -B verify -Pjira-itest-applink,jira-ci-applink,-jira-itest-ktor,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://confluence:1990"
+
+      - name: Stop jira to write coverage data
+        run: |
+          echo "Stopping process with PID $JIRA_PID"
+          ./scripts/shutdown-jira.sh $JIRA_PID
+
+      - name: Store jira startup log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jira-startup.log
+          path: jira-startup.log
+          if-no-files-found: 'warn'
+          retention-days: 3
+
+      - name: Store jira logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atlassian-jira.log
+          path: target/jira/home/log/atlassian-jira.log
+          if-no-files-found: 'warn'
+          retention-days: 3
 
   kotlin-jira-client-test-sdk:
     runs-on: ubuntu-24.04
