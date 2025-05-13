@@ -83,6 +83,7 @@
                             <contextPath>/</contextPath>
                             <installPlugin>false</installPlugin>
                             <jvmArgs>-Xms2g -Xmx4g -XX:+UseG1GC</jvmArgs>
+                            <server>localhost</server>
                             <httpPort>${jira.http.port}</httpPort>
                             <applications>
                                 <application>

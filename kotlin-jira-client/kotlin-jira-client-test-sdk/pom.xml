@@ -208,6 +208,7 @@
                     </productDataPath>
                     <skipITs>true</skipITs>
                     <jvmArgs>-Xms2g -Xmx4g -XX:+UseG1GC</jvmArgs>
+                    <server>localhost</server>
                     <contextPath>/</contextPath>
                     <productLicense>${jira.service.management.license}</productLicense>
                     <httpPort>${jira.http.port}</httpPort>
