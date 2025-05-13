@@ -122,17 +122,16 @@ jobs:
         id: extract-version
         run: |
           VERSION="${{ needs.build.outputs.version }}"
-          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          ./mvnw -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
         run: |
           echo "MAVEN VERSION"
-          mvn -version
+          ./mvnw -version
           echo "JAVA_HOME"
-          echo $JAVA_HOME
           java -version
-          (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" > jira-startup.log &
+          (while true; do sleep 10000; done) | ./mvnw jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" > jira-startup.log &
           echo "JIRA_PID=$!" >> $GITHUB_ENV
 
       - name: Wait for Jira and Insight
@@ -142,7 +141,7 @@ jobs:
         run: sudo echo "127.0.0.1 confluence" | sudo tee -a /etc/hosts
 
       - name: Integration tests using applinks
-        run: mvn -B verify -Pjira-itest-applink,jira-ci-applink,-jira-itest-ktor,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://confluence:1990"
+        run: ./mvnw -B verify -Pjira-itest-applink,jira-ci-applink,-jira-itest-ktor,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://confluence:1990"
 
       - name: Stop jira to write coverage data
         run: |
