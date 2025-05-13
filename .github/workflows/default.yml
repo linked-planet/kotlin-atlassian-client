@@ -127,6 +127,8 @@ jobs:
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
         run: |
+          echo "MAVEN VERSION"
+          mvn -version
           echo "JAVA_HOME"
           echo $JAVA_HOME
           java -version
