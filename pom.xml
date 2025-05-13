@@ -399,6 +399,7 @@
                             <contextPath>/</contextPath>
                             <installPlugin>false</installPlugin>
                             <jvmArgs>-Xms1g -Xmx2g -XX:+UseG1GC</jvmArgs>
+                            <server>localhost</server>
                             <httpPort>${jira.http.port}</httpPort>
                             <wait>true</wait>
                             <productLicense>${jira.service.management.license}</productLicense>
