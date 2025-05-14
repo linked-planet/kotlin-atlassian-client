@@ -76,5 +76,4 @@ class JiraApplinkClientTest constructor(
     fun initTest() {
         loginAsUser("admin")
     }
-
 }

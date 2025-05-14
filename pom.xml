@@ -20,23 +20,23 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <kotlin.version>1.8.20</kotlin.version>
+        <kotlin.version>2.1.20</kotlin.version>
         <kotlinx.coroutines.core.version>1.6.4</kotlinx.coroutines.core.version>
         <arrow.version>1.2.1</arrow.version>
         <arrow.meta.version>1.6.2</arrow.meta.version>
-
-        <jira.version>9.4.2</jira.version>
-        <servicedesk.version>5.4.2</servicedesk.version>
+        <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
+        <jira.version>9.12.10</jira.version>
+        <servicedesk.version>5.12.10</servicedesk.version>
         <jira.http.port>2990</jira.http.port>
         <atlassian.spring.scanner.version>2.2.1</atlassian.spring.scanner.version>
-        <amps.version>8.9.1</amps.version>
-        <insight.version>10.4.2</insight.version>
-        <confluence.version>7.19.5</confluence.version>
-        <atlassian-plugins-osgi-testrunner.version>2.0.3</atlassian-plugins-osgi-testrunner.version>
+        <amps.version>8.9.2</amps.version>
+        <insight.version>10.12.1-QR-0157</insight.version>
+        <confluence.version>9.2.3</confluence.version>
+        <atlassian-plugins-osgi-testrunner.version>2.0.9</atlassian-plugins-osgi-testrunner.version>
     </properties>
 
     <dependencies>
@@ -383,6 +383,7 @@
                     <plugin>
                         <groupId>com.atlassian.maven.plugins</groupId>
                         <artifactId>jira-maven-plugin</artifactId>
+                        <version>${amps.version}</version>
                         <extensions>true</extensions>
                         <configuration>
                             <productVersion>${jira.version}</productVersion>
