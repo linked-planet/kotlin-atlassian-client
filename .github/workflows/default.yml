@@ -37,7 +37,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'corretto'
 
       - name: Extract and Set Release Version
         if: ${{ github.event_name == 'release' }}
@@ -46,10 +46,10 @@ jobs:
           VERSION=$(git describe --tags | cut -d v -f2)
           echo "Detected version = $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          ./mvnw -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
       - name: Build libraries
-        run: mvn package -T 2 -Pci "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+        run: ./mvnw package -T 2 -Pci "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
 # JIRA
 # -------------------------------------------------------
@@ -82,17 +82,17 @@ jobs:
         id: extract-version
         run: |
           VERSION="${{ needs.build.outputs.version }}"
-          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          ./mvnw -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
+        run: (while true; do sleep 10000; done) | ./mvnw jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
 
       - name: Wait for Jira and Insight
         run: ./scripts/wait-for-jira.sh
 
       - name: Integration tests using ktor
-        run: mvn -B verify -Pjira-itest-ktor,jira-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+        run: ./mvnw -B verify -Pjira-itest-ktor,jira-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
   kotlin-jira-client-test-applink:
     runs-on: ubuntu-24.04
@@ -194,10 +194,10 @@ jobs:
         id: extract-version
         run: |
           VERSION="${{ needs.build.outputs.version }}"
-          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          ./mvnw -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
       - name: Integration tests using sdk
-        run: mvn clean -B verify -Pjira-itest-sdk,jira-ci-sdk,-jira-itest-applink,-jira-itest-ktor,-insight-itest-sdk,-insight-itest-applink,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990"
+        run: ./mvnw clean -B verify -Pjira-itest-sdk,jira-ci-sdk,-jira-itest-applink,-jira-itest-ktor,-insight-itest-sdk,-insight-itest-applink,-insight-itest-ktor "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990"
 
 # INSIGHT
 # -------------------------------------------------------
@@ -230,17 +230,17 @@ jobs:
         id: extract-version
         run: |
           VERSION="${{ needs.build.outputs.version }}"
-          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          ./mvnw -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
+        run: (while true; do sleep 10000; done) | ./mvnw jira:debug -Pitest-jira,-insight-itest-applink,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
 
       - name: Wait for Jira and Insight
         run: ./scripts/wait-for-jira.sh
 
       - name: Integration tests using ktor
-        run: mvn -B verify -Pinsight-itest-ktor,insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink,-insight-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+        run: ./mvnw -B verify -Pinsight-itest-ktor,insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink,-insight-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
   kotlin-insight-client-test-sdk:
     runs-on: ubuntu-24.04
@@ -270,10 +270,10 @@ jobs:
         id: extract-version
         run: |
           VERSION="${{ needs.build.outputs.version }}"
-          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          ./mvnw -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
       - name: Integration tests using sdk
-        run: mvn -B verify -Pinsight-itest-sdk,insight-ci-sdk,-insight-itest-ktor,-insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990"
+        run: ./mvnw -B verify -Pinsight-itest-sdk,insight-ci-sdk,-insight-itest-ktor,-insight-ci-ktor,-jira-itest-applink,-jira-itest-sdk,-jira-itest-ktor,-insight-itest-applink "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990"
   kotlin-insight-client-test-applink:
     runs-on: ubuntu-24.04
     needs: build
@@ -302,11 +302,11 @@ jobs:
         id: extract-version
         run: |
           VERSION="${{ needs.build.outputs.version }}"
-          mvn -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          ./mvnw -B versions:set "-DnewVersion=$VERSION" "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
 
       - name: Startup Jira and Insight
         # Loop is needed to prevent Jira from suspension
-        run: (while true; do sleep 10000; done) | mvn jira:debug -Pitest-jira,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-insight-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
+        run: (while true; do sleep 10000; done) | ./mvnw jira:debug -Pitest-jira,-insight-itest-sdk,-insight-itest-ktor,-jira-itest-applink,-insight-itest-applink,-jira-itest-ktor,-jira-itest-sdk "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://localhost:2990" &
 
       - name: Wait for Jira and Insight
         run: ./scripts/wait-for-jira.sh
@@ -315,7 +315,7 @@ jobs:
         run: sudo echo "127.0.0.1 confluence" | sudo tee -a /etc/hosts
 
       - name: Integration tests using applinks
-        run: mvn -B verify -Pinsight-itest-applink,insight-ci-applink,-insight-itest-ktor,-insight-itest-sdk,-jira-itest-ktor,-jira-itest-sdk,-jira-itest-applink "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://confluence:1990"
+        run: ./mvnw -B verify -Pinsight-itest-applink,insight-ci-applink,-insight-itest-ktor,-insight-itest-sdk,-jira-itest-ktor,-jira-itest-sdk,-jira-itest-applink "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}" "-Dbaseurl=http://confluence:1990"
 
   deploy-to-central:
     runs-on: ubuntu-24.04
@@ -350,11 +350,11 @@ jobs:
           VERSION="${{ needs.build.outputs.version }}"
 
           # Check if the version has already been set in the POM file
-          CURRENT_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+          CURRENT_VERSION=$(./mvnw -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
           if [ "$CURRENT_VERSION" = "$VERSION" ]; then
             echo "Version $VERSION is already set in the POM file."
           else
-            mvn -B versions:set "-DnewVersion=$VERSION" versions:commit "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+            ./mvnw -B versions:set "-DnewVersion=$VERSION" versions:commit "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
           fi
 
           # Check if there are changes to commit
@@ -387,7 +387,7 @@ jobs:
         run: gpg --list-secret-keys --keyid-format LONG
 
       - name: Deploy to Maven Central
-        run: mvn -B deploy -Pci,-ci-sdk,-ci-jira-applink,-ci-ktor -DskipTests "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+        run: ./mvnw -B deploy -Pci,-ci-sdk,-ci-jira-applink,-ci-ktor -DskipTests "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
         env:
           SONATYPE_USERNAME: ${{ vars.SONATYPE_S01_TOKEN_USER }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_S01_TOKEN_PASSWORD }}
@@ -428,7 +428,7 @@ jobs:
           INCREMENT_VERSION=$(echo "$VERSION" | cut -d . -f3)
           NEXT_INCREMENT_VERSION=$((INCREMENT_VERSION + 1))
           NEXT_SNAPSHOT_VERSION="$MAJOR_VERSION.$MINOR_VERSION.$NEXT_INCREMENT_VERSION-SNAPSHOT"
-          mvn -B versions:set "-DnewVersion=$NEXT_SNAPSHOT_VERSION" versions:commit "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
+          ./mvnw -B versions:set "-DnewVersion=$NEXT_SNAPSHOT_VERSION" versions:commit "-Djira.service.management.license=${{ secrets.JSM_DC_DEMO_LICENSE }}" "-Dconfluence.license=${{ secrets.CONFLUENCE_DC_DEMO_LICENSE }}"
           git commit -am "[skip ci] set development version $NEXT_SNAPSHOT_VERSION"
           git push origin HEAD:$MAIN_BRANCH
 

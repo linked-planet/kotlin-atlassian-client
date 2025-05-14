@@ -31,14 +31,11 @@
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
         <jira.version>9.12.10</jira.version>
         <servicedesk.version>5.12.10</servicedesk.version>
-<!--        <jira.version>9.4.2</jira.version>-->
-<!--        <servicedesk.version>5.4.2</servicedesk.version>-->
         <jira.http.port>2990</jira.http.port>
         <atlassian.spring.scanner.version>2.2.1</atlassian.spring.scanner.version>
         <amps.version>8.9.2</amps.version>
         <insight.version>10.12.1-QR-0157</insight.version>
         <confluence.version>9.2.3</confluence.version>
-<!--        <atlassian-plugins-osgi-testrunner.version>2.0.3</atlassian-plugins-osgi-testrunner.version>-->
         <atlassian-plugins-osgi-testrunner.version>2.0.9</atlassian-plugins-osgi-testrunner.version>
     </properties>
 
