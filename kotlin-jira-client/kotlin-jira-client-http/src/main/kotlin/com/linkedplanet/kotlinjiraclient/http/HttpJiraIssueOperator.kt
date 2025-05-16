@@ -46,7 +46,7 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, List<T>> = either {
         recursiveRestCallPaginatedRaw { index, maxSize ->
-            context.httpClient.executeRest<HttpJiraIssuePage>(
+            context.httpClient.executeRestCall(
                 "GET",
                 "/rest/api/2/search",
                 mapOf(
@@ -56,10 +56,9 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
                     "expand" to queryParams.expanded.joinToString(","),
                 ),
                 null,
-                "application/json",
-                object : TypeToken<HttpJiraIssuePage>() {}.type
+                "application/json"
             )
-                .map { it.body!! }
+                .map { toHttpJiraIssuePage(it.body!!) }
         }
             .mapLeft { e -> JiraClientError.fromHttpDomainError(e) }
             .bind()
@@ -80,17 +79,16 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
         queryParams: IssueQueryParams,
         parser: suspend (JsonObject, Map<String, String>) -> Either<JiraClientError, T>
     ): Either<JiraClientError, Page<T>> = either {
-        val page = context.httpClient.executeGet<HttpJiraIssuePage>(
+        val page = context.httpClient.executeGetCall(
             "/rest/api/2/search",
             mapOf(
                 "jql" to jql,
                 "startAt" to (pageIndex * pageSize).toString(),
                 "maxResults" to pageSize.toString(),
                 "expand" to queryParams.expanded.joinToString(","),
-            ),
-            object : TypeToken<HttpJiraIssuePage>() {}.type
+            )
         )
-            .map { it.body!! }
+            .map { toHttpJiraIssuePage(it.body!!) }
             .mapLeft { JiraClientError.fromHttpDomainError(it) }
             .bind()
 
@@ -305,6 +303,17 @@ class HttpJiraIssueOperator(private val context: HttpJiraClientContext) : JiraIs
                 jsonBody.add("fields", fieldsObject)
                 jsonBody
             }
+
+    private fun toHttpJiraIssuePage(jsonString: String): HttpJiraIssuePage {
+        val jsonObject = JsonParser().parse(jsonString).asJsonObject
+        return HttpJiraIssuePage(
+            jsonObject.get("maxResults").asInt,
+            jsonObject.get("startAt").asInt,
+            jsonObject.get("total").asInt,
+            jsonObject.get("issues")?.asJsonArray?.map { it }?.toTypedArray<JsonElement>()?: arrayOf(),
+            jsonObject.get("names"),
+        )
+    }
 
     private class HttpJiraIssuePage(
         private val maxResults: Number,
