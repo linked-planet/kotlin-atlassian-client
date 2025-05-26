@@ -3,6 +3,7 @@
 Provides a Kotlin client for interaction with Atlassian Assets / Insight.
 It provides access to
 
+
 - InsightObjects
 - Attachments
 - History
