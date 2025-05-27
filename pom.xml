@@ -348,27 +348,6 @@
                             </execution>
                         </executions>
                     </plugin>
-
-                    <!-- DEPLOYMENT -->
-                    <!-- see https://central.sonatype.org/publish/publish-maven/#distribution-management-and-authentication -->
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>default-deploy</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>deploy</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <serverId>maven-central-nexus</serverId>
-                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
