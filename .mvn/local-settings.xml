@@ -60,8 +60,8 @@
   <servers>
     <server>
       <id>central</id>
-      <username>${env.SONATYPE_CENTRAL_TOKEN_USER}</username>
-      <password>${env.SONATYPE_CENTRAL_TOKEN_PASSWORD}</password>
+      <username>${env.SONATYPE_USERNAME}</username>
+      <password>${env.SONATYPE_PASSWORD}</password>
     </server>
   </servers>
 </settings>
