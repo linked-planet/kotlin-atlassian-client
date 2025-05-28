@@ -7,7 +7,7 @@
     <artifactId>kotlin-atlassian-client</artifactId>
     <name>kotlin-atlassian-client</name>
     <groupId>com.linked-planet.client</groupId>
-    <version>0.14.13</version>
+    <version>0.14.14-SNAPSHOT</version>
     <description>Provides clients for jira and insight functionality.</description>
     <packaging>pom</packaging>
 
@@ -350,23 +350,15 @@
                     </plugin>
 
                     <!-- DEPLOYMENT -->
-                    <!-- see https://central.sonatype.org/publish/publish-maven/#distribution-management-and-authentication -->
+                    <!-- see https://central.sonatype.org/publish/publish-portal-maven/ -->
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>default-deploy</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>deploy</goal>
-                                </goals>
-                            </execution>
-                        </executions>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.7.0</version>
+                        <extensions>true</extensions>
                         <configuration>
-                            <serverId>maven-central-nexus</serverId>
-                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
                         </configuration>
                     </plugin>
                 </plugins>
