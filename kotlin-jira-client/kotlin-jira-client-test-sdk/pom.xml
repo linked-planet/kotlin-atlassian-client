@@ -203,6 +203,9 @@
                 <version>${amps.version}</version>
                 <extensions>true</extensions>
                 <configuration>
+                    <banningExcludes>
+                        <exclude>com.google.code.gson:gson</exclude>
+                    </banningExcludes>
                     <productVersion>${jira.version}</productVersion>
                     <productDataVersion>${jira.version}</productDataVersion>
                     <productDataPath>${maven.multiModuleProjectDirectory}/test-resources/jira-generated-test-resources.zip

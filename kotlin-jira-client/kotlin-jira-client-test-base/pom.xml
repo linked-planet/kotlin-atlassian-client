@@ -80,6 +80,9 @@
                         <artifactId>jira-maven-plugin</artifactId>
                         <extensions>true</extensions>
                         <configuration>
+                            <banningExcludes>
+                                <exclude>com.google.code.gson:gson</exclude>
+                            </banningExcludes>
                             <productVersion>${jira.version}</productVersion>
                             <productDataVersion>${jira.version}</productDataVersion>
                             <productDataPath>${project.parent.basedir}/jira/generated-test-resources.zip

@@ -151,6 +151,9 @@
                 <artifactId>confluence-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <banningExcludes>
+                        <exclude>com.google.code.gson:gson</exclude>
+                    </banningExcludes>
                     <productVersion>${confluence.version}</productVersion>
                     <productDataVersion>${confluence.version}</productDataVersion>
                     <productDataPath>${maven.multiModuleProjectDirectory}/test-resources/confluence-generated-test-resources.zip
