@@ -86,7 +86,7 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.10.1</version>
+            <!-- <version>defined by the platform dependency management </version> -->
             <scope>provided</scope>
         </dependency>
 
