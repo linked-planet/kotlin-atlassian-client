@@ -19,6 +19,9 @@
     </modules>
 
     <properties>
+        <!-- https://mvnrepository.com/artifact/com.atlassian.platform.dependencies/platform-deps/ -->
+        <platform.version>6.5.46</platform.version>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -33,7 +36,7 @@
         <servicedesk.version>5.12.10</servicedesk.version>
         <jira.http.port>2990</jira.http.port>
         <atlassian.spring.scanner.version>2.2.1</atlassian.spring.scanner.version>
-        <amps.version>8.9.2</amps.version>
+        <amps.version>9.3.3</amps.version><!-- OK to use a newer version of AMPS with an older version of the SDK. -->
         <insight.version>10.12.1-QR-0157</insight.version>
         <confluence.version>9.2.3</confluence.version>
         <atlassian-plugins-osgi-testrunner.version>2.0.9</atlassian-plugins-osgi-testrunner.version>
@@ -63,6 +66,27 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>4.13.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.platform.dependencies</groupId>
+                <artifactId>platform-public-api</artifactId>
+                <version>${platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.platform.dependencies</groupId>
+                <artifactId>platform-deprecated-public-api</artifactId>
+                <version>${platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.arrow-kt</groupId>
+                <artifactId>arrow-stack</artifactId>
+                <version>${arrow.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
