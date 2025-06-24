@@ -79,20 +79,14 @@
         <dependency>
             <groupId>com.atlassian.sal</groupId>
             <artifactId>sal-api</artifactId>
-            <version>4.2.1</version>
+            <!-- <version> provided by platform dependency management </version> -->
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.10.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
+            <!-- <version>defined by the platform dependency management </version> -->
         </dependency>
 
         <!-- WIRED TEST RUNNER DEPENDENCIES -->
@@ -126,7 +120,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>${maven.resources.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -161,6 +155,9 @@
                 <artifactId>confluence-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <banningExcludes>
+                        <exclude>com.google.code.gson:gson</exclude>
+                    </banningExcludes>
                     <productVersion>${confluence.version}</productVersion>
                     <productDataVersion>${confluence.version}</productDataVersion>
                     <productDataPath>${maven.multiModuleProjectDirectory}/test-resources/confluence-generated-test-resources.zip

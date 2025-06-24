@@ -31,7 +31,7 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.10.1</version>
+            <!-- <version>defined by the platform dependency management </version> -->
             <scope>provided</scope>
         </dependency>
 
@@ -80,6 +80,9 @@
                         <artifactId>jira-maven-plugin</artifactId>
                         <extensions>true</extensions>
                         <configuration>
+                            <banningExcludes>
+                                <exclude>com.google.code.gson:gson</exclude>
+                            </banningExcludes>
                             <productVersion>${jira.version}</productVersion>
                             <productDataVersion>${jira.version}</productDataVersion>
                             <productDataPath>${project.parent.basedir}/jira/generated-test-resources.zip
