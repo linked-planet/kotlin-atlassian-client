@@ -51,14 +51,16 @@ class IssueJsonConverter {
         get() {
             // For unknown reasons the factory is sometimes null. This workaround tries to fetch the instance again.
             if (_beanBuilderFactory == null) {
-                log.warn("_beanBuilderFactory is null. Using getOSGiComponentInstanceOfType")
+                log.info("_beanBuilderFactory is null. Using getOSGiComponentInstanceOfType to recover.")
                 _beanBuilderFactory = ComponentAccessor.getOSGiComponentInstanceOfType(BeanBuilderFactory::class.java)
             }
             if (_beanBuilderFactory == null) {
-                log.warn("_beanBuilderFactory is null. Using getComponent")
+                log.info("_beanBuilderFactory is null. Using getComponent to recover.")
                 _beanBuilderFactory = ComponentAccessor.getComponent(BeanBuilderFactory::class.java)
             }
-            log.error("unable to find _beanBuilderFactory")
+            if (_beanBuilderFactory == null) {
+                log.error("_beanBuilderFactory is neither provided by getComponent nor OSGi. Giving up. ")
+            }
             return _beanBuilderFactory
         }
     private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
