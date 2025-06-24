@@ -20,7 +20,7 @@
 
     <properties>
         <!-- https://mvnrepository.com/artifact/com.atlassian.platform.dependencies/platform-deps/ -->
-        <platform.version>6.5.46</platform.version>
+        <platform.version>7.0.0</platform.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
@@ -33,7 +33,7 @@
         <arrow.version>1.2.1</arrow.version>
         <arrow.meta.version>1.6.2</arrow.meta.version>
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
-        <jira.version>9.12.10</jira.version>
+        <jira.version>10.3.7</jira.version>
         <servicedesk.version>5.12.10</servicedesk.version>
         <jira.http.port>2990</jira.http.port>
         <atlassian.spring.scanner.version>3.0.4</atlassian.spring.scanner.version>
