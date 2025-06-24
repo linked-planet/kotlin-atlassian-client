@@ -233,7 +233,7 @@ sealed class InsightAttribute(
     data class Url(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        val values: List<String>,
+        @field:NotNull val values: List<String>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Url, true, values.joinToString(","), values){
         override fun toString() = values.joinToString(",")
@@ -242,7 +242,7 @@ sealed class InsightAttribute(
     data class Select(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        val values: List<String>,
+        @field:NotNull val values: List<String>,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(attributeId, schema, AttributeTypeEnum.Select, true, values.joinToString(","), values){
         override fun toString() = values.joinToString(",")
@@ -337,7 +337,7 @@ sealed class InsightAttribute(
     data class Status(
         @get:JvmName("getAttributeId")
         @field:NotNull override val attributeId: InsightAttributeId,
-        @field:NotNull val status: StatusAttribute?,
+        val status: StatusAttribute?,
         override val schema: ObjectTypeSchemaAttribute?
     ) : InsightAttribute(
         attributeId,

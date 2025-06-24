@@ -23,5 +23,5 @@ import javax.validation.constraints.NotNull
 
 data class JiraGroup(
     @field:NotNull val name: String,
-    @field:NotNull val avatarUrl: String? = null,
+    val avatarUrl: String? = null,
 )
