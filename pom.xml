@@ -36,7 +36,7 @@
         <jira.version>9.12.10</jira.version>
         <servicedesk.version>5.12.10</servicedesk.version>
         <jira.http.port>2990</jira.http.port>
-        <atlassian.spring.scanner.version>2.2.1</atlassian.spring.scanner.version>
+        <atlassian.spring.scanner.version>3.0.4</atlassian.spring.scanner.version>
         <amps.version>9.3.3</amps.version><!-- OK to use a newer version of AMPS with an older version of the SDK. -->
         <insight.version>10.12.1-QR-0157</insight.version>
         <confluence.version>9.2.3</confluence.version>
