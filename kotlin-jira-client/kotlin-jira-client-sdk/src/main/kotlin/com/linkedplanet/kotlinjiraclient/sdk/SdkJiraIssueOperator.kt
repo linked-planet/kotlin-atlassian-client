@@ -38,7 +38,6 @@ import com.atlassian.jira.util.ErrorCollection.Reason
 import com.atlassian.jira.util.ErrorCollections
 import com.atlassian.jira.web.bean.I18nBean
 import com.atlassian.jira.web.bean.PagerFilter
-import com.atlassian.plugin.webresource.WebResourceUrlProvider
 import com.google.gson.JsonObject
 import com.linkedplanet.kotlinatlassianclientcore.common.api.Page
 import com.linkedplanet.kotlinatlassianclientcore.common.error.asEither
@@ -65,7 +64,6 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
     private val jqlParser: JqlQueryParser by getComponent()
     private val applicationProperties: ApplicationProperties by getComponent()
-    private val webResourceUrlProvider: WebResourceUrlProvider by getComponent()
     private val issueJsonConverter = IssueJsonConverter()
 
     private fun user() = jiraAuthenticationContext.loggedInUser
@@ -85,9 +83,7 @@ object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
 
     private fun toBasicReturnTypeIssue(createdIssue: MutableIssue): JiraIssue {
         val basePath = applicationProperties.jiraBaseUrl
-        val contextPath = webResourceUrlProvider.baseUrl
-        val fullPath = if (contextPath.isNotEmpty()) "$basePath/$contextPath" else basePath
-        val selfLink = fullPath + "/rest/api/2/issue/" + createdIssue.id
+        val selfLink = basePath + "/rest/api/2/issue/" + createdIssue.id
         return JiraIssue(createdIssue.id.toString(), createdIssue.key, selfLink)
     }
 
