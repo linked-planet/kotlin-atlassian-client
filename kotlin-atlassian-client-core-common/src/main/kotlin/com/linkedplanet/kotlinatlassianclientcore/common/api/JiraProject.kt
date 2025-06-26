@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlinatlassianclientcore.common.api
 
-import javax.validation.constraints.NotNull
+import jakarta.validation.constraints.NotNull
 
 data class JiraProject(
     @field:NotNull val id: Long,

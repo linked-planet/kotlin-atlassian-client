@@ -22,7 +22,7 @@
 package com.linkedplanet.kotlinatlassianclientcore.common.error
 
 import arrow.core.Either
-import javax.validation.constraints.NotNull
+import jakarta.validation.constraints.NotNull
 
 open class AtlassianClientError(
     @field:NotNull val error: String,

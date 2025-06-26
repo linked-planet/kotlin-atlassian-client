@@ -28,6 +28,19 @@
         </dependency>
 
         <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>3.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.atlassian.jira</groupId>
             <artifactId>jira-api</artifactId>
             <scope>provided</scope>
@@ -75,10 +88,6 @@
                 <exclusion>
                     <groupId>org.codehaus.groovy.modules.http-builder</groupId>
                     <artifactId>http-builder</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.ehcache</groupId>

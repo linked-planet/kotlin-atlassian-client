@@ -46,7 +46,7 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import java.net.MalformedURLException
 import java.net.URL
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.UriBuilder
+import jakarta.ws.rs.core.UriBuilder
 
 @Component
 object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
@@ -151,7 +151,7 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
                 jiraBaseUrls.baseUrl() + issueType.iconUrl
             }
             val restApiUrl = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
-            val self = ResourceUriBuilder().build(restApiUrl, IssueTypeResource::class.java, issueType.id).toString()
+            val self = "ResourceUriBuilder().build(restApiUrl, IssueTypeResource::class.java, issueType.id).toString()"
             JiraIssueType(id, name, self, descTranslation, isSubTask, iconAbsoluteURL, avatar?.id ?: 0L)
         }
 

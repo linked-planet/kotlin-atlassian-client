@@ -30,7 +30,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.Collections.emptyList
-import javax.validation.constraints.NotNull
+import jakarta.validation.constraints.NotNull
 
 // region ID wrapper
 

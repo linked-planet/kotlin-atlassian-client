@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlinatlassianclientcore.common.api
 
-import javax.validation.constraints.NotNull
+import jakarta.validation.constraints.NotNull
 
 open class Page<T>(
     @field:NotNull val items: List<T>,

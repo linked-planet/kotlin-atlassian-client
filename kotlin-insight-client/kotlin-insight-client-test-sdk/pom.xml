@@ -83,10 +83,6 @@
                     <artifactId>http-builder</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>org.ehcache</groupId>
                     <artifactId>ehcache</artifactId>
                 </exclusion>
@@ -138,13 +134,6 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
             <version>3.0.2</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
             <scope>provided</scope>
         </dependency>
 

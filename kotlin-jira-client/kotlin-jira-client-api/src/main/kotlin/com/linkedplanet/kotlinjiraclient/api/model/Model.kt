@@ -19,7 +19,7 @@
  */
 package com.linkedplanet.kotlinjiraclient.api.model
 
-import javax.validation.constraints.NotNull
+import jakarta.validation.constraints.NotNull
 
 data class JiraStatus(
     @field:NotNull val id: String,

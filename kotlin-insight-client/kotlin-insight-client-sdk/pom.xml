@@ -58,10 +58,6 @@
                     <artifactId>http-builder</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>org.ehcache</groupId>
                     <artifactId>ehcache</artifactId>
                 </exclusion>
@@ -94,12 +90,5 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Others -->
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>

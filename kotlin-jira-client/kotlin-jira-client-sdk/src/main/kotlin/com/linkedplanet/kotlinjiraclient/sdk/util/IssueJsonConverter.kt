@@ -33,8 +33,8 @@ import com.google.gson.*
 import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 import com.linkedplanet.kotlinjiraclient.sdk.field.FieldAccessorImpl
 import org.slf4j.LoggerFactory
-import javax.ws.rs.core.UriBuilder
-import javax.xml.bind.annotation.XmlTransient
+import jakarta.ws.rs.core.UriBuilder
+import jakarta.xml.bind.annotation.XmlTransient
 
 /**
  * Converts a Jira Issue to Json.
@@ -75,7 +75,7 @@ class IssueJsonConverter {
     ): JsonObject {
         val expanded = queryParams.expanded.joinToString(",")
         val issueBean: IssueBean = beanBuilderFactory
-            .newIssueBeanBuilder2(IncludedFields.includeNavigableByDefault(null), expanded, uriBuilder)
+            .newIssueBeanBuilder2(IncludedFields.includeNavigableByDefault(null), expanded /*uriBuilder*/)
             .build(issue)
         this.addOrderableFieldsToBean(issueBean, issue)
         this.addAvailableNavigableFieldsToBean(issueBean, issue)
