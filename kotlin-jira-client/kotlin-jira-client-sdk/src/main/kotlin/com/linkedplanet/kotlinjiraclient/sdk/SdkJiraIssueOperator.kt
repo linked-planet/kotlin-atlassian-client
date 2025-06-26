@@ -51,10 +51,10 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.catchJiraClientError
 import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.jiraClientError
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
-import javax.inject.Named
+import org.springframework.stereotype.Component
 import kotlin.math.ceil
 
-@Named
+@Component
 object SdkJiraIssueOperator : JiraIssueOperator<SdkJiraField> {
     override var RESULTS_PER_PAGE: Int = 10
 
