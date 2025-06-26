@@ -112,7 +112,7 @@
         <dependency>
             <groupId>com.atlassian.sal</groupId>
             <artifactId>sal-api</artifactId>
-            <!-- <version> provided by platform dependency management </version> -->
+            <version>${sal.version}</version>
             <scope>provided</scope>
         </dependency>
 

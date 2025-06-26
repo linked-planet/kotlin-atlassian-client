@@ -33,6 +33,7 @@
         <arrow.version>1.2.1</arrow.version>
         <arrow.meta.version>1.6.2</arrow.meta.version>
         <gson.version>2.10.1</gson.version>
+        <sal.version>6.0.0</sal.version>
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
         <jira.version>10.3.7</jira.version>
         <servicedesk.version>5.12.10</servicedesk.version>
