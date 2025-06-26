@@ -20,7 +20,7 @@
 package com.linkedplanet.plugin.confluence.jiraclient.test.impl
 
 import com.linkedplanet.plugin.confluence.jiraclient.test.api.PluginComponent
-import javax.inject.Named
+import org.springframework.stereotype.Component
 
-@Named
+@Component
 class PluginComponentImpl : PluginComponent

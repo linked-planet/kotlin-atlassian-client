@@ -45,10 +45,10 @@ import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
 import java.net.MalformedURLException
 import java.net.URL
-import javax.inject.Named
+import org.springframework.stereotype.Component
 import javax.ws.rs.core.UriBuilder
 
-@Named
+@Component
 object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
 
     private val projectService: ProjectService by getComponent()

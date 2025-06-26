@@ -32,9 +32,9 @@ import java.util.Collections
 import java.util.stream.Collectors
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import javax.inject.Named
+import org.springframework.stereotype.Component
 
-@Named
+@Component
 class FieldAccessorImpl(
     private val fieldManager: FieldManager = ComponentAccessor.getFieldManager(),
     private val customFieldManager: CustomFieldManager = ComponentAccessor.getCustomFieldManager(),

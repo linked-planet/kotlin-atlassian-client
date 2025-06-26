@@ -20,7 +20,7 @@
 package com.linkedplanet.plugin.jira.insightclient.test.impl
 
 import com.linkedplanet.plugin.jira.insightclient.test.api.PluginComponent
-import javax.inject.Named
+import org.springframework.stereotype.Component
 
-@Named
+@Component
 class PluginComponentImpl : PluginComponent
