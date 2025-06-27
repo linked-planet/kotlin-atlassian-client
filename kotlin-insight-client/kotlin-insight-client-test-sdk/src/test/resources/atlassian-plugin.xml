@@ -23,6 +23,4 @@
 
     <resource type="i18n" name="i18n" location="i18n/plugin"/>
 
-    <component-import key="beanBuilderFactory" interface="com.atlassian.jira.rest.v2.issue.builder.BeanBuilderFactory"/>
-
 </atlassian-plugin>

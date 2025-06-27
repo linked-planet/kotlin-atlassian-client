@@ -25,15 +25,11 @@ import com.atlassian.jira.issue.fields.Field
 import com.atlassian.jira.issue.fields.FieldException
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem
 import com.atlassian.jira.issue.fields.rest.RestAwareField
-import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls
-import com.atlassian.jira.rest.v2.issue.IncludedFields
 import com.atlassian.jira.rest.v2.issue.IssueBean
-import com.atlassian.jira.rest.v2.issue.builder.BeanBuilderFactory
 import com.google.gson.*
 import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 import com.linkedplanet.kotlinjiraclient.sdk.field.FieldAccessorImpl
 import org.slf4j.LoggerFactory
-import jakarta.ws.rs.core.UriBuilder
 import jakarta.xml.bind.annotation.XmlTransient
 
 /**
@@ -46,25 +42,6 @@ class IssueJsonConverter {
     private val log = LoggerFactory.getLogger(FieldAccessorImpl::class.java)
     private val fieldLayoutManager = ComponentAccessor.getFieldLayoutManager()
     private val fieldManager = ComponentAccessor.getFieldManager()
-    private var _beanBuilderFactory = ComponentAccessor.getOSGiComponentInstanceOfType(BeanBuilderFactory::class.java)
-    private val beanBuilderFactory: BeanBuilderFactory
-        get() {
-            // For unknown reasons the factory is sometimes null. This workaround tries to fetch the instance again.
-            if (_beanBuilderFactory == null) {
-                log.info("_beanBuilderFactory is null. Using getOSGiComponentInstanceOfType to recover.")
-                _beanBuilderFactory = ComponentAccessor.getOSGiComponentInstanceOfType(BeanBuilderFactory::class.java)
-            }
-            if (_beanBuilderFactory == null) {
-                log.info("_beanBuilderFactory is null. Using getComponent to recover.")
-                _beanBuilderFactory = ComponentAccessor.getComponent(BeanBuilderFactory::class.java)
-            }
-            if (_beanBuilderFactory == null) {
-                log.error("_beanBuilderFactory is neither provided by getComponent nor OSGi. Giving up. ")
-            }
-            return _beanBuilderFactory
-        }
-    private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
-    private val uriBuilder: UriBuilder = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
     private val gson = setupGson()
 
 
@@ -73,14 +50,14 @@ class IssueJsonConverter {
         issue: Issue,
         queryParams: IssueQueryParams,
     ): JsonObject {
-        val expanded = queryParams.expanded.joinToString(",")
-        val issueBean: IssueBean = beanBuilderFactory
-            .newIssueBeanBuilder2(IncludedFields.includeNavigableByDefault(null), expanded /*uriBuilder*/)
-            .build(issue)
-        this.addOrderableFieldsToBean(issueBean, issue)
-        this.addAvailableNavigableFieldsToBean(issueBean, issue)
+//        val expanded = queryParams.expanded.joinToString(",")
+//        val issueBean: IssueBean = beanBuilderFactory
+//            .newIssueBeanBuilder2(IncludedFields.includeNavigableByDefault(null), expanded /*uriBuilder*/)
+//            .build(issue)
+//        this.addOrderableFieldsToBean(issueBean, issue)
+//        this.addAvailableNavigableFieldsToBean(issueBean, issue)
 
-        return gson.toJsonTree(issueBean).asJsonObject
+        return gson.toJsonTree("").asJsonObject
     }
 
     @Throws(FieldException::class)
