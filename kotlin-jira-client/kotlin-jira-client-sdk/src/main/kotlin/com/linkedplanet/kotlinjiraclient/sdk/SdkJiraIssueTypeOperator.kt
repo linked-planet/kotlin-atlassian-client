@@ -32,8 +32,6 @@ import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeMan
 import com.atlassian.jira.issue.issuetype.IssueType
 import com.atlassian.jira.issue.operation.IssueOperations
 import com.atlassian.jira.issue.operation.ScreenableIssueOperation
-import com.atlassian.jira.rest.v2.issue.IssueTypeResource
-import com.atlassian.jira.rest.v2.issue.ResourceUriBuilder
 import com.atlassian.jira.security.JiraAuthenticationContext
 import com.linkedplanet.kotlinjiraclient.api.error.JiraClientError
 import com.linkedplanet.kotlinjiraclient.api.interfaces.JiraIssueTypeOperator
@@ -43,10 +41,9 @@ import com.linkedplanet.kotlinjiraclient.api.model.JiraIssueTypeAttributeSchema
 import com.linkedplanet.kotlinjiraclient.sdk.util.eitherAndCatch
 import com.linkedplanet.kotlinjiraclient.sdk.util.getComponent
 import com.linkedplanet.kotlinjiraclient.sdk.util.toEither
+import org.springframework.stereotype.Component
 import java.net.MalformedURLException
 import java.net.URL
-import org.springframework.stereotype.Component
-import jakarta.ws.rs.core.UriBuilder
 
 @Component
 object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
@@ -150,8 +147,8 @@ object SdkJiraIssueTypeOperator : JiraIssueTypeOperator {
             } catch (_: MalformedURLException) {
                 jiraBaseUrls.baseUrl() + issueType.iconUrl
             }
-            val restApiUrl = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
-            val self = "ResourceUriBuilder().build(restApiUrl, IssueTypeResource::class.java, issueType.id).toString()"
+            val restApiBase = jiraBaseUrls.restApi2BaseUrl().removeSuffix("/")
+            val self = "${restApiBase}/issuetype/${issueType.id}"
             JiraIssueType(id, name, self, descTranslation, isSubTask, iconAbsoluteURL, avatar?.id ?: 0L)
         }
 
