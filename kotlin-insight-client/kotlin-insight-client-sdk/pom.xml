@@ -69,6 +69,10 @@
                     <groupId>com.atlassian.jira.plugins</groupId>
                     <artifactId>insight-core-widget-report</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.atlassian.secrets</groupId>
+                    <artifactId>password-cipher-base</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
