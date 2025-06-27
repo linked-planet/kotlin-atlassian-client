@@ -35,8 +35,9 @@ interface InsightHistoryOperatorTest {
     @Test
     fun testHistory() {
         runBlocking {
-            val country = insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", ::identity).orNull()!!
-            val history = insightHistoryOperator.getHistory(country.id).orNull()!!
+            val country =
+                insightObjectOperator.getObjectByName(InsightObjectType.Country.id, "Germany", ::identity).getOrNull()!!
+            val history = insightHistoryOperator.getHistory(country.id).getOrNull()!!
             assertThat(history.historyItems.isNotEmpty(), equalTo(true))
             assertThat(history.historyItems.last().actor.key, equalTo("admin"))
             assertThat(history.historyItems.last().created, endsWith("Z"))

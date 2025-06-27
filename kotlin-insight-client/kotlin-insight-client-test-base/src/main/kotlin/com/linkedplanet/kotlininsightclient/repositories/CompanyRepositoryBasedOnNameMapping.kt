@@ -49,7 +49,7 @@ class CompanyRepositoryBasedOnNameMapping(
     override suspend fun referenceAttributeToValue(attribute: InsightAttribute): Any? {
         val country = (attribute as InsightAttribute.Reference).referencedObjects.first().id
         val eitherCountry = countryOperator.getById(country)
-        return eitherCountry.orNull()
+        return eitherCountry.getOrNull()
     }
 
     override suspend fun attributeToReferencedObjectId(
@@ -63,7 +63,7 @@ class CompanyRepositoryBasedOnNameMapping(
                 name = country.name,
                 toDomain = ::identity
             )
-                .orNull()?.id
+                .getOrNull()?.id
         )
     }
 

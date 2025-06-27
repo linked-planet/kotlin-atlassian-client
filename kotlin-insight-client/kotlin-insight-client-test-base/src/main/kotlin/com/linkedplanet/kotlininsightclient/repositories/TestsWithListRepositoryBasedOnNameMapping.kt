@@ -49,7 +49,7 @@ class TestsWithListRepositoryBasedOnNameMapping(
 
     override suspend fun referenceAttributeToValue(attribute: InsightAttribute): Any? {
         val listOfObjects = (attribute as? InsightAttribute.Reference)?.referencedObjects
-            ?.mapNotNull { simpleObjectRepository.getById(it.id).orNull() }
+            ?.mapNotNull { simpleObjectRepository.getById(it.id).getOrNull() }
         return listOfObjects
     }
 

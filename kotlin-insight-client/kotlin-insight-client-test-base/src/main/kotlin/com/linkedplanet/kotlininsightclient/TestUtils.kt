@@ -33,10 +33,14 @@ import org.hamcrest.MatcherAssert.assertThat
  */
 fun <T> Either<InsightClientError, T>.orFail(): T {
     when (this) {
-        is Either.Left<InsightClientError> -> assertThat(this.value.message+" error:"+this.value.error, equalTo("No Error at all!"))
+        is Either.Left<InsightClientError> -> assertThat(
+            "${this.value.message} error:${this.value.error}",
+            equalTo("No Error at all!")
+        )
+
         is Either.Right -> return this.value
     }
-    return (this as Either<InsightClientError, T>).orNull()!!
+    return (this as Either<InsightClientError, T>).getOrNull()!!
 }
 
 fun <T> Either<InsightClientError, T>.asError(): InsightClientError = when (this) {
