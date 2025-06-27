@@ -146,8 +146,22 @@
             <artifactId>atlassian-plugins-osgi-testrunner</artifactId>
             <version>${atlassian-plugins-osgi-testrunner.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.atlassian.upm</groupId>
+                    <artifactId>upm-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.atlassian.upm</groupId>
+            <artifactId>upm-api</artifactId>
+            <version>7.0.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
+
 
     <build>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
