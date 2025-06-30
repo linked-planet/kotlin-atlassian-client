@@ -28,7 +28,7 @@
         <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.version>2.1.20</kotlin.version>
+        <kotlin.version>2.0.20</kotlin.version>
         <kotlinx.coroutines.core.version>1.6.4</kotlinx.coroutines.core.version>
         <arrow.version>1.2.1</arrow.version>
         <arrow.meta.version>1.6.2</arrow.meta.version>
