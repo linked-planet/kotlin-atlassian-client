@@ -58,6 +58,10 @@
                     <groupId>jndi</groupId>
                     <artifactId>jndi</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.glassfish.jersey.core</groupId>
+                    <artifactId>jersey-client</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -125,7 +129,6 @@
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
             <version>3.1.0</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
@@ -159,9 +162,23 @@
             <version>7.0.0</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>3.1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>3.1.5</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>javax.ws.rs</groupId>-->
+<!--            <artifactId>javax.ws.rs-api</artifactId>-->
+<!--            <version>2.1.1</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
     </dependencies>
-
 
     <build>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
@@ -208,6 +225,9 @@
                 <configuration>
                     <banningExcludes>
                         <exclude>com.google.code.gson:gson</exclude>
+                        <exclude>jakarta.annotation:jakarta.annotation-api</exclude>
+                        <exclude>jakarta.inject:jakarta.inject-api</exclude>
+                        <exclude>jakarta.ws.rs:jakarta.ws.rs-api</exclude>
                     </banningExcludes>
                     <productVersion>${jira.version}</productVersion>
                     <productDataVersion>${jira.version}</productDataVersion>
