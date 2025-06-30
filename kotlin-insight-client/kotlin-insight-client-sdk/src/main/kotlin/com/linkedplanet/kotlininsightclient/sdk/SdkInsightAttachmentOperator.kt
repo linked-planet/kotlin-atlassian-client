@@ -28,12 +28,12 @@ import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredAttachmentUrlResolver
-import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredFileManager
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
 import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 import com.linkedplanet.kotlininsightclient.sdk.util.toISOString
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
@@ -47,12 +47,9 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.createTempFile
 
-
 object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     private val objectFacade: ObjectFacade by getOSGiComponent()
-
-    private val fileManager = ReverseEngineeredFileManager()
     private val attachmentUrlResolver = ReverseEngineeredAttachmentUrlResolver()
 
     override suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>> =
@@ -66,7 +63,9 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         catchAsInsightClientError {
             val attachmentId = attachmentUrlResolver.parseAttachmentIdFromPathInformation(url)
             val attachmentBean = objectFacade.loadAttachmentBeanById(attachmentId)
-            fileManager.getObjectAttachmentContent(attachmentBean.objectId, attachmentBean.nameInFileSystem)
+            // TODO: Replace with REST-based retrieval
+            // val url = "/rest/insight/1.0/object/${objectId}/attachment/${attachmentId}/download"
+            ByteArrayInputStream(ByteArray(0))
         }.mapLeft { OtherNotFoundError("Attachment download failed for url:$url") }
 
     override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =
@@ -79,7 +78,8 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         catchAsInsightClientError {
             val attachmentBeans = objectFacade.findAttachmentBeans(objectId.raw)
             attachmentBeans.map { bean ->
-                val attachmentContent = fileManager.getObjectAttachmentContent(bean.objectId, bean.nameInFileSystem)
+                // TODO: Replace with REST-based retrieval
+                val attachmentContent = ByteArrayInputStream(ByteArray(0))
                 bean.filename to attachmentContent
             }.toMap()
         }
