@@ -87,7 +87,7 @@ fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Either<JiraCl
 
         fun fieldByName(name: String): JsonElement? =
             fields
-                .get(resolveConfig(name, map))
+                .getNullSafe(resolveConfig(name, map))
                 ?.let { if (it.isJsonNull) null else it }
 
         val key = jsonObject.get("key").asString
@@ -111,13 +111,13 @@ fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Either<JiraCl
 
         val statusObject: JsonObject = fields.get("status").asJsonObject
         val status = JiraStatus(
-            statusObject.get("id").asString,
-            statusObject.get("name").asString,
-            statusObject.get("statusCategory").asJsonObject.get("key").asString
+            statusObject.getNullSafe("id")?.asString ?: "",
+            statusObject.getNullSafe("name")?.asString ?: "",
+            statusObject.getNullSafe("statusCategory")?.asJsonObject?.getNullSafe("key")?.asString ?: ""
         )
 
         val transitions =
-            jsonObject.get("transitions")?.asJsonArray
+            jsonObject.getNullSafe("transitions")?.asJsonArray
                 ?.map {
                     val transition = it.asJsonObject
                     val name = transition.get("name").asString
@@ -150,8 +150,14 @@ fun issueParser(jsonObject: JsonObject, map: Map<String, String>): Either<JiraCl
         )
     }
 
-fun JsonObject.getNullSafe(fieldName: String) =
-    if (get(fieldName)?.isJsonNull ?: true) null else get(fieldName)
+fun JsonObject.getNullSafe(fieldName: String): JsonElement? {
+    if (!this.has(fieldName)) return null
+    val jsonElement = get(fieldName)
+    return when {
+        jsonElement?.isJsonNull == true -> null
+        else -> jsonElement
+    }
+}
 
 fun JsonArray.parseInsightFieldKey(): String = firstOrNull()?.asString?.parseInsightFieldKey() ?: ""
 
