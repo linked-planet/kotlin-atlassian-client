@@ -26,6 +26,16 @@
             <!-- <version>defined by the platform dependency management </version> -->
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.atlassian.jira</groupId>

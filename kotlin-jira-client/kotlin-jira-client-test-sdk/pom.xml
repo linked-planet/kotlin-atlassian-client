@@ -204,6 +204,9 @@
                 <configuration>
                     <banningExcludes>
                         <exclude>com.google.code.gson:gson</exclude>
+                        <exclude>com.fasterxml.jackson.core:jackson-core</exclude>
+                        <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                        <exclude>com.fasterxml.jackson.core:jackson-annotations</exclude>
                     </banningExcludes>
                     <productVersion>${jira.version}</productVersion>
                     <productDataVersion>${jira.version}</productDataVersion>
