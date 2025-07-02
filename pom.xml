@@ -40,7 +40,7 @@
         <amps.version>9.3.3</amps.version><!-- OK to use a newer version of AMPS with an older version of the SDK. -->
         <insight.version>10.12.1-QR-0157</insight.version>
         <confluence.version>9.2.3</confluence.version>
-        <atlassian-plugins-osgi-testrunner.version>2.0.9</atlassian-plugins-osgi-testrunner.version>
+        <atlassian-plugins-osgi-testrunner.version>2.0.10</atlassian-plugins-osgi-testrunner.version>
         <!-- fasterxml.jackson.version is defined inside platform 6.5 deps, but not exposed -->
         <fasterxml.jackson.version>2.16.2</fasterxml.jackson.version>
     </properties>
