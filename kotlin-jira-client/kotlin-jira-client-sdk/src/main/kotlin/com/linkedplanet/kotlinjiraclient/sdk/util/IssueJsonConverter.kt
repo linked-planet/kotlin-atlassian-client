@@ -29,7 +29,14 @@ import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls
 import com.atlassian.jira.rest.v2.issue.IncludedFields
 import com.atlassian.jira.rest.v2.issue.IssueBean
 import com.atlassian.jira.rest.v2.issue.builder.BeanBuilderFactory
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.PropertyAccessor
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.PropertyName
+import com.fasterxml.jackson.databind.introspect.Annotated
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser as GsonJsonParser
@@ -68,6 +75,25 @@ class IssueJsonConverter {
     private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
     private val uriBuilder: UriBuilder = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
 
+    private val jacksonObjectMapper = jacksonObjectMapper().apply {
+        // we need to detect private fields, because some classes do not use public getters for JsonProperties
+        // See IssueRefJsonBean, which uses a modern fluent, no getter "data class" approach
+        setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+
+        setAnnotationIntrospector(object : JacksonAnnotationIntrospector() {
+            override fun findNameForSerialization(a: Annotated): PropertyName? {
+                if (!a.hasAnnotation(JsonProperty::class.java)
+                    && !a.hasAnnotation(JsonInclude::class.java)
+                    && !a.hasAnnotation(javax.xml.bind.annotation.XmlElement::class.java)
+                    && !a.hasAnnotation(javax.xml.bind.annotation.XmlAttribute::class.java)
+                ) {
+                    return null
+                }
+                return super.findNameForSerialization(a) ?: PropertyName.NO_NAME
+            }
+        })
+    }
+
     @Throws(FieldException::class)
     fun createJsonIssue(
         issue: Issue,
@@ -81,7 +107,7 @@ class IssueJsonConverter {
         this.addAvailableNavigableFieldsToBean(issueBean, issue)
 
         // Jackson is the official way now to serialize Beans. GSON will fail due to infinite loops in the model.
-        val jackson = jacksonObjectMapper()
+        val jackson = jacksonObjectMapper
         val jacksonJson: JsonNode = jackson.valueToTree(issueBean)
 
         return GsonJsonParser.parseString(jacksonJson.toString()).asJsonObject // expose as GSON for API compatibility
