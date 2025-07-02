@@ -269,7 +269,7 @@ interface InsightObjectOperatorTest {
         testFloat = 3.12345678901234, // only double precision does survive this roundtrip
         testDate = LocalDate.parse("1984-04-01"),
         testDateTime = ZonedDateTime.parse("1983-12-07T14:55:24Z"),
-        testUrl = setOf("http://localhost", "http://127.0.0.1"),
+        testUrl = setOf("http://127.0.0.1", "http://localhost"),
         testEmail = "awesome@linked-planet.com",
         testTextArea = "text area text",
         testSelect = listOf("Test Option 2"),
