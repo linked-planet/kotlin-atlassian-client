@@ -34,7 +34,7 @@
         <arrow.meta.version>1.6.2</arrow.meta.version>
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
         <jira.version>10.3.7</jira.version>
-        <servicedesk.version>5.12.10</servicedesk.version>
+        <servicedesk.version>10.3.7</servicedesk.version>
         <jira.http.port>2990</jira.http.port>
         <atlassian.spring.scanner.version>3.0.4</atlassian.spring.scanner.version>
         <amps.version>9.3.3</amps.version><!-- OK to use a newer version of AMPS with an older version of the SDK. -->
