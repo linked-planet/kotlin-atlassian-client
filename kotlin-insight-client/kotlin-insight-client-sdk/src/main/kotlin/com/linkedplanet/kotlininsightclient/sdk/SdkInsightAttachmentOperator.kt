@@ -21,6 +21,10 @@ package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.atlassian.sal.api.net.Request
+import com.atlassian.sal.api.net.Response
+import com.atlassian.sal.api.net.TrustedRequest
+import com.atlassian.sal.api.net.TrustedRequestFactory
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.OtherNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
@@ -33,7 +37,6 @@ import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 import com.linkedplanet.kotlininsightclient.sdk.util.toISOString
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
-import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
@@ -51,6 +54,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     private val objectFacade: ObjectFacade by getOSGiComponent()
     private val attachmentUrlResolver = ReverseEngineeredAttachmentUrlResolver()
+    private val trustedRequestFactory: TrustedRequestFactory<*> by getOSGiComponent()
 
     override suspend fun getAttachments(objectId: InsightObjectId): Either<InsightClientError, List<InsightAttachment>> =
         catchAsInsightClientError {
@@ -61,27 +65,32 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     override suspend fun downloadAttachment(url: String): Either<InsightClientError, InputStream> =
         catchAsInsightClientError {
-            val attachmentId = attachmentUrlResolver.parseAttachmentIdFromPathInformation(url)
-            val attachmentBean = objectFacade.loadAttachmentBeanById(attachmentId)
-            // TODO: Replace with REST-based retrieval
-            // val url = "/rest/insight/1.0/object/${objectId}/attachment/${attachmentId}/download"
-            ByteArrayInputStream(ByteArray(0))
-        }.mapLeft { OtherNotFoundError("Attachment download failed for url:$url") }
+            val request: TrustedRequest = trustedRequestFactory.createTrustedRequest(Request.MethodType.GET, url)
+            request.setConnectionTimeout(15000)
+            request.setSoTimeout(30000)
+
+            var inputStream: InputStream? = null
+            request.execute { response: Response ->
+                if (response.statusCode == 200) {
+                    inputStream = response.responseBodyAsStream
+                } else {
+                    throw RuntimeException("HTTP ${response.statusCode} while accessing attachment at $url")
+                }
+            }
+
+            inputStream ?: throw RuntimeException("No data returned while accessing attachment at $url")
+        }.mapLeft {
+            OtherNotFoundError("Attachment download failed for URL: $url — ${it.message}")
+        }
 
     override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =
         either {
-            val fileMap = allAttachmentStreamsForInsightObject(objectId).bind()
-            zipInputStreamForMultipleInputStreams(fileMap).bind()
-        }
-
-    private fun allAttachmentStreamsForInsightObject(objectId: InsightObjectId) =
-        catchAsInsightClientError {
-            val attachmentBeans = objectFacade.findAttachmentBeans(objectId.raw)
-            attachmentBeans.map { bean ->
-                // TODO: Replace with REST-based retrieval
-                val attachmentContent = ByteArrayInputStream(ByteArray(0))
-                bean.filename to attachmentContent
+            val attachments = getAttachments(objectId).bind()
+            val fileMap: Map<String, InputStream> = attachments.map { attachment ->
+                val attachmentContent = downloadAttachment(attachment.url).bind()
+                attachment.filename to attachmentContent
             }.toMap()
+            zipInputStreamForMultipleInputStreams(fileMap).bind()
         }
 
     private fun zipInputStreamForMultipleInputStreams(
@@ -112,8 +121,7 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             Files.copy(inputStream, tempFilePath, StandardCopyOption.REPLACE_EXISTING)
             val mimeType = URLConnection.guessContentTypeFromName(filename)
             val bean = objectFacade.addAttachmentBean(objectId.raw, tempFilePath.toFile(), filename, mimeType, null)
-            val insightAttachment = beanToInsightAttachment(bean)
-            insightAttachment
+            beanToInsightAttachment(bean)
         }
 
     override suspend fun deleteAttachment(attachmentId: AttachmentId): Either<InsightClientError, Unit> =
