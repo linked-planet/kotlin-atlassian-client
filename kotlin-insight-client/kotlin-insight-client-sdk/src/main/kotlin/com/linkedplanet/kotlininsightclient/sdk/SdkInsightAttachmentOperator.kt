@@ -72,10 +72,10 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
             val request = trustedGetRequestForCurrentUser(url).bind()
             val response = Either.catch { request.executeAndReturn<Response> { it } as Response }
                 .mapLeft { downloadFailed(500, url) }.bind()
-            if (response.isSuccessful) {
-                response.responseBodyAsStream
+            if (!response.isSuccessful) {
+                raise(downloadFailed(response.statusCode, url))
             }
-            raise(downloadFailed(response.statusCode, url))
+            response.responseBodyAsStream
         }
 
     private fun downloadFailed(statusCode: Int, url: String, ) = HttpInsightClientError(
