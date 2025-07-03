@@ -75,16 +75,16 @@ class ObjectNotFoundError(val objectId: InsightObjectId):
 class ObjectTypeNotFoundError(val rootObjectTypeId: InsightObjectTypeId) :
     InsightClientError("Insight Objekttyp unbekannt", "Der Objekttyp mit der angegebenen InsightObjectTypeId=$rootObjectTypeId wurde nicht gefunden.")
 
-class OtherNotFoundError(message: String) : InsightClientError("Nicht gefunden.", message)
+class OtherNotFoundError(message: String) : InsightClientError("Nicht gefunden.", message, statusCode = 404)
 
 open class OtherInsightClientError(error: String, message: String) : InsightClientError(error, message)
 
 /**
  * Somewhere inside an HTTP connection failed.
  */
-class HttpInsightClientError(statusCode: Int, error: String, message: String) :
+class HttpInsightClientError(statusCode: Int, error: String = "Insight-Fehler", message: String) :
     InsightClientError(
         error = error,
-        message = "$message StatusCode:$statusCode",
+        message = "$message (StatusCode:$statusCode)",
         statusCode = statusCode
 )
