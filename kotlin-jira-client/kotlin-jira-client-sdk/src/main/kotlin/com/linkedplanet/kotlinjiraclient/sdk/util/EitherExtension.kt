@@ -79,7 +79,7 @@ inline fun <B> Either.Companion.catchJiraClientError(
 ): Either<JiraClientError, B> = catch(f).mapLeft {
     JiraClientError(
         error = error ?: "Jira-Fehler",
-        message = message ?: it.message ?: "-",
+        message = message ?: it.localizedMessage ?: it.message ?: "-",
         stacktrace = it.stackTraceToString(),
         500
     )

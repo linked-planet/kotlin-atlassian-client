@@ -52,12 +52,12 @@ sealed class InsightClientError(
 ) : AtlassianClientError(error, message, stacktrace, statusCode) {
 
     companion object {
-        private const val internalErrorString = "Jira/Insight hat ein internes Problem festgestellt"
+        private const val internalErrorString = "Jira/Assets hat ein internes Problem festgestellt"
         fun fromException(e: Throwable): InsightClientError =
-            ExceptionInsightClientError("Insight-Fehler", e.message ?: internalErrorString, e.stackTraceToString())
+            ExceptionInsightClientError("Assets-Fehler", e.message ?: internalErrorString, e.stackTraceToString())
 
         fun internalError(message: String): Either<InsightClientError, InsightAttribute> =
-            InternalInsightClientError("Interner Insight-Fehler", message).asEither()
+            InternalInsightClientError("Interner Assets-Fehler", message).asEither()
 
     }
 }
@@ -75,16 +75,16 @@ class ObjectNotFoundError(val objectId: InsightObjectId):
 class ObjectTypeNotFoundError(val rootObjectTypeId: InsightObjectTypeId) :
     InsightClientError("Insight Objekttyp unbekannt", "Der Objekttyp mit der angegebenen InsightObjectTypeId=$rootObjectTypeId wurde nicht gefunden.")
 
-class OtherNotFoundError(message: String) : InsightClientError("Nicht gefunden.", message)
+class OtherNotFoundError(message: String) : InsightClientError("Nicht gefunden.", message, statusCode = 404)
 
 open class OtherInsightClientError(error: String, message: String) : InsightClientError(error, message)
 
 /**
  * Somewhere inside an HTTP connection failed.
  */
-class HttpInsightClientError(statusCode: Int, error: String, message: String) :
+class HttpInsightClientError(statusCode: Int, error: String = "Assets-Fehler", message: String) :
     InsightClientError(
         error = error,
-        message = "$message StatusCode:$statusCode",
+        message = "$message (StatusCode:$statusCode)",
         statusCode = statusCode
 )

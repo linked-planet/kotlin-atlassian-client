@@ -19,6 +19,10 @@
         <module>kotlin-insight-client-sdk</module>
     </modules>
 
+    <properties>
+        <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <!-- Atlassian -->
@@ -26,13 +30,6 @@
                 <groupId>com.atlassian.jira</groupId>
                 <artifactId>jira-api</artifactId>
                 <version>${jira.version}</version>
-                <scope>provided</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>jta</groupId>
-                        <artifactId>jta</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.atlassian.jira</groupId>
@@ -71,7 +68,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
             <!-- Kotlin -->
             <dependency>
                 <groupId>org.jetbrains.kotlinx</groupId>

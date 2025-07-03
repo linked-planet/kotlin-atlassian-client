@@ -141,6 +141,7 @@ class KtorHttpClient(
             }
         ) {
             url("$baseUrl$url")
+            header("X-Atlassian-Token", "no-check")
             header("Connection", "keep-alive")
             header("Cache-Control", "no-cache")
         }

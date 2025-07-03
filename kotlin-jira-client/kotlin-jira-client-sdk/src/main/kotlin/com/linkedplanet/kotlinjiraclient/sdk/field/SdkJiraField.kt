@@ -190,9 +190,12 @@ private fun IssueInputParameters.setIssueType(field: JiraIssueTypeNameField) {
 private fun JiraCustomField.customField(): CustomField {
     val fields = customFieldManager.getCustomFieldObjectsByName(customFieldName)
     when {
-        fields.isEmpty() -> throw IllegalArgumentException("Field name is unknown")
-        fields.size > 1 -> throw IllegalArgumentException("Field name is not unique")
-        else -> return fields.firstOrNull()!!
+        fields.isEmpty() ->
+            throw IllegalArgumentException("Field '$customFieldName' is unknown")
+        fields.size > 1 ->
+            throw IllegalArgumentException("Field '$customFieldName' is not unique")
+        else ->
+            return fields.firstOrNull()!!
     }
 }
 

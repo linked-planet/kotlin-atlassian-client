@@ -115,7 +115,11 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
             val file = tempFileWithData(filename, inputStream)
             val filePart = RequestFilePart(mimeType, filename, file, "file")
             request.setFiles(listOf(filePart))
-
+            request.apply {
+                setHeader("X-Atlassian-Token", "no-check")
+                setHeader("Connection", "keep-alive")
+                setHeader("Cache-Control", "no-cache")
+            }
             request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<InputStream>>> {
                 override fun credentialsRequired(response: Response) = null
 

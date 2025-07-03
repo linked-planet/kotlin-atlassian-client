@@ -29,12 +29,26 @@ import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls
 import com.atlassian.jira.rest.v2.issue.IncludedFields
 import com.atlassian.jira.rest.v2.issue.IssueBean
 import com.atlassian.jira.rest.v2.issue.builder.BeanBuilderFactory
-import com.google.gson.*
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.PropertyAccessor
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.introspect.Annotated
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
+import com.fasterxml.jackson.databind.ser.PropertyWriter
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser as GsonJsonParser
 import com.linkedplanet.kotlinjiraclient.api.model.IssueQueryParams
 import com.linkedplanet.kotlinjiraclient.sdk.field.FieldAccessorImpl
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.UriBuilder
-import javax.xml.bind.annotation.XmlTransient
 
 /**
  * Converts a Jira Issue to Json.
@@ -65,8 +79,41 @@ class IssueJsonConverter {
         }
     private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
     private val uriBuilder: UriBuilder = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
-    private val gson = setupGson()
+    private val jacksonObjectMapper: ObjectMapper = jacksonObjectMapper().apply {
+        setFilterProvider(
+            SimpleFilterProvider()
+                .addFilter("lp-only-json-property-filter", OnlyAnnotatedFieldsFilter)
+                .setFailOnUnknownId(false)
+        )
+        setAnnotationIntrospector(object : JacksonAnnotationIntrospector() {
+            override fun findFilterId(a: Annotated): Any = "lp-only-json-property-filter"
+        })
+        setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+    }
 
+    object OnlyAnnotatedFieldsFilter : SimpleBeanPropertyFilter() {
+        override fun serializeAsField(
+            pojo: Any?,
+            jgen: JsonGenerator,
+            provider: SerializerProvider,
+            writer: PropertyWriter
+        ) {
+            val annotations = writer.member?.allAnnotations?.annotations()
+                ?.mapNotNull { it.annotationClass.qualifiedName }
+                ?: emptyList()
+
+            val hasAnnotation = annotations.any {
+                it == JsonProperty::class.qualifiedName ||
+                        it == JsonInclude::class.qualifiedName ||
+                        it.endsWith("XmlElement") ||
+                        it.endsWith("XmlAttribute")
+            }
+
+            if (hasAnnotation) {
+                writer.serializeAsField(pojo, jgen, provider)
+            }
+        }
+    }
 
     @Throws(FieldException::class)
     fun createJsonIssue(
@@ -80,7 +127,10 @@ class IssueJsonConverter {
         this.addOrderableFieldsToBean(issueBean, issue)
         this.addAvailableNavigableFieldsToBean(issueBean, issue)
 
-        return gson.toJsonTree(issueBean).asJsonObject
+        // Jackson is the official way now to serialize Beans. GSON will fail due to infinite loops in the model.
+        val jacksonJson: JsonNode = jacksonObjectMapper.valueToTree(issueBean)
+
+        return GsonJsonParser.parseString(jacksonJson.toString()).asJsonObject // expose as GSON for API compatibility
     }
 
     @Throws(FieldException::class)
@@ -111,17 +161,4 @@ class IssueJsonConverter {
             bean.addField(this, json, false)
         }
     }
-
-    private fun setupGson() =
-        GsonBuilder()
-            .setExclusionStrategies(object : ExclusionStrategy {
-                override fun shouldSkipField(f: FieldAttributes?): Boolean {
-                    return f?.getAnnotation(XmlTransient::class.java) != null
-                }
-
-                override fun shouldSkipClass(clazz: Class<*>?): Boolean {
-                    return false
-                }
-            })
-            .create()
 }

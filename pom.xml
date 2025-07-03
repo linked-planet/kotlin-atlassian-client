@@ -28,19 +28,20 @@
         <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.version>2.1.20</kotlin.version>
+        <kotlin.version>2.0.20</kotlin.version>
         <kotlinx.coroutines.core.version>1.6.4</kotlinx.coroutines.core.version>
-        <arrow.version>1.2.1</arrow.version>
-        <arrow.meta.version>1.6.2</arrow.meta.version>
+        <arrow.version>1.2.4</arrow.version>
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
-        <jira.version>9.12.10</jira.version>
-        <servicedesk.version>5.12.10</servicedesk.version>
+        <jira.version>10.3.7</jira.version>
+        <servicedesk.version>10.3.7</servicedesk.version>
         <jira.http.port>2990</jira.http.port>
         <atlassian.spring.scanner.version>3.0.4</atlassian.spring.scanner.version>
         <amps.version>9.3.3</amps.version><!-- OK to use a newer version of AMPS with an older version of the SDK. -->
         <insight.version>10.12.1-QR-0157</insight.version>
         <confluence.version>9.2.3</confluence.version>
         <atlassian-plugins-osgi-testrunner.version>2.0.9</atlassian-plugins-osgi-testrunner.version>
+        <!-- fasterxml.jackson.version is defined inside platform 6.5 deps, but not exposed -->
+        <fasterxml.jackson.version>2.16.2</fasterxml.jackson.version>
     </properties>
 
     <dependencies>
@@ -58,6 +59,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>${kotlin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlinx</groupId>
                 <artifactId>kotlinx-coroutines-core</artifactId>
@@ -290,7 +298,7 @@
                 <plugin>
                     <groupId>org.jetbrains.dokka</groupId>
                     <artifactId>dokka-maven-plugin</artifactId>
-                    <version>1.7.20</version>
+                    <version>2.0.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

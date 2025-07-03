@@ -39,13 +39,13 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
     @Test
     fun issues_01DeleteAllIssuesAndCreateTenTestIssues() {
         runBlocking {
-            val result = either {
+            either {
                 val existingIssueIds = issueOperator.getIssuesByJQL("") { jsonObject, _ ->
                     Either.Right(jsonObject.getAsJsonPrimitive("key").asString)
                 }
 
                 existingIssueIds.orFail().forEach {
-                    issueOperator.deleteIssue(it)
+                    issueOperator.deleteIssue(it).orFail()
                 }
 
                 (1..10).forEach { searchedKeyIndex ->
@@ -62,8 +62,7 @@ interface JiraIssueOperatorTest<JiraFieldType> : BaseTestConfigProvider<JiraFiel
                         fields
                     ).bind()
                 }
-            }
-            assertThat(result is Either.Right, equalTo(true))
+            }.orFail()
         }
     }
 
