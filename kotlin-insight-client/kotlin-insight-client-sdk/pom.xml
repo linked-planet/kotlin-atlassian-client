@@ -24,7 +24,6 @@
         <dependency>
             <groupId>com.atlassian.jira</groupId>
             <artifactId>jira-api</artifactId>
-            <version>${jira.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -68,26 +67,6 @@
                     <artifactId>insight-core-widget-report</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.servicedesk</groupId>
-            <artifactId>insight-core-model</artifactId>
-            <version>${insight.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.servicedesk</groupId>
-            <artifactId>insight-core-persistence</artifactId>
-            <version>${insight.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Others -->
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

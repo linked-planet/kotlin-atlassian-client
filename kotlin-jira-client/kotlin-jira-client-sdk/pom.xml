@@ -43,7 +43,6 @@
             <artifactId>jira-api</artifactId>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>com.atlassian.jira</groupId>
             <artifactId>jira-core</artifactId>
@@ -59,13 +58,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <dependency>
-            <groupId>com.atlassian.jira</groupId>
-            <artifactId>jira-rest-plugin</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>com.atlassian.jira.plugins</groupId>
             <artifactId>insight</artifactId>
@@ -92,6 +84,11 @@
                     <artifactId>insight-core-widget-report</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-rest-plugin</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
