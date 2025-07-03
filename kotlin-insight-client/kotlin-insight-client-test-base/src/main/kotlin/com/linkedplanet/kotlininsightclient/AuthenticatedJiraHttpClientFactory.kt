@@ -20,10 +20,8 @@
 package com.linkedplanet.kotlininsightclient
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.right
 import com.google.gson.Gson
-import com.linkedplanet.kotlininsightclient.api.error.AuthenticationError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
 import org.http4k.client.Java8HttpClient
 import org.http4k.core.Body
@@ -36,6 +34,7 @@ import org.http4k.core.then
 import org.http4k.filter.ClientFilters
 import org.http4k.filter.cookie.BasicCookieStorage
 import org.http4k.filter.cookie.CookieStorage
+import java.util.*
 
 /**
  * Provides access to Jira itself via a logged in AuthenticatedHttpHandler
@@ -51,26 +50,29 @@ class AuthenticatedJiraHttpClientFactory(
     private val httpHandler: HttpHandler = ClientFilters.Cookies(storage = storage).then(Java8HttpClient())
     private val gson = Gson()
 
-    fun login(credentials: Credentials) : Either<InsightClientError, AuthenticatedHttpHandler> {
+    fun login(credentials: Credentials): Either<InsightClientError, AuthenticatedHttpHandler> {
+        val username = credentials.username
+        val password = credentials.password
         val body = gson.toJson(credentials)
         val request = Request(Method.POST, "$jiraOrigin/rest/auth/1/session")
             .header("content-type", "application/json")
             .body(Body(body))
-
         val loginResponse = httpHandler(request)
         if (loginResponse.status != Status.OK) {
-            return AuthenticationError(
-                "Login failed with HTTP StatusCode:${loginResponse.status.code}"
-            ).left()
-        } else {
-            val privateHandler = object : AuthenticatedHttpHandler, HttpHandler by httpHandler {
-                override fun getWithRelativePath(path: String): Response {
-                    val absolutePath = "$jiraOrigin$path"
-                    return this(Request(Method.GET, absolutePath))
-                }
-            }
-            return privateHandler.right()
+            println("Continue despite 'session' login failing with HTTP StatusCode:${loginResponse.status.code}")
         }
+        val privateHandler = object : AuthenticatedHttpHandler, HttpHandler by httpHandler {
+            override fun getWithRelativePath(path: String): Response {
+                val absolutePath = "$jiraOrigin$path"
+                val getRequest = Request(Method.GET, absolutePath)
+                    .header(
+                        "Authorization",
+                        "Basic ${Base64.getEncoder().encodeToString("$username:$password".toByteArray())}"
+                    )
+                return this(getRequest)
+            }
+        }
+        return privateHandler.right()
     }
 }
 

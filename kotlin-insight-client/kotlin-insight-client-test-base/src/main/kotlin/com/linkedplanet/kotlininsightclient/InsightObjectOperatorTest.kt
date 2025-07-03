@@ -266,7 +266,7 @@ interface InsightObjectOperatorTest {
         name = "testObjectWithAllDefaultTypes",
         testBoolean = false,
         testInteger = 72,
-        testFloat = 3.12345678901234, // only double precision does survive this roundtrip
+        testFloat = 3.123456789012, // A longer number does not survice the official REST calls
         testDate = LocalDate.parse("1984-04-01"),
         testDateTime = ZonedDateTime.parse("1983-12-07T14:55:24Z"),
         testUrl = setOf("http://127.0.0.1", "http://localhost"),
