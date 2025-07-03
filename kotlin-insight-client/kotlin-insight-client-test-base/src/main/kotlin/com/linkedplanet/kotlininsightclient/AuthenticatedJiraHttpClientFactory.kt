@@ -23,7 +23,7 @@ import arrow.core.Either
 import arrow.core.right
 import com.google.gson.Gson
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.sun.org.slf4j.internal.LoggerFactory
+import org.slf4j.LoggerFactory
 import org.http4k.client.Java8HttpClient
 import org.http4k.core.Body
 import org.http4k.core.HttpHandler
