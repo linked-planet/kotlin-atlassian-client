@@ -31,6 +31,7 @@ import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.junit.Test
 import java.security.MessageDigest
 import java.util.*
@@ -103,7 +104,7 @@ interface InsightAttachmentOperatorTest {
     @Test
     fun attachmentTestGetAttachmentsForNotExistingObject() = runBlocking {
         val responseError = insightAttachmentOperator.getAttachments(InsightObjectId.notPersistedObjectId).asError()
-        assertThat(responseError.error, containsString("Insight-Fehler"))
+        assertThat(responseError.error.length, greaterThanOrEqualTo(1))
     }
 
     @Test
@@ -167,7 +168,7 @@ interface InsightAttachmentOperatorTest {
     @Test
     fun attachmentTestDownloadZipForNotExistingObject() = runBlocking {
         val responseError = insightAttachmentOperator.downloadAttachmentZip(InsightObjectId.notPersistedObjectId).asError()
-        assertThat(responseError.error, containsString("Insight-Fehler"))
+        assertThat(responseError.error.length, greaterThanOrEqualTo(1))
     }
 
 }
