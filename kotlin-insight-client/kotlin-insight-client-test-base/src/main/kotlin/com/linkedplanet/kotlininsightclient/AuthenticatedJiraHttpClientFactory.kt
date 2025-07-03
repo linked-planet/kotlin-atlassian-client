@@ -23,6 +23,7 @@ import arrow.core.Either
 import arrow.core.right
 import com.google.gson.Gson
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
+import com.sun.org.slf4j.internal.LoggerFactory
 import org.http4k.client.Java8HttpClient
 import org.http4k.core.Body
 import org.http4k.core.HttpHandler
@@ -45,6 +46,7 @@ class AuthenticatedJiraHttpClientFactory(
     companion object {
         data class Credentials(val username: String, val password: String)
     }
+    private val log = LoggerFactory.getLogger(this::class.java)
 
     private val storage: CookieStorage = BasicCookieStorage() // this is just a HashMap
     private val httpHandler: HttpHandler = ClientFilters.Cookies(storage = storage).then(Java8HttpClient())
@@ -59,7 +61,7 @@ class AuthenticatedJiraHttpClientFactory(
             .body(Body(body))
         val loginResponse = httpHandler(request)
         if (loginResponse.status != Status.OK) {
-            println("Continue despite 'session' login failing with HTTP StatusCode:${loginResponse.status.code}")
+            log.debug("Continue despite 'session' login failing with HTTP StatusCode:${loginResponse.status.code}")
         }
         val privateHandler = object : AuthenticatedHttpHandler, HttpHandler by httpHandler {
             override fun getWithRelativePath(path: String): Response {
