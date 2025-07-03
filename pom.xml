@@ -30,8 +30,7 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.version>2.0.20</kotlin.version>
         <kotlinx.coroutines.core.version>1.6.4</kotlinx.coroutines.core.version>
-        <arrow.version>1.2.1</arrow.version>
-        <arrow.meta.version>1.6.2</arrow.meta.version>
+        <arrow.version>1.2.4</arrow.version>
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
         <jira.version>10.3.7</jira.version>
         <servicedesk.version>10.3.7</servicedesk.version>
