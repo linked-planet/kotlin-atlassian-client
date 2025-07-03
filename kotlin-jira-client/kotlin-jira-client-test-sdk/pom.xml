@@ -15,8 +15,6 @@
 
     <properties>
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
-        <atlassian.spring.scanner.version>2.2.1</atlassian.spring.scanner.version>
-
         <jira.http.port>2990</jira.http.port>
     </properties>
 
