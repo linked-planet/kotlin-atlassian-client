@@ -33,10 +33,15 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.PropertyAccessor
+import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.PropertyName
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.introspect.Annotated
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
+import com.fasterxml.jackson.databind.ser.PropertyWriter
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser as GsonJsonParser
@@ -74,24 +79,40 @@ class IssueJsonConverter {
         }
     private val jiraBaseUrls: JiraBaseUrls = ComponentAccessor.getComponent(JiraBaseUrls::class.java)
     private val uriBuilder: UriBuilder = UriBuilder.fromPath(jiraBaseUrls.restApi2BaseUrl())
-
-    private val jacksonObjectMapper = jacksonObjectMapper().apply {
-        // we need to detect private fields, because some classes do not use public getters for JsonProperties
-        // See IssueRefJsonBean, which uses a modern fluent, no getter "data class" approach
-        setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
-
+    private val jacksonObjectMapper: ObjectMapper = jacksonObjectMapper().apply {
+        setFilterProvider(
+            SimpleFilterProvider()
+                .addFilter("lp-only-json-property-filter", OnlyAnnotatedFieldsFilter)
+                .setFailOnUnknownId(false)
+        )
         setAnnotationIntrospector(object : JacksonAnnotationIntrospector() {
-            override fun findNameForSerialization(a: Annotated): PropertyName? {
-                if (!a.hasAnnotation(JsonProperty::class.java)
-                    && !a.hasAnnotation(JsonInclude::class.java)
-                    && !a.hasAnnotation(javax.xml.bind.annotation.XmlElement::class.java)
-                    && !a.hasAnnotation(javax.xml.bind.annotation.XmlAttribute::class.java)
-                ) {
-                    return null
-                }
-                return super.findNameForSerialization(a) ?: PropertyName.NO_NAME
-            }
+            override fun findFilterId(a: Annotated): Any = "lp-only-json-property-filter"
         })
+        setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+    }
+
+    object OnlyAnnotatedFieldsFilter : SimpleBeanPropertyFilter() {
+        override fun serializeAsField(
+            pojo: Any?,
+            jgen: JsonGenerator,
+            provider: SerializerProvider,
+            writer: PropertyWriter
+        ) {
+            val annotations = writer.member?.allAnnotations?.annotations()
+                ?.mapNotNull { it.annotationClass.qualifiedName }
+                ?: emptyList()
+
+            val hasAnnotation = annotations.any {
+                it == JsonProperty::class.qualifiedName ||
+                        it == JsonInclude::class.qualifiedName ||
+                        it.endsWith("XmlElement") ||
+                        it.endsWith("XmlAttribute")
+            }
+
+            if (hasAnnotation) {
+                writer.serializeAsField(pojo, jgen, provider)
+            }
+        }
     }
 
     @Throws(FieldException::class)
@@ -107,8 +128,7 @@ class IssueJsonConverter {
         this.addAvailableNavigableFieldsToBean(issueBean, issue)
 
         // Jackson is the official way now to serialize Beans. GSON will fail due to infinite loops in the model.
-        val jackson = jacksonObjectMapper
-        val jacksonJson: JsonNode = jackson.valueToTree(issueBean)
+        val jacksonJson: JsonNode = jacksonObjectMapper.valueToTree(issueBean)
 
         return GsonJsonParser.parseString(jacksonJson.toString()).asJsonObject // expose as GSON for API compatibility
     }
