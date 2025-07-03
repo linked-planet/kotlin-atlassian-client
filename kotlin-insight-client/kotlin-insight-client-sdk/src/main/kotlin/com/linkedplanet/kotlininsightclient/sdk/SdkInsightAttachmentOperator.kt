@@ -21,22 +21,25 @@ package com.linkedplanet.kotlininsightclient.sdk
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.atlassian.jira.security.JiraAuthenticationContext
 import com.atlassian.sal.api.net.Request
 import com.atlassian.sal.api.net.Response
 import com.atlassian.sal.api.net.TrustedRequest
 import com.atlassian.sal.api.net.TrustedRequestFactory
+import com.linkedplanet.kotlininsightclient.api.error.HttpInsightClientError
 import com.linkedplanet.kotlininsightclient.api.error.InsightClientError
-import com.linkedplanet.kotlininsightclient.api.error.OtherNotFoundError
 import com.linkedplanet.kotlininsightclient.api.interfaces.InsightAttachmentOperator
 import com.linkedplanet.kotlininsightclient.api.model.AttachmentId
 import com.linkedplanet.kotlininsightclient.api.model.InsightAttachment
 import com.linkedplanet.kotlininsightclient.api.model.InsightObjectId
 import com.linkedplanet.kotlininsightclient.sdk.services.ReverseEngineeredAttachmentUrlResolver
 import com.linkedplanet.kotlininsightclient.sdk.util.catchAsInsightClientError
+import com.linkedplanet.kotlininsightclient.sdk.util.getComponent
 import com.linkedplanet.kotlininsightclient.sdk.util.getOSGiComponent
 import com.linkedplanet.kotlininsightclient.sdk.util.toISOString
 import com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade
 import com.riadalabs.jira.plugins.insight.services.model.AttachmentBean
+import org.apache.http.client.utils.URIBuilder
 import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
@@ -53,6 +56,7 @@ import kotlin.io.path.createTempFile
 object SdkInsightAttachmentOperator : InsightAttachmentOperator {
 
     private val objectFacade: ObjectFacade by getOSGiComponent()
+    private val jiraAuthenticationContext: JiraAuthenticationContext by getComponent()
     private val attachmentUrlResolver = ReverseEngineeredAttachmentUrlResolver()
     private val trustedRequestFactory: TrustedRequestFactory<*> by getOSGiComponent()
 
@@ -64,23 +68,32 @@ object SdkInsightAttachmentOperator : InsightAttachmentOperator {
         }
 
     override suspend fun downloadAttachment(url: String): Either<InsightClientError, InputStream> =
-        catchAsInsightClientError {
-            val request: TrustedRequest = trustedRequestFactory.createTrustedRequest(Request.MethodType.GET, url)
-            request.setConnectionTimeout(15000)
-            request.setSoTimeout(30000)
-
-            var inputStream: InputStream? = null
-            request.execute { response: Response ->
-                if (response.statusCode == 200) {
-                    inputStream = response.responseBodyAsStream
-                } else {
-                    throw RuntimeException("HTTP ${response.statusCode} while accessing attachment at $url")
-                }
+        either {
+            val request = trustedGetRequestForCurrentUser(url).bind()
+            val response = Either.catch { request.executeAndReturn<Response> { it } as Response }
+                .mapLeft { downloadFailed(500, url) }.bind()
+            if (response.isSuccessful) {
+                response.responseBodyAsStream
             }
+            raise(downloadFailed(response.statusCode, url))
+        }
 
-            inputStream ?: throw RuntimeException("No data returned while accessing attachment at $url")
+    private fun downloadFailed(statusCode: Int, url: String, ) = HttpInsightClientError(
+        statusCode = statusCode,
+        message = "Anhang Download fehlgeschlagen für URL: $url"
+    )
+
+    private fun trustedGetRequestForCurrentUser(url: String): Either<InsightClientError, TrustedRequest> =
+        Either.catch {
+            trustedRequestFactory.createTrustedRequest(Request.MethodType.GET, url).apply {
+                addTrustedTokenAuthentication(URIBuilder(url).host, jiraAuthenticationContext.loggedInUser.username)
+                setHeader("Content-Type", "application/json")
+            }
         }.mapLeft {
-            OtherNotFoundError("Attachment download failed for URL: $url — ${it.message}")
+            HttpInsightClientError(
+                statusCode = 500,
+                message = "Es konnte keine Verbindung zu Assets erzeugt werden."
+            )
         }
 
     override suspend fun downloadAttachmentZip(objectId: InsightObjectId): Either<InsightClientError, InputStream> =

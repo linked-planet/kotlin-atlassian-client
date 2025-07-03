@@ -103,7 +103,7 @@ interface InsightAttachmentOperatorTest {
     @Test
     fun attachmentTestGetAttachmentsForNotExistingObject() = runBlocking {
         val responseError = insightAttachmentOperator.getAttachments(InsightObjectId.notPersistedObjectId).asError()
-        assertThat(responseError.message, containsString("-1"))
+        assertThat(responseError.error, containsString("Insight-Fehler"))
     }
 
     @Test
@@ -167,7 +167,7 @@ interface InsightAttachmentOperatorTest {
     @Test
     fun attachmentTestDownloadZipForNotExistingObject() = runBlocking {
         val responseError = insightAttachmentOperator.downloadAttachmentZip(InsightObjectId.notPersistedObjectId).asError()
-        assertThat(responseError.message, containsString("-1"))
+        assertThat(responseError.error, containsString("Insight-Fehler"))
     }
 
 }
