@@ -107,7 +107,7 @@
                         <goals>
                             <goal>flatten</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>validate</phase>
                     </execution>
                 </executions>
             </plugin>
