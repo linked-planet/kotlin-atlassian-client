@@ -49,10 +49,6 @@
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>jta</groupId>
-                    <artifactId>jta</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>jndi</groupId>
                     <artifactId>jndi</artifactId>
                 </exclusion>
