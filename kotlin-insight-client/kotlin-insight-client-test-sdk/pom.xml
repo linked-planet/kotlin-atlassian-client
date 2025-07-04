@@ -89,6 +89,7 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <!-- <version>defined by the platform dependency management </version> -->
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -200,7 +201,6 @@
                         <Import-Package>
                             org.springframework.osgi.*;resolution:="optional",
                             org.eclipse.gemini.blueprint.*;resolution:="optional",
-                            com.riadalabs.jira.plugins.insight.services.core.*;resolution:="optional",
                             *;version="0";resolution:=optional
                         </Import-Package>
                         <Spring-Context>*</Spring-Context>
