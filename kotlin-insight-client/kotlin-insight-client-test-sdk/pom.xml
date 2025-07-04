@@ -45,10 +45,6 @@
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>jta</groupId>
-                    <artifactId>jta</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>jndi</groupId>
                     <artifactId>jndi</artifactId>
                 </exclusion>
@@ -106,13 +102,6 @@
             <groupId>com.atlassian.plugin</groupId>
             <artifactId>atlassian-spring-scanner-annotation</artifactId>
             <version>${atlassian.spring.scanner.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>jta</groupId>
-            <artifactId>jta</artifactId>
-            <version>1.0.1b</version>
             <scope>provided</scope>
         </dependency>
 
