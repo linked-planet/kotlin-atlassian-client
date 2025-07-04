@@ -28,6 +28,16 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
                 <version>${maven.flatten.version}</version>
+                <configuration>
+                    <pomElements>
+                        <scm/>
+                        <url/>
+                        <organization/>
+                        <name/>
+                        <description/>
+                        <developers/>
+                    </pomElements>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
