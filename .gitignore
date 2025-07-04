@@ -6,3 +6,4 @@
 */build/*
 /target/*
 **/*/target/*
+**/.flattened-pom.xml
