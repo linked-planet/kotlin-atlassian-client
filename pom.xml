@@ -38,7 +38,7 @@
         <jira.http.port>2990</jira.http.port>
         <atlassian.spring.scanner.version>3.0.4</atlassian.spring.scanner.version>
         <amps.version>9.3.3</amps.version><!-- OK to use a newer version of AMPS with an older version of the SDK. -->
-        <insight.version>15.17.2-REL-0001</insight.version>
+        <insight.version>16.0.0-QR-0112</insight.version>
         <confluence.version>9.2.3</confluence.version>
         <atlassian-plugins-osgi-testrunner.version>2.0.9</atlassian-plugins-osgi-testrunner.version>
         <!-- fasterxml.jackson.version is defined inside platform 6.5 deps, but not exposed -->
