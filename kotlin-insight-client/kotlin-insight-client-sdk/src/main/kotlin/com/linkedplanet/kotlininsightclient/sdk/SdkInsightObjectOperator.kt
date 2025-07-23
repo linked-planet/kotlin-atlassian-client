@@ -255,7 +255,7 @@ object SdkInsightObjectOperator : InsightObjectOperator {
                     objectAttributeBeanFactory.createVersionAttributeValue(ota) { versionIds.contains(it.id()) }
                 }
                 is InsightAttribute.Confluence -> {
-                    val pageIds = attr.pages.map { it.id }
+                    val pageIds = attr.pages.map { it.id.toLong() }
                     objectAttributeBeanFactory.createConfluenceAttributeValue(ota, *pageIds.toTypedArray())
                 }
                 is InsightAttribute.Unknown -> {
